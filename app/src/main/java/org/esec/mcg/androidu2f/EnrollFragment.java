@@ -76,7 +76,11 @@ public class EnrollFragment extends Fragment {
             @Override
             public void run() {
                 try {
-                    final String response = HTTP.post(new URL("https://demo.yubico.com/wsapi/u2f/enroll"), parameters);
+//                    final String response = HTTP.post(new URL("https://demo.yubico.com/wsapi/u2f/enroll"), parameters);
+//                    final String response = HTTP.post(new URL("http://192.168.1.140:8080/fidouaf/v1/history"), parameters);
+//                    final String response = HTTP.get(new URL("http://192.168.1.140:8080/fidouaf/v1/history"));
+//                    final String response = HTTP.get(new URL("http://openidconnect.ebay.com/fidouaf/v1/public/regRequest/yg"));
+                    final String response = HTTP.get(new URL("http://192.168.1.128:8000"));
                     LogUtils.d(response);
                 } catch (IOException e) {
 

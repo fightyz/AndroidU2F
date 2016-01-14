@@ -24,7 +24,15 @@
             android:name=".SettingsActivity"
             android:label="@string/title_activity_settings" >
             <intent-filter>
-                <action android:name="org.esec.mcg.androidu2f.SettingsActivity"/>
+                <action android:name="org.esec.mcg.androidu2f.SettingsActivity" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+        <activity android:name=".client.U2FClientActivity" >
+            <intent-filter>
+                <action android:name="org.fidoalliance.intent.FIDO_OPERATION"/>
+                <data android:mimeType="application/fido.u2f_client+json"/>
                 <category android:name="android.intent.category.DEFAULT"/>
             </intent-filter>
         </activity>

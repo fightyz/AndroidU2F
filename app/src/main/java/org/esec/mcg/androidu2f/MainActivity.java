@@ -13,6 +13,8 @@ import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import org.esec.mcg.utils.logger.LogUtils;
+
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -41,14 +43,14 @@ public class MainActivity extends AppCompatActivity
         getFragmentManager().beginTransaction().replace(R.id.fragment_container, fragment).commit();
     }
 
-    @Override
-    protected void onResume() {
-        super.onResume();
-//        TextView tv = (TextView) findViewById(R.id.text_view);
-//        SharedPreferences pf = PreferenceManager.getDefaultSharedPreferences(this);
-//        tv.setText(pf.getString("server_endpoint", "yz"));
-
-    }
+//    @Override
+//    protected void onResume() {
+//        super.onResume();
+////        TextView tv = (TextView) findViewById(R.id.text_view);
+////        SharedPreferences pf = PreferenceManager.getDefaultSharedPreferences(this);
+////        tv.setText(pf.getString("server_endpoint", "yz"));
+//
+//    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -71,6 +73,14 @@ public class MainActivity extends AppCompatActivity
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == 1) {
+            LogUtils.d("resultCode = " + resultCode);
+        }
+        super.onActivityResult(requestCode, resultCode, data);
     }
 
     @Override

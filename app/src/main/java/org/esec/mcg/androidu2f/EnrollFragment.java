@@ -1,6 +1,7 @@
 package org.esec.mcg.androidu2f;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.app.Fragment;
@@ -8,6 +9,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import org.esec.mcg.androidu2f.msg.U2FIntentType;
+import org.esec.mcg.androidu2f.op.Register;
 import org.esec.mcg.utils.HTTP;
 import org.esec.mcg.utils.logger.LogUtils;
 
@@ -30,10 +33,16 @@ public class EnrollFragment extends Fragment {
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String USERNAME = "username";
     private static final String PASSWORD = "password";
+    private static final int REG_ACTIVITY_RES_1 = 1;
 
     // TODO: Rename and change types of parameters
     private String username;
     private String password;
+
+    private String registerRequest = "{\"authenticateRequests\": [], \n" +
+            "\"registerRequests\": [{\"challenge\": \"9s80ruHc6q9shJM5WLfOmz-ejb_Rm8dmWCnOvgZ2ovw\", \"version\": \"U2F_V2\", \"appId\": \"http://localhost:8081\"}]}";
+
+    private Register register = new Register();
 
     private OnFragmentInteractionListener mListener;
 
@@ -75,17 +84,30 @@ public class EnrollFragment extends Fragment {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                try {
-//                    final String response = HTTP.post(new URL("https://demo.yubico.com/wsapi/u2f/enroll"), parameters);
-//                    final String response = HTTP.post(new URL("http://192.168.1.140:8080/fidouaf/v1/history"), parameters);
-//                    final String response = HTTP.get(new URL("http://192.168.1.140:8080/fidouaf/v1/history"));
-//                    final String response = HTTP.get(new URL("http://openidconnect.ebay.com/fidouaf/v1/public/regRequest/yg"));
-                    final String response = HTTP.get(new URL("http://192.168.1.128:8000"));
-                    LogUtils.d(response);
-                } catch (IOException e) {
+//                try {
+////                    final String response = HTTP.post(new URL("https://demo.yubico.com/wsapi/u2f/enroll"), parameters);
+////                    final String response = HTTP.post(new URL("http://192.168.1.140:8080/fidouaf/v1/history"), parameters);
+////                    final String response = HTTP.get(new URL("http://192.168.1.140:8080/fidouaf/v1/history"));
+////                    final String response = HTTP.get(new URL("http://openidconnect.ebay.com/fidouaf/v1/public/regRequest/yg"));
+////                    final String response = HTTP.get(new URL("http://192.168.1.128:8000"));
+//
+//                    LogUtils.d(response);
+//                } catch (IOException e) {
+//
+//                }
+                // non-normative
+                Intent i = new Intent("org.fidoalliance.intent.FIDO_OPERATION");
+                i.addCategory("android.intent.category.DEFAULT");
+                i.setType("application/fido.u2f_client+json");
 
-                }
+                final String response = register.getU2fMsgRegRequest();
+                Bundle data = new Bundle();
+                data.putString("message", response);
+                data.putString("U2FIntentType", U2FIntentType.U2F_OPERATION_REG.name());
+                i.putExtras(data);
 
+                // call u2f client
+                getActivity().startActivityForResult(i, REG_ACTIVITY_RES_1);
             }
         }).start();
     }

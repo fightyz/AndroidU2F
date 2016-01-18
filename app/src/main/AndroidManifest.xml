@@ -31,9 +31,20 @@
         </activity>
         <activity android:name=".client.U2FClientActivity" >
             <intent-filter>
-                <action android:name="org.fidoalliance.intent.FIDO_OPERATION"/>
-                <data android:mimeType="application/fido.u2f_client+json"/>
-                <category android:name="android.intent.category.DEFAULT"/>
+                <action android:name="org.fidoalliance.intent.FIDO_OPERATION" />
+
+                <data android:mimeType="application/fido.u2f_client+json" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+        <activity android:name=".token.U2FTokenActivity" >
+            <intent-filter>
+                <action android:name="org.fidoalliance.intent.FIDO_OPERATION" />
+
+                <data android:mimeType="application/fido.u2f_token+json" />
+
+                <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
     </application>

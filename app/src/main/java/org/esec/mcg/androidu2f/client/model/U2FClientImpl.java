@@ -7,6 +7,7 @@ import org.esec.mcg.androidu2f.U2FException;
 import org.esec.mcg.androidu2f.client.U2FClientActivity;
 import org.esec.mcg.androidu2f.codec.ClientDataCodec;
 import org.esec.mcg.androidu2f.token.U2FToken;
+import org.esec.mcg.androidu2f.token.msg.RegisterRequest;
 import org.esec.mcg.utils.logger.LogUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -29,15 +30,22 @@ public class U2FClientImpl implements U2FClient {
     private String appId;
     private String serverChallengeBase64;
     private String facetID;
-    private PackageInfo packageInfo;
 
-    public U2FClientImpl(U2FToken u2fToken, PackageInfo packageInfo) {
+    private PackageInfo packageInfo;
+    private Crypto crypto;
+
+    /**
+     * Implementaion of U2FClient.
+     * @param packageInfo Caller's packageInfo.
+     */
+    public U2FClientImpl(PackageInfo packageInfo) {
         this.u2fToken = u2fToken;
         this.packageInfo = packageInfo;
+        crypto = new CryptoImpl();
     }
 
     @Override
-    public void register(String u2fProtocolMessage) throws U2FException {
+    public RegisterRequest register(String u2fProtocolMessage) throws U2FException {
         LogUtils.d(u2fProtocolMessage);
         try {
             JSONObject reg = new JSONObject(u2fProtocolMessage);
@@ -45,6 +53,7 @@ public class U2FClientImpl implements U2FClient {
             appId = ((JSONObject)reg.getJSONArray("registerRequests").get(0)).getString("appId");
             serverChallengeBase64 = ((JSONObject)reg.getJSONArray("registerRequests").get(0)).getString("challenge");
 
+            // Check the u2f version
             if (!version.equals(U2F_V2)) {
                 throw new U2FException(String.format("Unsupported protocol version: %s", version));
             }
@@ -53,10 +62,16 @@ public class U2FClientImpl implements U2FClient {
 
             facetID = getFacetID(packageInfo);
             String clientData = ClientDataCodec.encodeClientData(ClientDataCodec.REQUEST_TYPE_REGISTER, serverChallengeBase64, facetID);
+            LogUtils.d(clientData);
 
+            byte[] appIdSha256 = crypto.computeSha256(appId);
+            byte[] clientDataSha256 = crypto.computeSha256(clientData);
+
+            return new RegisterRequest(appIdSha256, clientDataSha256);
         } catch (JSONException e) {
             e.printStackTrace();
         }
+        return null;
     }
 
     private void verifyAppId(String appId) {

@@ -99,6 +99,7 @@ public class EnrollFragment extends Fragment {
                 Intent i = new Intent("org.fidoalliance.intent.FIDO_OPERATION");
                 i.addCategory("android.intent.category.DEFAULT");
                 i.setType("application/fido.u2f_client+json");
+//                i.setCl
 
                 final String response = register.getU2fMsgRegRequest();
                 Bundle data = new Bundle();

@@ -1,5 +1,6 @@
-package org.esec.mcg.androidu2f.token;
+package org.esec.mcg.androidu2f.token.impl;
 
+import org.esec.mcg.androidu2f.token.KeyPairGenerator;
 import org.spongycastle.jce.ECNamedCurveTable;
 import org.spongycastle.jce.spec.ECParameterSpec;
 
@@ -14,7 +15,7 @@ import java.security.Security;
 /**
  * Created by yz on 2016/1/19.
  */
-public class Secp256r1KeyPairGenerator implements KeyPairGenerator {
+public class SCSecp256r1 implements KeyPairGenerator {
 
     private ECParameterSpec ecParameterSpec;
 
@@ -22,7 +23,7 @@ public class Secp256r1KeyPairGenerator implements KeyPairGenerator {
         Security.addProvider(new org.spongycastle.jce.provider.BouncyCastleProvider());
     }
 
-    Secp256r1KeyPairGenerator() {
+    public SCSecp256r1() {
         ecParameterSpec = ECNamedCurveTable.getParameterSpec("SECP256r1");
     }
 

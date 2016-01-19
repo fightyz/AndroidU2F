@@ -1,17 +1,26 @@
 package org.esec.mcg.androidu2f.token;
 
 import android.content.Context;
+import android.util.Log;
 
 import org.esec.mcg.androidu2f.U2FException;
 import org.esec.mcg.androidu2f.codec.RawMessageCodec;
+import org.esec.mcg.androidu2f.token.impl.KeyHandleGeneratorWithKeyStore;
+import org.esec.mcg.androidu2f.token.impl.SCSecp256r1;
 import org.esec.mcg.androidu2f.token.msg.RegisterRequest;
 import org.esec.mcg.androidu2f.token.msg.RegisterResponse;
+import org.esec.mcg.utils.ByteUtil;
 import org.esec.mcg.utils.logger.LogUtils;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
+import java.security.PublicKey;
+import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 
 /**
@@ -33,16 +42,9 @@ public class LocalU2FToken implements U2FToken {
     public LocalU2FToken(Context context) {
         attestationCertificate = null;
         certificatePrivateKey = null;
-        keyPairGenerator = new Secp256r1KeyPairGenerator();
-        KeyHandleGenerator tmp = null;
-        try {
-            tmp = new AESKeyWrapKeyHandleGenerator(context, "AESKeyWrapper");
-        } catch (GeneralSecurityException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        keyHandleGenerator = tmp;
+        keyPairGenerator = new SCSecp256r1();
+
+        keyHandleGenerator = new KeyHandleGeneratorWithKeyStore();;
         dataStore = null;
         userPresenceVerifier = null;
         crypto = null;
@@ -59,14 +61,34 @@ public class LocalU2FToken implements U2FToken {
 //            throw new U2FException("Cannot verify user presence.");
 //        }
 
-        KeyPair keyPair = keyPairGenerator.generateKeyPair(applicationSha256, challengeSha256);
-        byte[] keyHandle = keyHandleGenerator.generateKeyHandle(applicationSha256, keyPair);
-        LogUtils.d(keyHandle);
+//        KeyPair keyPair = keyPairGenerator.generateKeyPair(applicationSha256, challengeSha256);
+//        byte[] keyHandle = keyHandleGenerator.generateKeyHandle(applicationSha256, keyPair);
+//        LogUtils.d(keyHandle);
 
-        dataStore.storeKeyPair(keyHandle, keyPair);
+//        dataStore.storeKeyPair(keyHandle, keyPair);
 
-        byte[] userPublicKey = keyPairGenerator.encodePublicKey(keyPair.getPublic());
-        LogUtils.d(userPublicKey);
+        byte[] keyHandle = keyHandleGenerator.generateKeyHandle(applicationSha256, challengeSha256);
+//        KeyPair keyPair = keyPairGenerator.generateKeyPair(applicationSha256, challengeSha256);
+        KeyStore keyStore = null;
+        PublicKey publicKey = null;
+        try {
+            keyStore = KeyStore.getInstance("AndroidKeyStore");
+            keyStore.load(null);
+            publicKey = keyStore.getCertificate(new String(keyHandle)).getPublicKey();
+        } catch (KeyStoreException e) {
+            e.printStackTrace();
+        } catch (CertificateException e) {
+            e.printStackTrace();
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+//        byte[] userPublicKey = keyPairGenerator.encodePublicKey(publicKey);
+        byte[] userPublicKey = publicKey.getEncoded(); // this is x.509 encoded, so has 91 bytes.
+        LogUtils.d(ByteUtil.ByteArrayToHexString(userPublicKey));
+        LogUtils.d(userPublicKey.length);
 
         byte[] signedData = RawMessageCodec.encodeRegistrationSignedBytes(applicationSha256, challengeSha256,
                 keyHandle, userPublicKey);

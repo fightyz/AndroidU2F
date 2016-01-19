@@ -26,4 +26,7 @@ dependencies {
     compile 'com.android.support:appcompat-v7:23.0.1'
     compile 'com.android.support:design:23.0.1'
     compile 'com.android.support:support-v4:23.0.1'
+    compile files('libs/sc-light-jdk15on-1.47.0.2.jar')
+    compile files('libs/scpkix-jdk15on-1.47.0.2.jar')
+    compile files('libs/scprov-jdk15on-1.47.0.2.jar')
 }

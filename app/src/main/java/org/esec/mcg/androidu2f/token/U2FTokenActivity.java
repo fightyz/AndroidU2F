@@ -7,6 +7,10 @@ import android.view.View;
 import android.widget.TextView;
 
 import org.esec.mcg.androidu2f.R;
+import org.esec.mcg.androidu2f.U2FException;
+import org.esec.mcg.androidu2f.codec.RawMessageCodec;
+import org.esec.mcg.androidu2f.token.msg.RegisterRequest;
+import org.esec.mcg.utils.ByteUtil;
 
 public class U2FTokenActivity extends AppCompatActivity {
 
@@ -14,7 +18,7 @@ public class U2FTokenActivity extends AppCompatActivity {
     private TextView operationMessageTextView;
 
     private String u2fIntentType;
-    private String message;
+    private byte[] message;
 
     private U2FToken u2fToken;
 
@@ -32,9 +36,9 @@ public class U2FTokenActivity extends AppCompatActivity {
         super.onResume();
         Bundle extras = getIntent().getExtras();
         u2fIntentType = extras.getString("U2FIntentType");
-//        message = extras.getString("message");
+        message = extras.getByteArray("message");
         operationTextView.setText(u2fIntentType);
-//        operationMessageTextView.setText(message);
+        operationMessageTextView.setText(ByteUtil.ByteArrayToHexString(message));
     }
 
     public void swipeProceed(View view) {
@@ -44,7 +48,15 @@ public class U2FTokenActivity extends AppCompatActivity {
     }
 
     public void localProceed(View view) {
-        u2fToken = new LocalU2FToken();
+        u2fToken = new LocalU2FToken(this);
+        RegisterRequest registerRequest;
+        try {
+            registerRequest = RawMessageCodec.decodeRegisterRequest(message);
+            u2fToken.register(registerRequest);
+        } catch (U2FException e) {
+            e.printStackTrace();
+        }
+
         // TODO
     }
 }

@@ -24,7 +24,7 @@ public class U2FClientImpl implements U2FClient {
 
     private static final String U2F_V2 = "U2F_V2";
 
-    private U2FToken u2fToken;
+//    private U2FToken u2fToken;
 
     private String version;
     private String appId;
@@ -39,7 +39,7 @@ public class U2FClientImpl implements U2FClient {
      * @param packageInfo Caller's packageInfo.
      */
     public U2FClientImpl(PackageInfo packageInfo) {
-        this.u2fToken = u2fToken;
+//        this.u2fToken = u2fToken;
         this.packageInfo = packageInfo;
         crypto = new CryptoImpl();
     }
@@ -58,9 +58,9 @@ public class U2FClientImpl implements U2FClient {
                 throw new U2FException(String.format("Unsupported protocol version: %s", version));
             }
 
+            facetID = getFacetID(packageInfo);
             verifyAppId(appId);
 
-            facetID = getFacetID(packageInfo);
             String clientData = ClientDataCodec.encodeClientData(ClientDataCodec.REQUEST_TYPE_REGISTER, serverChallengeBase64, facetID);
             LogUtils.d(clientData);
 
@@ -74,8 +74,12 @@ public class U2FClientImpl implements U2FClient {
         return null;
     }
 
-    private void verifyAppId(String appId) {
-
+    /**
+     * @param appId
+     * @return
+     */
+    private boolean verifyAppId(String appId) {
+        return true;
     }
 
     private String getFacetID(PackageInfo paramPackageInfo) {

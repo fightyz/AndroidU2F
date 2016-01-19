@@ -12,6 +12,7 @@ import org.esec.mcg.androidu2f.R;
 import org.esec.mcg.androidu2f.U2FException;
 import org.esec.mcg.androidu2f.client.model.U2FClient;
 import org.esec.mcg.androidu2f.client.model.U2FClientImpl;
+import org.esec.mcg.androidu2f.codec.RawMessageCodec;
 import org.esec.mcg.androidu2f.msg.U2FIntentType;
 import org.esec.mcg.androidu2f.token.LocalU2FToken;
 import org.esec.mcg.androidu2f.token.U2FToken;
@@ -69,10 +70,10 @@ public class U2FClientActivity extends AppCompatActivity {
                     i.setType("application/fido.u2f_token+json");
                     Bundle data = new Bundle();
 //                    data.put
-
+                    data.putByteArray("message", RawMessageCodec.encodeRegisterRequest(registerRequest));
                     data.putString("U2FIntentType", U2FIntentType.U2F_OPERATION_REG.name());
                     i.putExtras(data);
-                    startActivityForResult(i, REG_ACTIVITY_RES_1);
+                    startActivityForResult(i, REG_ACTIVITY_RES_1); // Start token activity.
                 }
             } catch (U2FException e) {
                 e.printStackTrace();

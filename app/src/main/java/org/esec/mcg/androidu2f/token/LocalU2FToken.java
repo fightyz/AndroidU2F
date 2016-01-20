@@ -11,9 +11,12 @@ import org.esec.mcg.androidu2f.token.msg.RegisterRequest;
 import org.esec.mcg.androidu2f.token.msg.RegisterResponse;
 import org.esec.mcg.utils.ByteUtil;
 import org.esec.mcg.utils.logger.LogUtils;
+import org.spongycastle.asn1.ASN1Sequence;
+import org.spongycastle.asn1.x509.SubjectPublicKeyInfo;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
+import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
@@ -22,6 +25,8 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.X509EncodedKeySpec;
 
 /**
  * Created by yz on 2016/1/14.
@@ -71,10 +76,14 @@ public class LocalU2FToken implements U2FToken {
 //        KeyPair keyPair = keyPairGenerator.generateKeyPair(applicationSha256, challengeSha256);
         KeyStore keyStore = null;
         PublicKey publicKey = null;
+        PublicKey unrestrictedPublicKey = null;
         try {
             keyStore = KeyStore.getInstance("AndroidKeyStore");
             keyStore.load(null);
-            publicKey = keyStore.getCertificate(new String(keyHandle)).getPublicKey();
+
+            publicKey = keyStore.getCertificate("key1").getPublicKey();
+            unrestrictedPublicKey = KeyFactory.getInstance(publicKey.getAlgorithm()).generatePublic(new X509EncodedKeySpec(publicKey.getEncoded()));
+            LogUtils.d(ByteUtil.ByteArrayToHexString(keyStore.getCertificate(new String(keyHandle)).getEncoded()));
         } catch (KeyStoreException e) {
             e.printStackTrace();
         } catch (CertificateException e) {
@@ -83,12 +92,30 @@ public class LocalU2FToken implements U2FToken {
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
+        } catch (InvalidKeySpecException e) {
+            e.printStackTrace();
         }
 
+        byte[] unrestrictedUserPublicKeyX509 = unrestrictedPublicKey.getEncoded();
+        LogUtils.d(ByteUtil.ByteArrayToHexString(unrestrictedUserPublicKeyX509));
+        LogUtils.d(unrestrictedPublicKey.getAlgorithm());
+        LogUtils.d(unrestrictedUserPublicKeyX509.length);
+        LogUtils.d(unrestrictedPublicKey.getFormat());
+
 //        byte[] userPublicKey = keyPairGenerator.encodePublicKey(publicKey);
-        byte[] userPublicKey = publicKey.getEncoded(); // this is x.509 encoded, so has 91 bytes.
-        LogUtils.d(ByteUtil.ByteArrayToHexString(userPublicKey));
-        LogUtils.d(userPublicKey.length);
+        byte[] userPublicKeyX509 = publicKey.getEncoded(); // this is x.509 encoded, so has 91 bytes.
+        LogUtils.d(ByteUtil.ByteArrayToHexString(userPublicKeyX509));
+        LogUtils.d(userPublicKeyX509.length);
+        LogUtils.d(publicKey.getFormat());
+        SubjectPublicKeyInfo subjectPublicKeyInfo = new SubjectPublicKeyInfo(ASN1Sequence.getInstance(userPublicKeyX509));
+        byte[] userPublicKey = null;
+        try {
+            userPublicKey = subjectPublicKeyInfo.parsePublicKey().getEncoded();
+            LogUtils.d(ByteUtil.ByteArrayToHexString(userPublicKey));
+            LogUtils.d(userPublicKey.length);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
         byte[] signedData = RawMessageCodec.encodeRegistrationSignedBytes(applicationSha256, challengeSha256,
                 keyHandle, userPublicKey);

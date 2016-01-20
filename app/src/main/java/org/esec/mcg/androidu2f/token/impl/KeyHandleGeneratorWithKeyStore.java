@@ -141,6 +141,7 @@ public class KeyHandleGeneratorWithKeyStore implements KeyHandleGenerator {
         String keyHandleString = new String(keyHandle);
 //        String keyHandleString = Arrays.toString(keyHandle);
         LogUtils.d(keyHandleString);
+        keyHandleString = "key1";
 
         try {
             final KeyStore keyStore = KeyStore.getInstance("AndroidKeyStore");
@@ -165,7 +166,7 @@ public class KeyHandleGeneratorWithKeyStore implements KeyHandleGenerator {
 
             KeyPair keyPair = keyPairGenerator.generateKeyPair();
 
-            LogUtils.d(ByteUtil.ByteArrayToHexString(keyPair.getPublic().getEncoded()));
+//            LogUtils.d(ByteUtil.ByteArrayToHexString(keyPair.getPublic().getEncoded()));
 //            LogUtils.d(ByteUtil.ByteArrayToHexString(keyPair.getPrivate().getEncoded()));
         } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();

@@ -4,7 +4,27 @@
     <EditTextPreference
         android:key="server_endpoint"
         android:title="Server Endpoint"
-        android:defaultValue="https://demo.yubico.com"
+        android:defaultValue="http://192.168.1.102:8000"
+        android:selectAllOnFocus="true"
+        android:inputType="textCapWords"
+        android:capitalize="words"
+        android:singleLine="true"
+        android:maxLines="1" />
+
+    <EditTextPreference
+        android:key="enroll"
+        android:title="Enroll"
+        android:defaultValue="/enroll"
+        android:selectAllOnFocus="true"
+        android:inputType="textCapWords"
+        android:capitalize="words"
+        android:singleLine="true"
+        android:maxLines="1" />
+
+    <EditTextPreference
+        android:key="bind"
+        android:title="Bind"
+        android:defaultValue="/com_register"
         android:selectAllOnFocus="true"
         android:inputType="textCapWords"
         android:capitalize="words"

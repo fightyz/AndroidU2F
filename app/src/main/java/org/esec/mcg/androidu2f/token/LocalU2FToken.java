@@ -81,6 +81,7 @@ public class LocalU2FToken implements U2FToken {
             PublicKey publicKey = keyStore.getCertificate(new String(keyHandle)).getPublicKey();
             byte[] userPublicKeyX509 = publicKey.getEncoded(); // this is x.509 encoded, so has 91 bytes.
             System.arraycopy(userPublicKeyX509, 26, userPublicKey, 0, 65);
+            LogUtils.d(keyStore.getCertificate(new String(keyHandle)));
             LogUtils.d(ByteUtil.ByteArrayToHexString(userPublicKeyX509));
             LogUtils.d(ByteUtil.ByteArrayToHexString(userPublicKey));
         } catch (KeyStoreException e) {

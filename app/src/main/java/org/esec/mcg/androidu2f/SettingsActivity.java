@@ -172,6 +172,8 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             setHasOptionsMenu(true);
 
             bindPreferenceSummaryToValue(findPreference("server_endpoint"));
+            bindPreferenceSummaryToValue(findPreference("enroll"));
+            bindPreferenceSummaryToValue(findPreference("bind"));
         }
     }
 

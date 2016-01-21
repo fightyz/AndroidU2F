@@ -84,60 +84,14 @@ public class LocalU2FToken implements U2FToken {
             LogUtils.d(ByteUtil.ByteArrayToHexString(userPublicKeyX509));
             LogUtils.d(ByteUtil.ByteArrayToHexString(userPublicKey));
         } catch (KeyStoreException e) {
-            e.printStackTrace();
+            throw new U2FException("Local token register error.", e);
         } catch (CertificateException e) {
-            e.printStackTrace();
+            throw new U2FException("Local token register error.", e);
         } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
+            throw new U2FException("Local token register error.", e);
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new U2FException("Local token register error.", e);
         }
-
-//        KeyPair keyPair = keyPairGenerator.generateKeyPair(applicationSha256, challengeSha256);
-        /*
-        KeyStore keyStore = null;
-        PublicKey publicKey = null;
-        PublicKey unrestrictedPublicKey = null;
-        try {
-            keyStore = KeyStore.getInstance("AndroidKeyStore");
-            keyStore.load(null);
-
-            publicKey = keyStore.getCertificate("key1").getPublicKey();
-            unrestrictedPublicKey = KeyFactory.getInstance(publicKey.getAlgorithm()).generatePublic(new X509EncodedKeySpec(publicKey.getEncoded()));
-            LogUtils.d(ByteUtil.ByteArrayToHexString(keyStore.getCertificate(new String(keyHandle)).getEncoded()));
-        } catch (KeyStoreException e) {
-            e.printStackTrace();
-        } catch (CertificateException e) {
-            e.printStackTrace();
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (InvalidKeySpecException e) {
-            e.printStackTrace();
-        }
-
-        byte[] unrestrictedUserPublicKeyX509 = unrestrictedPublicKey.getEncoded();
-        LogUtils.d(ByteUtil.ByteArrayToHexString(unrestrictedUserPublicKeyX509));
-        LogUtils.d(unrestrictedPublicKey.getAlgorithm());
-        LogUtils.d(unrestrictedUserPublicKeyX509.length);
-        LogUtils.d(unrestrictedPublicKey.getFormat());
-
-//        byte[] userPublicKey = keyPairGenerator.encodePublicKey(publicKey);
-        byte[] userPublicKeyX509 = publicKey.getEncoded(); // this is x.509 encoded, so has 91 bytes.
-        LogUtils.d(ByteUtil.ByteArrayToHexString(userPublicKeyX509));
-        LogUtils.d(userPublicKeyX509.length);
-        LogUtils.d(publicKey.getFormat());
-        SubjectPublicKeyInfo subjectPublicKeyInfo = new SubjectPublicKeyInfo(ASN1Sequence.getInstance(userPublicKeyX509));
-        byte[] userPublicKey = null;
-        try {
-            userPublicKey = subjectPublicKeyInfo.parsePublicKey().getEncoded();
-            LogUtils.d(ByteUtil.ByteArrayToHexString(userPublicKey));
-            LogUtils.d(userPublicKey.length);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        */
 
         byte[] signedData = RawMessageCodec.encodeRegistrationSignedBytes(applicationSha256, challengeSha256,
                 keyHandle, userPublicKey);

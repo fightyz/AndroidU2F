@@ -9,7 +9,9 @@ import android.widget.TextView;
 import org.esec.mcg.androidu2f.R;
 import org.esec.mcg.androidu2f.U2FException;
 import org.esec.mcg.androidu2f.codec.RawMessageCodec;
+import org.esec.mcg.androidu2f.msg.U2FIntentType;
 import org.esec.mcg.androidu2f.token.msg.RegisterRequest;
+import org.esec.mcg.androidu2f.token.msg.RegisterResponse;
 import org.esec.mcg.utils.ByteUtil;
 
 public class U2FTokenActivity extends AppCompatActivity {
@@ -49,14 +51,22 @@ public class U2FTokenActivity extends AppCompatActivity {
 
     public void localProceed(View view) {
         u2fToken = new LocalU2FToken(this);
-        RegisterRequest registerRequest;
-        try {
-            registerRequest = RawMessageCodec.decodeRegisterRequest(message);
-            u2fToken.register(registerRequest);
-        } catch (U2FException e) {
-            e.printStackTrace();
+        if (u2fIntentType.equals(U2FIntentType.U2F_OPERATION_REG.name())) {
+            RegisterRequest registerRequest;
+            RegisterResponse registerResponse;
+            try {
+                registerRequest = RawMessageCodec.decodeRegisterRequest(message);
+                registerResponse = u2fToken.register(registerRequest);
+                Intent i = new Intent("org.fidoalliance.intent.FIDO_OPERATION");
+                Bundle data = new Bundle();
+                data.putByteArray("message", RawMessageCodec.encodeRegisterResponse(registerResponse));
+                data.putString("U2FIntentType", U2FIntentType.U2F_OPERATION_REG_RESULT.name());
+                i.putExtras(data);
+                setResult(RESULT_OK, i);
+                finish();
+            } catch (U2FException e) {
+                e.printStackTrace();
+            }
         }
-
-        // TODO
     }
 }

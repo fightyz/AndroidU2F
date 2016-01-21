@@ -8,6 +8,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
+import org.apache.commons.codec.binary.Base64;
 import org.esec.mcg.androidu2f.R;
 import org.esec.mcg.androidu2f.U2FException;
 import org.esec.mcg.androidu2f.client.model.U2FClient;
@@ -18,6 +19,8 @@ import org.esec.mcg.androidu2f.token.LocalU2FToken;
 import org.esec.mcg.androidu2f.token.U2FToken;
 import org.esec.mcg.androidu2f.token.msg.RegisterRequest;
 import org.esec.mcg.utils.logger.LogUtils;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 public class U2FClientActivity extends AppCompatActivity {
 
@@ -64,17 +67,15 @@ public class U2FClientActivity extends AppCompatActivity {
             try {
                 RegisterRequest registerRequest;
                 registerRequest = u2fClient.register(message);
-                if ( registerRequest != null ) {
-                    Intent i = new Intent("org.fidoalliance.intent.FIDO_OPERATION");
-                    i.addCategory("android.intent.category.DEFAULT");
-                    i.setType("application/fido.u2f_token+json");
-                    Bundle data = new Bundle();
-//                    data.put
-                    data.putByteArray("message", RawMessageCodec.encodeRegisterRequest(registerRequest));
-                    data.putString("U2FIntentType", U2FIntentType.U2F_OPERATION_REG.name());
-                    i.putExtras(data);
-                    startActivityForResult(i, REG_ACTIVITY_RES_1); // Start token activity.
-                }
+                Intent i = new Intent("org.fidoalliance.intent.FIDO_OPERATION");
+                i.addCategory("android.intent.category.DEFAULT");
+                i.setType("application/fido.u2f_token+json");
+                Bundle data = new Bundle();
+//              data.put
+                data.putByteArray("message", RawMessageCodec.encodeRegisterRequest(registerRequest));
+                data.putString("U2FIntentType", U2FIntentType.U2F_OPERATION_REG.name());
+                i.putExtras(data);
+                startActivityForResult(i, REG_ACTIVITY_RES_1); // Start token activity.
             } catch (U2FException e) {
                 e.printStackTrace();
             }
@@ -83,11 +84,30 @@ public class U2FClientActivity extends AppCompatActivity {
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == 1) {
-            LogUtils.d("resultCode = " + resultCode);
-        }
         super.onActivityResult(requestCode, resultCode, data);
-        setResult(RESULT_OK);
+        if (requestCode == REG_ACTIVITY_RES_1) {
+            LogUtils.d("resultCode = " + resultCode);
+            Intent i = new Intent("org.fidoalliance.intent.FIDO_OPERATION");
+            byte[] rawRegisterResponse = data.getByteArrayExtra("message");
+
+            Bundle bundleData = new Bundle();
+            String rawRegisterResponseBase64 = Base64.encodeBase64URLSafeString(rawRegisterResponse);
+            String clientDataBase64 = Base64.encodeBase64URLSafeString(u2fClient.getClientData().getBytes());
+
+            JSONObject registerResponse = new JSONObject();
+            try {
+                registerResponse.put("registrationData", rawRegisterResponseBase64);
+                registerResponse.put("clientData", clientDataBase64);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+
+            bundleData.putString("message", registerResponse.toString());
+            bundleData.putString("U2FIntentType", U2FIntentType.U2F_OPERATION_REG_RESULT.name());
+            i.putExtras(bundleData);
+            setResult(RESULT_OK, i);
+        }
+
         finish();
     }
 

@@ -2,17 +2,21 @@ package org.esec.mcg.androidu2f.codec;
 
 import org.esec.mcg.androidu2f.U2FException;
 import org.esec.mcg.androidu2f.token.msg.RegisterRequest;
+import org.esec.mcg.androidu2f.token.msg.RegisterResponse;
 
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.security.cert.CertificateEncodingException;
+import java.security.cert.X509Certificate;
 
 /**
  * Created by yz on 2016/1/18.
  */
 public class RawMessageCodec {
 
+    public static final byte REGISTRATION_RESERVED_BYTE_VALUE = 0x05;
     public static final byte REGISTRATION_SIGNED_RESERVED_BYTE_VALUE = 0x00;
 
     public static byte[] encodeRegisterRequest(RegisterRequest registerRequest) {
@@ -58,5 +62,34 @@ public class RawMessageCodec {
                 .put(keyHandle)
                 .put(userPublicKey);
         return signedData;
+    }
+
+    public static byte[] encodeRegisterResponse(RegisterResponse registerResponse) throws U2FException {
+        byte[] userPublicKey = registerResponse.getUserPublicKey();
+        byte[] keyHandle = registerResponse.getKeyHandle();
+        X509Certificate attestationCertificate = registerResponse.getAttestationCertificate();
+        byte[] signature = registerResponse.getSignature();
+
+        byte[] attestationCertificateBytes;
+        try {
+            attestationCertificateBytes = attestationCertificate.getEncoded();
+        } catch (CertificateEncodingException e) {
+            throw new U2FException("Error when encoding attestation certificate.", e);
+        }
+
+        if (keyHandle.length > 255) {
+            throw new U2FException("keyHandle length cannot be longer than 255 bytes!");
+        }
+
+        byte[] result = new byte[1 + userPublicKey.length + 1 + keyHandle.length
+                + attestationCertificateBytes.length + signature.length];
+        ByteBuffer.wrap(result)
+                .put(REGISTRATION_RESERVED_BYTE_VALUE)
+                .put(userPublicKey)
+                .put((byte) keyHandle.length)
+                .put(keyHandle)
+                .put(attestationCertificateBytes)
+                .put(signature);
+        return result;
     }
 }

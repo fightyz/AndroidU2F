@@ -20,7 +20,7 @@ import java.security.cert.CertificateFactory;
 /**
  * Created by yz on 2016/1/14.
  */
-public class U2FClientImpl implements U2FClient {
+public class U2FClientImpl extends U2FClient {
 
     private static final String U2F_V2 = "U2F_V2";
 
@@ -30,6 +30,7 @@ public class U2FClientImpl implements U2FClient {
     private String appId;
     private String serverChallengeBase64;
     private String facetID;
+//    private String clientData;
 
     private PackageInfo packageInfo;
     private Crypto crypto;
@@ -61,7 +62,7 @@ public class U2FClientImpl implements U2FClient {
             facetID = getFacetID(packageInfo);
             verifyAppId(appId);
 
-            String clientData = ClientDataCodec.encodeClientData(ClientDataCodec.REQUEST_TYPE_REGISTER, serverChallengeBase64, facetID);
+            clientData = ClientDataCodec.encodeClientData(ClientDataCodec.REQUEST_TYPE_REGISTER, serverChallengeBase64, facetID);
             LogUtils.d(clientData);
 
             byte[] appIdSha256 = crypto.computeSha256(appId);
@@ -69,9 +70,8 @@ public class U2FClientImpl implements U2FClient {
 
             return new RegisterRequest(appIdSha256, clientDataSha256);
         } catch (JSONException e) {
-            e.printStackTrace();
+            throw new U2FException("Rgister request JSON format is wrong.", e);
         }
-        return null;
     }
 
     /**
@@ -93,5 +93,9 @@ public class U2FClientImpl implements U2FClient {
             e.printStackTrace();
         }
         return null;
+    }
+
+    public String getClientData() {
+        return clientData;
     }
 }

@@ -79,6 +79,9 @@ public class MainActivity extends AppCompatActivity
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == 1) {
             LogUtils.d("resultCode = " + resultCode);
+            String registerResponse = data.getStringExtra("message");
+            LogUtils.d(registerResponse);
+            //TODO send register response to server
         }
         super.onActivityResult(requestCode, resultCode, data);
     }

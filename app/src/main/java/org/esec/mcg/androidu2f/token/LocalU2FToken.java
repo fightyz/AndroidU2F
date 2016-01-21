@@ -73,7 +73,28 @@ public class LocalU2FToken implements U2FToken {
 //        dataStore.storeKeyPair(keyHandle, keyPair);
 
         byte[] keyHandle = keyHandleGenerator.generateKeyHandle(applicationSha256, challengeSha256);
+
+        byte[] userPublicKey = new byte[65];
+        try {
+            KeyStore keyStore = KeyStore.getInstance("AndroidKeyStore");
+            keyStore.load(null);
+            PublicKey publicKey = keyStore.getCertificate(new String(keyHandle)).getPublicKey();
+            byte[] userPublicKeyX509 = publicKey.getEncoded(); // this is x.509 encoded, so has 91 bytes.
+            System.arraycopy(userPublicKeyX509, 26, userPublicKey, 0, 65);
+            LogUtils.d(ByteUtil.ByteArrayToHexString(userPublicKeyX509));
+            LogUtils.d(ByteUtil.ByteArrayToHexString(userPublicKey));
+        } catch (KeyStoreException e) {
+            e.printStackTrace();
+        } catch (CertificateException e) {
+            e.printStackTrace();
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
 //        KeyPair keyPair = keyPairGenerator.generateKeyPair(applicationSha256, challengeSha256);
+        /*
         KeyStore keyStore = null;
         PublicKey publicKey = null;
         PublicKey unrestrictedPublicKey = null;
@@ -116,6 +137,7 @@ public class LocalU2FToken implements U2FToken {
         } catch (IOException e) {
             e.printStackTrace();
         }
+        */
 
         byte[] signedData = RawMessageCodec.encodeRegistrationSignedBytes(applicationSha256, challengeSha256,
                 keyHandle, userPublicKey);

@@ -141,12 +141,12 @@ public class KeyHandleGeneratorWithKeyStore implements KeyHandleGenerator {
         String keyHandleString = new String(keyHandle);
 //        String keyHandleString = Arrays.toString(keyHandle);
         LogUtils.d(keyHandleString);
-        keyHandleString = "key1";
 
         try {
             final KeyStore keyStore = KeyStore.getInstance("AndroidKeyStore");
             keyStore.load(null);
             if (keyStore.containsAlias(keyHandleString)) {
+                //TODO throw exception
 //                throw new U2FException("Key handle already existed.");
                 keyStore.deleteEntry(keyHandleString);
             }

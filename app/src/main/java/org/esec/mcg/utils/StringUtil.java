@@ -14,7 +14,7 @@ public class StringUtil {
      * @return
      */
     public static byte[] HexStringToByteArray(String hex) {
-        String tmp = hex.replaceAll("[^[0-9][a-f]]", ""); // 不在括号中的任意字符
+        String tmp = hex.replaceAll("[^[0-9][a-f][A-F]]", ""); // 不在括号中的任意字符
         byte[] bytes = new byte[tmp.length() / 2]; // 每两个字符为一个byte
 
         String part = "";

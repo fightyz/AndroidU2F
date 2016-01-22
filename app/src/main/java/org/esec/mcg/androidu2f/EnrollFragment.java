@@ -2,9 +2,11 @@ package org.esec.mcg.androidu2f;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
 import android.app.Fragment;
+import android.preference.PreferenceManager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,6 +17,7 @@ import org.esec.mcg.utils.HTTP;
 import org.esec.mcg.utils.logger.LogUtils;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
@@ -101,11 +104,21 @@ public class EnrollFragment extends Fragment {
                 i.setType("application/fido.u2f_client+json");
 //                i.setCl
 
-                final String response = register.getU2fMsgRegRequest();
-                Bundle data = new Bundle();
-                data.putString("message", response);
-                data.putString("U2FIntentType", U2FIntentType.U2F_OPERATION_REG.name());
-                i.putExtras(data);
+                SharedPreferences pf = PreferenceManager.getDefaultSharedPreferences(getActivity());
+                String endPoint = pf.getString("server_endpoint", "http://192.168.1.101:8000");
+                String enrollPoint = pf.getString("enroll", "/enroll");
+                LogUtils.d("end point: " + endPoint);
+
+                final String response;
+                try {
+                    response = register.getU2fMsgRegRequest(new URL(endPoint + enrollPoint));
+                    Bundle data = new Bundle();
+                    data.putString("message", response);
+                    data.putString("U2FIntentType", U2FIntentType.U2F_OPERATION_REG.name());
+                    i.putExtras(data);
+                } catch (MalformedURLException e) {
+                    e.printStackTrace();
+                }
 
                 // call u2f client
                 getActivity().startActivityForResult(i, REG_ACTIVITY_RES_1);

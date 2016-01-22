@@ -6,6 +6,7 @@ import org.esec.mcg.androidu2f.token.Crypto;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
+import java.security.Security;
 import java.security.Signature;
 import java.security.SignatureException;
 
@@ -13,6 +14,11 @@ import java.security.SignatureException;
  * Created by yz on 2016/1/21.
  */
 public class CryptoECDSA implements Crypto {
+
+    static {
+        Security.addProvider(new org.spongycastle.jce.provider.BouncyCastleProvider());
+    }
+
     @Override
     public byte[] sign(byte[] signedData, PrivateKey certificatePrivateKey) throws U2FException {
         try {

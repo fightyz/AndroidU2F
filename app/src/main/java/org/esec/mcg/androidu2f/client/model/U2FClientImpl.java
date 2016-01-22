@@ -8,6 +8,7 @@ import org.esec.mcg.androidu2f.client.U2FClientActivity;
 import org.esec.mcg.androidu2f.codec.ClientDataCodec;
 import org.esec.mcg.androidu2f.token.U2FToken;
 import org.esec.mcg.androidu2f.token.msg.RegisterRequest;
+import org.esec.mcg.utils.ByteUtil;
 import org.esec.mcg.utils.logger.LogUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -68,6 +69,9 @@ public class U2FClientImpl extends U2FClient {
             byte[] appIdSha256 = crypto.computeSha256(appId);
             byte[] clientDataSha256 = crypto.computeSha256(clientData);
 
+            LogUtils.d(ByteUtil.ByteArrayToHexString(appIdSha256));
+            LogUtils.d(ByteUtil.ByteArrayToHexString(clientDataSha256));
+
             return new RegisterRequest(appIdSha256, clientDataSha256);
         } catch (JSONException e) {
             throw new U2FException("Rgister request JSON format is wrong.", e);
@@ -88,6 +92,7 @@ public class U2FClientImpl extends U2FClient {
             Certificate certificate = CertificateFactory.getInstance("X509").generateCertificate(byteArrayInputStream);
             MessageDigest messageDigest = MessageDigest.getInstance("SHA1");
             String facetID = "android:apk-key-hash:" + Base64.encodeToString(messageDigest.digest(certificate.getEncoded()), Base64.DEFAULT);
+            LogUtils.d("android:apk-key-hash:" + Base64.encodeToString(messageDigest.digest(certificate.getEncoded()), Base64.DEFAULT));
             return facetID;
         } catch (Exception e) {
             e.printStackTrace();

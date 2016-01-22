@@ -5,6 +5,7 @@ import android.util.Log;
 
 import org.esec.mcg.androidu2f.U2FException;
 import org.esec.mcg.androidu2f.codec.RawMessageCodec;
+import org.esec.mcg.androidu2f.token.impl.CryptoECDSA;
 import org.esec.mcg.androidu2f.token.impl.KeyHandleGeneratorWithKeyStore;
 import org.esec.mcg.androidu2f.token.impl.SCSecp256r1;
 import org.esec.mcg.androidu2f.token.msg.RegisterRequest;
@@ -46,14 +47,14 @@ public class LocalU2FToken implements U2FToken {
 
     //TODO Implements these interface.
     public LocalU2FToken(Context context) {
-        attestationCertificate = null;
-        certificatePrivateKey = null;
+        attestationCertificate = (X509Certificate)AttestationCertificate.getAttestationCertificate();
+        certificatePrivateKey = AttestationCertificate.getAttestationPrivateKey();
         keyPairGenerator = new SCSecp256r1();
 
         keyHandleGenerator = new KeyHandleGeneratorWithKeyStore();;
         dataStore = null;
         userPresenceVerifier = null;
-        crypto = null;
+        crypto = new CryptoECDSA();
         this.context = context;
     }
 
@@ -74,6 +75,7 @@ public class LocalU2FToken implements U2FToken {
 //        dataStore.storeKeyPair(keyHandle, keyPair);
 
         byte[] keyHandle = keyHandleGenerator.generateKeyHandle(applicationSha256, challengeSha256);
+        LogUtils.d(ByteUtil.ByteArrayToHexString(keyHandle));
 
         byte[] userPublicKey;
         try {
@@ -99,7 +101,11 @@ public class LocalU2FToken implements U2FToken {
         byte[] signedData = RawMessageCodec.encodeRegistrationSignedBytes(applicationSha256, challengeSha256,
                 keyHandle, userPublicKey);
 
+        if (certificatePrivateKey == null) {
+            LogUtils.e("attestation certificate private key is null");
+        }
         byte[] signature = crypto.sign(signedData, certificatePrivateKey);
+        LogUtils.d(ByteUtil.ByteArrayToHexString(signature));
         return new RegisterResponse(userPublicKey, keyHandle, attestationCertificate, signature);
     }
 }

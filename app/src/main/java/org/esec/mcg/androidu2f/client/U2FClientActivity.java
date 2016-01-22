@@ -4,11 +4,12 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Base64;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
-import org.apache.commons.codec.binary.Base64;
 import org.esec.mcg.androidu2f.R;
 import org.esec.mcg.androidu2f.U2FException;
 import org.esec.mcg.androidu2f.client.model.U2FClient;
@@ -18,6 +19,7 @@ import org.esec.mcg.androidu2f.msg.U2FIntentType;
 import org.esec.mcg.androidu2f.token.LocalU2FToken;
 import org.esec.mcg.androidu2f.token.U2FToken;
 import org.esec.mcg.androidu2f.token.msg.RegisterRequest;
+import org.esec.mcg.utils.ByteUtil;
 import org.esec.mcg.utils.logger.LogUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -90,10 +92,16 @@ public class U2FClientActivity extends AppCompatActivity {
             Intent i = new Intent("org.fidoalliance.intent.FIDO_OPERATION");
             byte[] rawRegisterResponse = data.getByteArrayExtra("message");
 
-            Bundle bundleData = new Bundle();
-            String rawRegisterResponseBase64 = Base64.encodeBase64URLSafeString(rawRegisterResponse);
-            String clientDataBase64 = Base64.encodeBase64URLSafeString(u2fClient.getClientData().getBytes());
+            LogUtils.d(ByteUtil.ByteArrayToHexString(rawRegisterResponse));
 
+            Bundle bundleData = new Bundle();
+//            String rawRegisterResponseBase64 = Base64.encodeBase64URLSafeString(rawRegisterResponse);
+//            String clientDataBase64 = Base64.encodeBase64URLSafeString(u2fClient.getClientData().getBytes());
+
+            String rawRegisterResponseBase64 = android.util.Base64.encodeToString(rawRegisterResponse, Base64.URL_SAFE);
+            String clientDataBase64 = android.util.Base64.encodeToString(u2fClient.getClientData().getBytes(), Base64.URL_SAFE);
+            LogUtils.d(clientDataBase64);
+            Log.d("clientData", "" + clientDataBase64);
             JSONObject registerResponse = new JSONObject();
             try {
                 registerResponse.put("registrationData", rawRegisterResponseBase64);

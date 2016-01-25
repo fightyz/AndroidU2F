@@ -101,7 +101,6 @@ public class LoginFragment extends Fragment {
         userText.getText().clear();
         passText.getText().clear();
 
-        LogUtils.d("user/pass: " + username + "/" + password);
         mListener.onLoginEntered(username, password, sign);
     }
 

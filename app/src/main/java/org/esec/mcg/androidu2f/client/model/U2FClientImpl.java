@@ -48,7 +48,7 @@ public class U2FClientImpl extends U2FClient {
 
     @Override
     public RegisterRequest register(String u2fProtocolMessage) throws U2FException {
-        LogUtils.d(u2fProtocolMessage);
+//        LogUtils.d(u2fProtocolMessage);
         try {
             JSONObject reg = new JSONObject(u2fProtocolMessage);
             version = ((JSONObject)reg.getJSONArray("registerRequests").get(0)).getString("version");
@@ -64,7 +64,7 @@ public class U2FClientImpl extends U2FClient {
             verifyAppId(appId);
 
             clientData = ClientDataCodec.encodeClientData(ClientDataCodec.REQUEST_TYPE_REGISTER, serverChallengeBase64, facetID);
-            LogUtils.d(clientData);
+            LogUtils.d("client data: " + clientData);
 
             byte[] appIdSha256 = crypto.computeSha256(appId);
             byte[] clientDataSha256 = crypto.computeSha256(clientData);

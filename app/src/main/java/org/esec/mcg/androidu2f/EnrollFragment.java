@@ -107,7 +107,7 @@ public class EnrollFragment extends Fragment {
                 SharedPreferences pf = PreferenceManager.getDefaultSharedPreferences(getActivity());
                 String endPoint = pf.getString("server_endpoint", "http://192.168.1.101:8000");
                 String enrollPoint = pf.getString("enroll", "/enroll");
-                LogUtils.d("end point: " + endPoint);
+//                LogUtils.d("end point: " + endPoint);
 
                 final String response;
                 try {

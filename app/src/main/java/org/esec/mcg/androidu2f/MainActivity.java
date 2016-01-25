@@ -15,6 +15,7 @@ import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import org.esec.mcg.androidu2f.client.curl.Curl;
 import org.esec.mcg.utils.HTTP;
 import org.esec.mcg.utils.logger.LogUtils;
 
@@ -90,6 +91,10 @@ public class MainActivity extends AppCompatActivity
             SharedPreferences pf = PreferenceManager.getDefaultSharedPreferences(this);
             String endPoint = pf.getString("server_endpoint", null);
             String bindPoint = pf.getString("bind", null);
+
+            String headerStr = "Content-Type:Application/json Accept:Application/json";
+            Curl.postInSeperateThread(endPoint + bindPoint, headerStr, registerResponse);
+
 
 //            HTTP.post(new URL(endPoint + bindPoint), )
         }

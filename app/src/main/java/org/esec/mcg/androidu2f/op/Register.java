@@ -21,7 +21,7 @@ public class Register {
         String msg = "{\"u2fProtocolMessage\":\"";
         try {
             String serverResponse = getRegRequest(url);
-            LogUtils.d(serverResponse);
+            LogUtils.d("server register request: " + serverResponse);
             JSONObject reg = new JSONObject(serverResponse);
             String appId = ((JSONObject)reg.getJSONArray("registerRequests").get(0)).getString("appId");
             return reg.toString();

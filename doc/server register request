@@ -1,0 +1,27 @@
+server register request
+{"signrequest": [], "registerRequests": [{"challenge": "mLkHCmQZGbZEXefhWByeKo5zTFldYLIZFRGeHdvTFBc=", "version": "U2F_V2", "appId": "http://localhost:8000"}]}
+
+client data
+{"typ":"navigator.id.finishEnrollment","challenge":"mLkHCmQZGbZEXefhWByeKo5zTFldYLIZFRGeHdvTFBc=","origin":"android:apk-key-hash:TbTBlGhHczYdk9vV3fmOkFOHUhY=\n"}
+
+application parameter(appID's hash)
+01 21 78 3a cd 70 27 2b 07 ea e5 af 25 5f 4f bf 23 62 a6 1e 32 e0 ef 38 b4 60 87 8f 51 59 10 4f
+
+challenge parameter(client data's hash)
+4f 2f 88 df b2 7d 41 27 c1 a1 c6 0f af 36 3b e3 9a 99 4e 6e 5c de d8 12 9b 43 3d 61 75 bd ba fd
+
+user public key
+04 f5 4f 62 b9 ab e9 69 35 93 58 d2 12 44 49 75 37 aa d9 2c 5d 24 83 6d b7 3d 37 8e 1e ae 2f 2e 06 22 1e a3 b0 af e1 08 7a e7 f3 aa 28 d1 39 4c 20 30 36 7a 2d b9 67 21 4b 1f f9 37 09 bd b2 61 12
+
+key handle
+01 21 78 3a cd 70 27 2b 07 ea e5 af 25 5f 4f bf 23 62 a6 1e 32 e0 ef 38 b4 60 87 8f 51 59 10 4f 4f 2f 88 df b2 7d 41 27 c1 a1 c6 0f af 36 3b e3 9a 99 4e 6e 5c de d8 12 9b 43 3d 61 75 bd ba fd
+
+attestation certificate
+30 82 01 12 30 81 b9 02 04 07 5b cd 15 30 0a 06 08 2a 86 48 ce 3d 04 03 02 30 13 31 11 30 0f 06 03 55 04 03 13 08 55 32 46 54 6f 6b 65 6e 30 20 17 0d 31 35 30 32 30 31 31 31 30 30 30 30 5a 18 0f 32 30 35 30 30 32 30 31 31 31 30 30 30 30 5a 30 13 31 11 30 0f 06 03 55 04 03 13 08 55 32 46 54 6f 6b 65 6e 30 59 30 13 06 07 2a 86 48 ce 3d 02 01 06 08 2a 86 48 ce 3d 03 01 07 03 42 00 04 6d 35 e3 26 e1 48 85 9e 26 63 e0 77 33 1a 6b 4c 99 86 71 2f 4e 7e 35 da be cc 34 ff 9b b6 03 b5 4c ec 8c 32 2d d3 6a 11 2c 41 44 0d b8 00 74 bd e2 a1 0f 99 74 6d bb ad 77 f2 cd 29 49 d5 b7 6e 30 0a 06 08 2a 86 48 ce 3d 04 03 02 03 48 00 30 45 02 20 77 33 18 8a cf 10 f2 bf d9 b8 85 a2 62 e5 81 fc dc 08 92 6c 2a 1f 75 55 4c 48 dc 9b 83 ab 18 03 02 21 00 f2 a8 a8 61 b4 e1 95 41 44 31 4b 30 3d 7a 40 5c c7 ce 6f 84 7b c8 3b e4 2d d5 5e 5f bd f0 c0 bd
+
+signature
+30 44 02 20 1c 64 56 90 1d 33 ff f9 7c 3d 6d fe 10 df 5d 9a 71 ba a9 30 bc cd 0e ae 45 fd aa 26 6a 84 2f 94 02 20 67 84 73 9d f2 2c a4 95 22 9f 80 f4 1b f7 7c 44 ea 39 6d 77 cc 3d 0b 59 8d 55 1a f3 59 84 77 d3
+
+register response
+{"registrationData":"BQT1T2K5q-lpNZNY0hJESXU3qtksXSSDbbc9N44eri8uBiIeo7Cv4Qh65_OqKNE5TCAwNnotuWch\nSx_5Nwm9smESQAEheDrNcCcrB-rlryVfT78jYqYeMuDvOLRgh49RWRBPTy-I37J9QSfBocYPrzY7\n45qZTm5c3tgSm0M9YXW9uv0wggESMIG5AgQHW80VMAoGCCqGSM49BAMCMBMxETAPBgNVBAMTCFUy\nRlRva2VuMCAXDTE1MDIwMTExMDAwMFoYDzIwNTAwMjAxMTEwMDAwWjATMREwDwYDVQQDEwhVMkZU\nb2tlbjBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IABG014ybhSIWeJmPgdzMaa0yZhnEvTn412r7M\nNP-btgO1TOyMMi3TahEsQUQNuAB0veKhD5l0bbutd_LNKUnVt24wCgYIKoZIzj0EAwIDSAAwRQIg\ndzMYis8Q8r_ZuIWiYuWB_NwIkmwqH3VVTEjcm4OrGAMCIQDyqKhhtOGVQUQxSzA9ekBcx85vhHvI\nO-Qt1V5fvfDAvTBEAiAcZFaQHTP_-Xw9bf4Q312acbqpMLzNDq5F_aomaoQvlAIgZ4RznfIspJUi\nn4D0G_d8ROo5bXfMPQtZjVUa81mEd9M=\n","clientData":"eyJ0eXAiOiJuYXZpZ2F0b3IuaWQuZmluaXNoRW5yb2xsbWVudCIsImNoYWxsZW5nZSI6Im1Ma0hD\nbVFaR2JaRVhlZmhXQnllS281elRGbGRZTElaRlJHZUhkdlRGQmM9Iiwib3JpZ2luIjoiYW5kcm9p\nZDphcGsta2V5LWhhc2g6VGJUQmxHaEhjellkazl2VjNmbU9rRk9IVWhZPVxuIn0=\n"}
+

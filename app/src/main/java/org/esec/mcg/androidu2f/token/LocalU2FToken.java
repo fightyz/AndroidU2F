@@ -67,6 +67,7 @@ public class LocalU2FToken implements U2FToken {
 //        if ((userPresent & UserPresenceVerifier.USER_PRESENT_FLAG) == 0x00) {
 //            throw new U2FException("Cannot verify user presence.");
 //        }
+//        startActivity()
 
 //        KeyPair keyPair = keyPairGenerator.generateKeyPair(applicationSha256, challengeSha256);
 //        byte[] keyHandle = keyHandleGenerator.generateKeyHandle(applicationSha256, keyPair);

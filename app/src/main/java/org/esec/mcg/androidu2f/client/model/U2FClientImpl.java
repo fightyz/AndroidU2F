@@ -66,6 +66,7 @@ public class U2FClientImpl extends U2FClient {
             clientData = ClientDataCodec.encodeClientData(ClientDataCodec.REQUEST_TYPE_REGISTER, serverChallengeBase64, facetID);
             LogUtils.d("client data: " + clientData);
 
+            //TODO Actually, application parameter should be "SHA-256 hash of the application identity of the application requesting the registration"
             byte[] appIdSha256 = crypto.computeSha256(appId);
             byte[] clientDataSha256 = crypto.computeSha256(clientData);
 
@@ -78,6 +79,7 @@ public class U2FClientImpl extends U2FClient {
         }
     }
 
+    //TODO Implement this function
     /**
      * @param appId
      * @return

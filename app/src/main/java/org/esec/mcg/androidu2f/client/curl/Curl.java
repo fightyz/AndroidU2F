@@ -1,6 +1,7 @@
 package org.esec.mcg.androidu2f.client.curl;
 
 import android.os.AsyncTask;
+import android.preference.PreferenceActivity;
 
 import org.apache.http.Header;
 import org.apache.http.HttpResponse;
@@ -27,6 +28,11 @@ import javax.net.ssl.HostnameVerifier;
  */
 public class Curl {
 
+    public static void getInSeperateThread(String url) {
+        GetAsyncTask asyncTask = new GetAsyncTask();
+        asyncTask.execute(url);
+    }
+
     public static void postInSeperateThread(String url, String header, String data) {
         PostAsyncTask asyncTask = new PostAsyncTask();
         asyncTask.execute(url, header, data);
@@ -48,6 +54,38 @@ public class Curl {
             result = "Error";
         }
         return result;
+    }
+
+    public static String get(String url) {
+        return get(url, null);
+    }
+
+    public static String get(String url, String[] header) {
+        String ret = "";
+        try {
+            HttpClient httpClient = getClient(url);
+            HttpGet request = new HttpGet(url);
+
+            try {
+                if (header != null) {
+                    for (String h : header) {
+                        String[] split = h.split(":");
+                        request.addHeader(split[0], split[1]);
+                    }
+                }
+                HttpResponse response = httpClient.execute(request);
+                ret = Curl.toStr(response);
+                Header[] headers = response.getAllHeaders();
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                ret = "{'error_code':'connect_fail','url':'" + url + "'}";
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            ret = "{'error_code':'connect_fail','e':'" + e + "'}";
+        }
+
+        return ret;
     }
 
     public static String post(String url, String header, String data) {
@@ -101,6 +139,26 @@ public class Curl {
         SingleClientConnManager mgr = new SingleClientConnManager(client.getParams(), registry);
         DefaultHttpClient httpClient = new DefaultHttpClient(mgr, client.getParams());
         return httpClient;
+    }
+}
+
+class GetAsyncTask extends AsyncTask<String, Integer, String> {
+
+    private String result = null;
+    private boolean done = false;
+    public boolean isDone() { return done; }
+    public String getResult() { return result; }
+
+    @Override
+    protected String doInBackground(String... params) {
+        result = Curl.get(params[0]);
+        done = true;
+        return result;
+    }
+
+    protected void onPostExecute(String result) {
+        this.result = result;
+        done = true;
     }
 }
 

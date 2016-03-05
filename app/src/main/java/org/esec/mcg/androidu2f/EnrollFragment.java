@@ -11,12 +11,9 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import org.esec.mcg.androidu2f.client.op.U2FServerRequest;
 import org.esec.mcg.androidu2f.msg.U2FIntentType;
-import org.esec.mcg.androidu2f.op.Register;
-import org.esec.mcg.utils.HTTP;
-import org.esec.mcg.utils.logger.LogUtils;
 
-import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashMap;
@@ -45,7 +42,10 @@ public class EnrollFragment extends Fragment {
     private String registerRequest = "{\"authenticateRequests\": [], \n" +
             "\"registerRequests\": [{\"challenge\": \"9s80ruHc6q9shJM5WLfOmz-ejb_Rm8dmWCnOvgZ2ovw\", \"version\": \"U2F_V2\", \"appId\": \"http://localhost:8081\"}]}";
 
-    private Register register = new Register();
+    /**
+     * Client's clientRegister operation.
+     */
+    private U2FServerRequest serverRequestMessage = new U2FServerRequest();
 
     private OnFragmentInteractionListener mListener;
 
@@ -98,20 +98,20 @@ public class EnrollFragment extends Fragment {
 //                } catch (IOException e) {
 //
 //                }
-                // non-normative
+                // non-normative, defined according to UAF protocol.
                 Intent i = new Intent("org.fidoalliance.intent.FIDO_OPERATION");
                 i.addCategory("android.intent.category.DEFAULT");
                 i.setType("application/fido.u2f_client+json");
 //                i.setCl
 
+                // Get the U2F Server's enroll url
                 SharedPreferences pf = PreferenceManager.getDefaultSharedPreferences(getActivity());
                 String endPoint = pf.getString("server_endpoint", "http://192.168.1.101:8000");
                 String enrollPoint = pf.getString("enroll", "/enroll");
-//                LogUtils.d("end point: " + endPoint);
 
                 final String response;
                 try {
-                    response = register.getU2fMsgRegRequest(new URL(endPoint + enrollPoint));
+                    response = getServerRequest(new URL(endPoint + enrollPoint));
                     Bundle data = new Bundle();
                     data.putString("message", response);
                     data.putString("U2FIntentType", U2FIntentType.U2F_OPERATION_REG.name());
@@ -131,6 +131,14 @@ public class EnrollFragment extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         return inflater.inflate(R.layout.fragment_enroll, container, false);
+    }
+
+    /**
+     * Get U2F server request.
+     * @return U2F server request.
+     */
+    private String getServerRequest(URL url) {
+        return "{\"type\": \"u2f_register_request\", \"signRequest\": [], \"registerRequests\": [{\"challenge\": \"mLkHCmQZGbZEXefhWByeKo5zTFldYLIZFRGeHdvTFBc=\", \"version\": \"U2F_V2\", \"appId\": \"http://localhost:8000\"}]}";
     }
 
     // TODO: Rename method, update argument and hook method into UI event

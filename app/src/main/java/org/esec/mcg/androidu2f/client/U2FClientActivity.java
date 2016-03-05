@@ -9,6 +9,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import org.esec.mcg.androidu2f.R;
 import org.esec.mcg.androidu2f.U2FException;
@@ -65,6 +66,7 @@ public class U2FClientActivity extends AppCompatActivity {
             e.printStackTrace();
         }
 
+        // Register
         if (u2fIntentType.equals(U2FIntentType.U2F_OPERATION_REG.name())) {
             try {
                 RegisterRequest registerRequest;
@@ -73,12 +75,13 @@ public class U2FClientActivity extends AppCompatActivity {
                 i.addCategory("android.intent.category.DEFAULT");
                 i.setType("application/fido.u2f_token+json");
                 Bundle data = new Bundle();
-//              data.put
                 data.putByteArray("message", RawMessageCodec.encodeRegisterRequest(registerRequest));
                 data.putString("U2FIntentType", U2FIntentType.U2F_OPERATION_REG.name());
                 i.putExtras(data);
                 startActivityForResult(i, REG_ACTIVITY_RES_1); // Start token activity.
             } catch (U2FException e) {
+                // TODO Extract the specific reason of e?
+                Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show();
                 e.printStackTrace();
             }
         }

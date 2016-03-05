@@ -101,6 +101,13 @@ public class MainActivity extends AppCompatActivity
         super.onActivityResult(requestCode, resultCode, data);
     }
 
+    /**
+     * Callback of the LoginFragment.
+     * After user inputs username and password, do register or authenticate the android token
+     * @param username
+     * @param password
+     * @param sign If false, then register; If true, then authenticate.
+     */
     @Override
     public void onLoginEntered(String username, String password, boolean sign) {
         FragmentTransaction fragmentTransaction = getFragmentManager().beginTransaction();

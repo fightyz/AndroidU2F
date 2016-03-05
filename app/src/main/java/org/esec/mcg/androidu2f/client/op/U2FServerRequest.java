@@ -1,11 +1,9 @@
-package org.esec.mcg.androidu2f.op;
+package org.esec.mcg.androidu2f.client.op;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
-import org.esec.mcg.utils.HTTP;
 import org.esec.mcg.utils.logger.LogUtils;
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -13,10 +11,19 @@ import java.net.URL;
 
 /**
  * Created by yz on 2016/1/14.
+ * Client's register operation.
  */
-public class Register {
+public class U2FServerRequest {
     private Gson gson = new GsonBuilder().disableHtmlEscaping().create();
 
+    private String type;
+
+
+    /**
+     * Get the
+     * @param url
+     * @return
+     */
     public String getU2fMsgRegRequest(URL url) {
         String msg = "{\"u2fProtocolMessage\":\"";
         try {
@@ -29,6 +36,15 @@ public class Register {
             e.printStackTrace();
         }
         return msg;
+    }
+
+    /**
+     * Get request from U2F server.
+     * @param url
+     * @return
+     */
+    public String getRequest(URL url) {
+        return "{\"type\": \"u2f_register_request\", \"signRequest\": [], \"registerRequests\": [{\"challenge\": \"mLkHCmQZGbZEXefhWByeKo5zTFldYLIZFRGeHdvTFBc=\", \"version\": \"U2F_V2\", \"appId\": \"http://localhost:8000\"}]}";
     }
 
     private String getRegRequest(URL url) {

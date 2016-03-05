@@ -33,6 +33,9 @@ public class U2FClientImpl extends U2FClient {
     private String facetID;
 //    private String clientData;
 
+    /**
+     * Caller of the U2FClientActivity
+     */
     private PackageInfo packageInfo;
     private Crypto crypto;
 
@@ -46,6 +49,12 @@ public class U2FClientImpl extends U2FClient {
         crypto = new CryptoImpl();
     }
 
+    /**
+     * Decode U2F request message and generate raw message.
+     * @param u2fProtocolMessage
+     * @return
+     * @throws U2FException
+     */
     @Override
     public RegisterRequest register(String u2fProtocolMessage) throws U2FException {
 //        LogUtils.d(u2fProtocolMessage);
@@ -63,7 +72,7 @@ public class U2FClientImpl extends U2FClient {
             facetID = getFacetID(packageInfo);
             verifyAppId(appId);
 
-            clientData = ClientDataCodec.encodeClientData(ClientDataCodec.REQUEST_TYPE_REGISTER, serverChallengeBase64, facetID);
+            clientData = ClientDataCodec.encodeClientData(ClientDataCodec.REQUEST_TYPE_REGISTER, serverChallengeBase64, facetID, null);
             LogUtils.d("client data: " + clientData);
 
             //TODO Actually, application parameter should be "SHA-256 hash of the application identity of the application requesting the registration"
@@ -88,7 +97,7 @@ public class U2FClientImpl extends U2FClient {
         return true;
     }
 
-    private String getFacetID(PackageInfo paramPackageInfo) {
+    private String getFacetID(PackageInfo paramPackageInfo) throws U2FException {
         try {
             ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(paramPackageInfo.signatures[0].toByteArray());
             Certificate certificate = CertificateFactory.getInstance("X509").generateCertificate(byteArrayInputStream);
@@ -97,9 +106,9 @@ public class U2FClientImpl extends U2FClient {
             LogUtils.d("android:apk-key-hash:" + Base64.encodeToString(messageDigest.digest(certificate.getEncoded()), Base64.DEFAULT));
             return facetID;
         } catch (Exception e) {
-            e.printStackTrace();
+            throw new U2FException("Can't get caller's facetID.", e);
         }
-        return null;
+//        return null;
     }
 
     public String getClientData() {

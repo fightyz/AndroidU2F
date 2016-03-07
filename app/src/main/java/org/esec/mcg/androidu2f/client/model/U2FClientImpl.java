@@ -5,7 +5,7 @@ import android.util.Base64;
 
 import org.esec.mcg.androidu2f.U2FException;
 import org.esec.mcg.androidu2f.codec.ClientDataCodec;
-import org.esec.mcg.androidu2f.token.msg.RegisterRequest;
+import org.esec.mcg.androidu2f.token.msg.RegistrationRequest;
 import org.esec.mcg.utils.ByteUtil;
 import org.esec.mcg.utils.logger.LogUtils;
 import org.json.JSONException;
@@ -54,7 +54,7 @@ public class U2FClientImpl extends U2FClient {
      * @throws U2FException
      */
     @Override
-    public RegisterRequest register(String u2fProtocolMessage) throws U2FException {
+    public RegistrationRequest register(String u2fProtocolMessage) throws U2FException {
 //        LogUtils.d(u2fProtocolMessage);
         try {
             JSONObject reg = new JSONObject(u2fProtocolMessage);
@@ -80,7 +80,7 @@ public class U2FClientImpl extends U2FClient {
             LogUtils.d(ByteUtil.ByteArrayToHexString(appIdSha256));
             LogUtils.d(ByteUtil.ByteArrayToHexString(clientDataSha256));
 
-            return new RegisterRequest(appIdSha256, clientDataSha256);
+            return new RegistrationRequest(appIdSha256, clientDataSha256);
         } catch (JSONException e) {
             throw new U2FException("Rgister request JSON format is wrong.", e);
         }

@@ -7,8 +7,8 @@ import org.esec.mcg.androidu2f.codec.RawMessageCodec;
 import org.esec.mcg.androidu2f.token.impl.CryptoECDSA;
 import org.esec.mcg.androidu2f.token.impl.KeyHandleGeneratorWithKeyStore;
 import org.esec.mcg.androidu2f.token.impl.SCSecp256r1;
-import org.esec.mcg.androidu2f.token.msg.RegisterRequest;
-import org.esec.mcg.androidu2f.token.msg.RegisterResponse;
+import org.esec.mcg.androidu2f.token.msg.RegistrationRequest;
+import org.esec.mcg.androidu2f.token.msg.RegistrationResponse;
 import org.esec.mcg.utils.ByteUtil;
 import org.esec.mcg.utils.logger.LogUtils;
 import org.spongycastle.asn1.ASN1Sequence;
@@ -51,9 +51,9 @@ public class LocalU2FToken implements U2FToken {
     }
 
     @Override
-    public RegisterResponse register(RegisterRequest registerRequest) throws U2FException{
-        byte[] applicationSha256 = registerRequest.getApplicationSha256();
-        byte[] challengeSha256 = registerRequest.getChallengeSha256();
+    public RegistrationResponse register(RegistrationRequest registrationRequest) throws U2FException{
+        byte[] applicationSha256 = registrationRequest.getApplicationSha256();
+        byte[] challengeSha256 = registrationRequest.getChallengeSha256();
 
         byte[] keyHandle = keyHandleGenerator.generateKeyHandle(applicationSha256, challengeSha256);
         LogUtils.d(ByteUtil.ByteArrayToHexString(keyHandle));
@@ -87,6 +87,6 @@ public class LocalU2FToken implements U2FToken {
         }
         byte[] signature = crypto.sign(signedData, certificatePrivateKey);
         LogUtils.d(ByteUtil.ByteArrayToHexString(signature));
-        return new RegisterResponse(userPublicKey, keyHandle, attestationCertificate, signature);
+        return new RegistrationResponse(userPublicKey, keyHandle, attestationCertificate, signature);
     }
 }

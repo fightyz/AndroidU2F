@@ -1,18 +1,16 @@
 package org.esec.mcg.androidu2f.client.msg;
 
-import org.esec.mcg.androidu2f.token.msg.RegisterResponse;
-
 /**
  * Created by yz on 2016/1/21.
  */
-public class RegistrationResponse {
+public class RegisterResponse {
     /** websafe-base64(raw registration response message) */
     private final String registrationData;
 
     /** websafe-base64(UTF8(stringified(client data))) */
     private final String clientData;
 
-    public RegistrationResponse(String registrationData, String clientData) {
+    public RegisterResponse(String registrationData, String clientData) {
         this.registrationData = registrationData;
         this.clientData = clientData;
     }
@@ -42,7 +40,7 @@ public class RegistrationResponse {
             return false;
         if (getClass() != o.getClass())
             return false;
-        RegistrationResponse other = (RegistrationResponse) o;
+        RegisterResponse other = (RegisterResponse) o;
         if (registrationData == null) {
             if (other.registrationData != null)
                 return false;

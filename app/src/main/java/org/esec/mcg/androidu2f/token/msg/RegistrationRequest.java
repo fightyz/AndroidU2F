@@ -5,11 +5,11 @@ import java.util.Arrays;
 /**
  * Created by yz on 2016/1/14.
  */
-public class RegisterRequest {
+public class RegistrationRequest {
     private final byte[] challengeSha256;
     private final byte[] applicationSha256;
 
-    public RegisterRequest(byte[] applicationSha256, byte[] challengeSha256) {
+    public RegistrationRequest(byte[] applicationSha256, byte[] challengeSha256) {
         this.challengeSha256 = challengeSha256;
         this.applicationSha256 = applicationSha256;
     }
@@ -50,7 +50,7 @@ public class RegisterRequest {
             return false;
         if (getClass() != obj.getClass())
             return false;
-        RegisterRequest other = (RegisterRequest) obj;
+        RegistrationRequest other = (RegistrationRequest) obj;
         if (!Arrays.equals(applicationSha256, other.applicationSha256))
             return false;
         if (!Arrays.equals(challengeSha256, other.challengeSha256))

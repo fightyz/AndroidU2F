@@ -6,14 +6,14 @@ import java.util.Arrays;
 /**
  * Created by yz on 2016/1/14.
  */
-public class RegisterResponse {
+public class RegistrationResponse {
     private final byte[] userPublicKey;
     private final byte[] keyHandle;
     private final X509Certificate attestationCertificate;
     private final byte[] signature;
 
-    public RegisterResponse(byte[] userPublicKey, byte[] keyHandle,
-                            X509Certificate attestationCertificate, byte[] signature) {
+    public RegistrationResponse(byte[] userPublicKey, byte[] keyHandle,
+                                X509Certificate attestationCertificate, byte[] signature) {
         super();
         this.userPublicKey = userPublicKey;
         this.keyHandle = keyHandle;
@@ -69,7 +69,7 @@ public class RegisterResponse {
             return false;
         if (getClass() != obj.getClass())
             return false;
-        RegisterResponse other = (RegisterResponse) obj;
+        RegistrationResponse other = (RegistrationResponse) obj;
         if (!attestationCertificate.equals(other.attestationCertificate))
             return false;
         if (!Arrays.equals(keyHandle, other.keyHandle))

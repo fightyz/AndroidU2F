@@ -1,8 +1,8 @@
 package org.esec.mcg.androidu2f.codec;
 
 import org.esec.mcg.androidu2f.U2FException;
-import org.esec.mcg.androidu2f.token.msg.RegisterRequest;
-import org.esec.mcg.androidu2f.token.msg.RegisterResponse;
+import org.esec.mcg.androidu2f.token.msg.RegistrationRequest;
+import org.esec.mcg.androidu2f.token.msg.RegistrationResponse;
 
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
@@ -19,9 +19,9 @@ public class RawMessageCodec {
     public static final byte REGISTRATION_RESERVED_BYTE_VALUE = 0x05;
     public static final byte REGISTRATION_SIGNED_RESERVED_BYTE_VALUE = 0x00;
 
-    public static byte[] encodeRegisterRequest(RegisterRequest registerRequest) {
-        byte[] appIdSha256 = registerRequest.getApplicationSha256();
-        byte[] challengeSha256 = registerRequest.getChallengeSha256();
+    public static byte[] encodeRegisterRequest(RegistrationRequest registrationRequest) {
+        byte[] appIdSha256 = registrationRequest.getApplicationSha256();
+        byte[] challengeSha256 = registrationRequest.getChallengeSha256();
         byte[] result = new byte[appIdSha256.length + challengeSha256.length];
 
         ByteBuffer.wrap(result)
@@ -31,7 +31,7 @@ public class RawMessageCodec {
         return result;
     }
 
-    public static RegisterRequest decodeRegisterRequest(byte[] data) throws U2FException {
+    public static RegistrationRequest decodeRegisterRequest(byte[] data) throws U2FException {
         DataInputStream inputStream = new DataInputStream(new ByteArrayInputStream(data));
         byte[] appIdSha256 = new byte[32];
         byte[] challengeSha256 = new byte[32];
@@ -43,7 +43,7 @@ public class RawMessageCodec {
                 throw new U2FException("Message ends with unexpected data");
             }
 
-            return new RegisterRequest(appIdSha256, challengeSha256);
+            return new RegistrationRequest(appIdSha256, challengeSha256);
         } catch (IOException e) {
             throw new U2FException("Error when parsing raw RegistrationResponse", e);
         }
@@ -64,11 +64,11 @@ public class RawMessageCodec {
         return signedData;
     }
 
-    public static byte[] encodeRegisterResponse(RegisterResponse registerResponse) throws U2FException {
-        byte[] userPublicKey = registerResponse.getUserPublicKey();
-        byte[] keyHandle = registerResponse.getKeyHandle();
-        X509Certificate attestationCertificate = registerResponse.getAttestationCertificate();
-        byte[] signature = registerResponse.getSignature();
+    public static byte[] encodeRegisterResponse(RegistrationResponse registrationResponse) throws U2FException {
+        byte[] userPublicKey = registrationResponse.getUserPublicKey();
+        byte[] keyHandle = registrationResponse.getKeyHandle();
+        X509Certificate attestationCertificate = registrationResponse.getAttestationCertificate();
+        byte[] signature = registrationResponse.getSignature();
 
         byte[] attestationCertificateBytes;
         try {

@@ -10,8 +10,8 @@ import org.esec.mcg.androidu2f.R;
 import org.esec.mcg.androidu2f.U2FException;
 import org.esec.mcg.androidu2f.codec.RawMessageCodec;
 import org.esec.mcg.androidu2f.msg.U2FIntentType;
-import org.esec.mcg.androidu2f.token.msg.RegisterRequest;
-import org.esec.mcg.androidu2f.token.msg.RegisterResponse;
+import org.esec.mcg.androidu2f.token.msg.RegistrationRequest;
+import org.esec.mcg.androidu2f.token.msg.RegistrationResponse;
 import org.esec.mcg.utils.ByteUtil;
 
 public class U2FTokenActivity extends AppCompatActivity {
@@ -52,17 +52,17 @@ public class U2FTokenActivity extends AppCompatActivity {
     public void localProceed(View view) {
         u2fToken = new LocalU2FToken(this);
         if (u2fIntentType.equals(U2FIntentType.U2F_OPERATION_REG.name())) {
-            RegisterRequest registerRequest;
-            RegisterResponse registerResponse;
+            RegistrationRequest registrationRequest;
+            RegistrationResponse registrationResponse;
             try {
-                registerRequest = RawMessageCodec.decodeRegisterRequest(message);
-                registerResponse = u2fToken.register(registerRequest);
+                registrationRequest = RawMessageCodec.decodeRegisterRequest(message);
+                registrationResponse = u2fToken.register(registrationRequest);
                 Intent i = new Intent("org.fidoalliance.intent.FIDO_OPERATION");
                 Bundle data = new Bundle();
-                data.putByteArray("message", RawMessageCodec.encodeRegisterResponse(registerResponse));
+                data.putByteArray("message", RawMessageCodec.encodeRegisterResponse(registrationResponse));
                 data.putString("U2FIntentType", U2FIntentType.U2F_OPERATION_REG_RESULT.name());
                 i.putExtras(data);
-//                LogUtils.d(ByteUtil.ByteArrayToHexString(RawMessageCodec.encodeRegisterResponse(registerResponse)));
+//                LogUtils.d(ByteUtil.ByteArrayToHexString(RawMessageCodec.encodeRegisterResponse(registrationResponse)));
                 setResult(RESULT_OK, i);
                 finish();
             } catch (U2FException e) {

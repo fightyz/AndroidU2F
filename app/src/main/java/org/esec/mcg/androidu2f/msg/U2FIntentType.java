@@ -6,5 +6,6 @@ package org.esec.mcg.androidu2f.msg;
 public enum U2FIntentType {
     U2F_OPERATION_REG,
     U2F_OPERATION_REG_RESULT,
-    u2f_OPERATION_AUTH
+    U2F_OPERATION_SIGN,
+    U2F_OPERATION_SIGN_RESULT
 }

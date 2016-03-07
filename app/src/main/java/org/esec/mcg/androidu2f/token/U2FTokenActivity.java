@@ -3,7 +3,6 @@ package org.esec.mcg.androidu2f.token;
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
 
@@ -14,7 +13,6 @@ import org.esec.mcg.androidu2f.msg.U2FIntentType;
 import org.esec.mcg.androidu2f.token.msg.RegisterRequest;
 import org.esec.mcg.androidu2f.token.msg.RegisterResponse;
 import org.esec.mcg.utils.ByteUtil;
-import org.esec.mcg.utils.logger.LogUtils;
 
 public class U2FTokenActivity extends AppCompatActivity {
 

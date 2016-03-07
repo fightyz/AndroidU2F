@@ -4,9 +4,7 @@ import android.content.pm.PackageInfo;
 import android.util.Base64;
 
 import org.esec.mcg.androidu2f.U2FException;
-import org.esec.mcg.androidu2f.client.U2FClientActivity;
 import org.esec.mcg.androidu2f.codec.ClientDataCodec;
-import org.esec.mcg.androidu2f.token.U2FToken;
 import org.esec.mcg.androidu2f.token.msg.RegisterRequest;
 import org.esec.mcg.utils.ByteUtil;
 import org.esec.mcg.utils.logger.LogUtils;

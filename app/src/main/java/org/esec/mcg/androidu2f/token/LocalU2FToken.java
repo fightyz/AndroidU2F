@@ -1,7 +1,6 @@
 package org.esec.mcg.androidu2f.token;
 
 import android.content.Context;
-import android.util.Log;
 
 import org.esec.mcg.androidu2f.U2FException;
 import org.esec.mcg.androidu2f.codec.RawMessageCodec;
@@ -12,14 +11,10 @@ import org.esec.mcg.androidu2f.token.msg.RegisterRequest;
 import org.esec.mcg.androidu2f.token.msg.RegisterResponse;
 import org.esec.mcg.utils.ByteUtil;
 import org.esec.mcg.utils.logger.LogUtils;
-import org.spongycastle.asn1.ASN1Object;
 import org.spongycastle.asn1.ASN1Sequence;
 import org.spongycastle.asn1.x509.SubjectPublicKeyInfo;
 
 import java.io.IOException;
-import java.security.GeneralSecurityException;
-import java.security.KeyFactory;
-import java.security.KeyPair;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
@@ -27,8 +22,6 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
-import java.security.spec.InvalidKeySpecException;
-import java.security.spec.X509EncodedKeySpec;
 
 /**
  * Created by yz on 2016/1/14.
@@ -45,13 +38,12 @@ public class LocalU2FToken implements U2FToken {
 
     private Context context;
 
-    //TODO Implements these interface.
     public LocalU2FToken(Context context) {
         attestationCertificate = (X509Certificate)AttestationCertificate.getAttestationCertificate();
         certificatePrivateKey = AttestationCertificate.getAttestationPrivateKey();
         keyPairGenerator = new SCSecp256r1();
 
-        keyHandleGenerator = new KeyHandleGeneratorWithKeyStore();;
+        keyHandleGenerator = new KeyHandleGeneratorWithKeyStore();
         dataStore = null;
         userPresenceVerifier = null;
         crypto = new CryptoECDSA();
@@ -62,18 +54,6 @@ public class LocalU2FToken implements U2FToken {
     public RegisterResponse register(RegisterRequest registerRequest) throws U2FException{
         byte[] applicationSha256 = registerRequest.getApplicationSha256();
         byte[] challengeSha256 = registerRequest.getChallengeSha256();
-
-//        byte userPresent = userPresenceVerifier.verifyUserPresence();
-//        if ((userPresent & UserPresenceVerifier.USER_PRESENT_FLAG) == 0x00) {
-//            throw new U2FException("Cannot verify user presence.");
-//        }
-//        startActivity()
-
-//        KeyPair keyPair = keyPairGenerator.generateKeyPair(applicationSha256, challengeSha256);
-//        byte[] keyHandle = keyHandleGenerator.generateKeyHandle(applicationSha256, keyPair);
-//        LogUtils.d(keyHandle);
-
-//        dataStore.storeKeyPair(keyHandle, keyPair);
 
         byte[] keyHandle = keyHandleGenerator.generateKeyHandle(applicationSha256, challengeSha256);
         LogUtils.d(ByteUtil.ByteArrayToHexString(keyHandle));

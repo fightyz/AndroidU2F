@@ -7,17 +7,13 @@ import android.os.Bundle;
 import android.util.Base64;
 import android.util.Log;
 import android.view.View;
-import android.widget.Button;
-import android.widget.TextView;
 import android.widget.Toast;
 
-import org.esec.mcg.androidu2f.R;
 import org.esec.mcg.androidu2f.U2FException;
 import org.esec.mcg.androidu2f.client.model.U2FClient;
 import org.esec.mcg.androidu2f.client.model.U2FClientImpl;
 import org.esec.mcg.androidu2f.codec.RawMessageCodec;
 import org.esec.mcg.androidu2f.msg.U2FIntentType;
-import org.esec.mcg.androidu2f.token.LocalU2FToken;
 import org.esec.mcg.androidu2f.token.U2FToken;
 import org.esec.mcg.androidu2f.token.msg.RegisterRequest;
 import org.esec.mcg.utils.ByteUtil;
@@ -28,11 +24,7 @@ import org.json.JSONObject;
 public class U2FClientActivity extends AppCompatActivity {
 
     private static final int REG_ACTIVITY_RES_1 = 1;
-
-    private TextView operationTextView;
-    private TextView operationMessageTextView;
-    private Button swipeCardButton;
-    private Button localTokenButton;
+    private static final int REG_ACTIVITY_SIGN_2 = 2;
 
     private String u2fIntentType;
     private String message;
@@ -43,11 +35,6 @@ public class U2FClientActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-//        setContentView(R.layout.activity_u2f_token);
-//        operationTextView = (TextView) findViewById(R.id.operation_tv);
-//        operationMessageTextView = (TextView) findViewById(R.id.operation_message_tv);
-//        swipeCardButton = (Button) findViewById(R.id.swipe_card_btn);
-//        localTokenButton = (Button) findViewById(R.id.local_token_btn);
     }
 
     @Override
@@ -56,8 +43,6 @@ public class U2FClientActivity extends AppCompatActivity {
         Bundle extras = getIntent().getExtras();
         u2fIntentType = extras.getString("U2FIntentType");
         message = extras.getString("message");
-//        operationTextView.setText(u2fIntentType);
-//        operationMessageTextView.setText(message);
 
         try {
             // The caller's appid. In this case, the caller is self.
@@ -84,6 +69,13 @@ public class U2FClientActivity extends AppCompatActivity {
                 Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show();
                 e.printStackTrace();
             }
+        } else if (u2fIntentType.equals(U2FIntentType.U2F_OPERATION_SIGN.name())) { // Sign
+            try {
+
+            } catch (U2FException e) {
+                Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show();
+                e.printStackTrace();
+            }
         }
     }
 
@@ -103,7 +95,6 @@ public class U2FClientActivity extends AppCompatActivity {
 
             String rawRegisterResponseBase64 = android.util.Base64.encodeToString(rawRegisterResponse, Base64.URL_SAFE);
             String clientDataBase64 = android.util.Base64.encodeToString(u2fClient.getClientData().getBytes(), Base64.URL_SAFE);
-            LogUtils.d(clientDataBase64);
             Log.d("clientData", "" + clientDataBase64);
             JSONObject registerResponse = new JSONObject();
             try {

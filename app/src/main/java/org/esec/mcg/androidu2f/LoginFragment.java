@@ -74,6 +74,13 @@ public class LoginFragment extends Fragment {
                 submit(false);
             }
         });
+        view.findViewById(R.id.sign_button).setOnClickListener(new View.OnClickListener() {
+
+            @Override
+            public void onClick(View v) {
+                submit(true);
+            }
+        });
         return view;
     }
 

@@ -70,12 +70,12 @@ public class U2FClientActivity extends AppCompatActivity {
                 e.printStackTrace();
             }
         } else if (u2fIntentType.equals(U2FIntentType.U2F_OPERATION_SIGN.name())) { // Sign
-            try {
-
-            } catch (U2FException e) {
-                Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show();
-                e.printStackTrace();
-            }
+//            try {
+//
+//            } catch (U2FException e) {
+//                Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show();
+//                e.printStackTrace();
+//            }
         }
     }
 

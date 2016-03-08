@@ -1,6 +1,7 @@
 package org.esec.mcg.androidu2f.client.model;
 
 import org.esec.mcg.androidu2f.U2FException;
+import org.esec.mcg.androidu2f.token.msg.AuthenticationRequest;
 import org.esec.mcg.androidu2f.token.msg.RegistrationRequest;
 
 /**
@@ -9,6 +10,7 @@ import org.esec.mcg.androidu2f.token.msg.RegistrationRequest;
 public abstract class U2FClient {
     protected String clientData;
     abstract public RegistrationRequest register(String u2fProtocolMessage) throws U2FException;
+    abstract public AuthenticationRequest sign(String u2fProtocolMessage) throws U2FException;
 
     public String getClientData() {
         return clientData;

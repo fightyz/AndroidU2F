@@ -93,6 +93,7 @@ public class SignFragment extends Fragment {
                 } catch (MalformedURLException e) {
                     e.printStackTrace();
                 }
+                getActivity().startActivityForResult(i, SIGN_ACTIVITY_RES_2);
             }
         }).start();
     }
@@ -149,6 +150,6 @@ public class SignFragment extends Fragment {
      * @return U2F server request.
      */
     private String getServerRequest(URL url) {
-        return "{\"type\": \"u2f_register_request\", \"signRequest\": [], \"registerRequests\": [{\"challenge\": \"mLkHCmQZGbZEXefhWByeKo5zTFldYLIZFRGeHdvTFBc=\", \"version\": \"U2F_V2\", \"appId\": \"http://localhost:8000\"}]}";
+        return "{\"type\": \"u2f_sign_request\", \"signRequests\": [{\"keyHandle\":\"ASF4Os1wJysH6uWvJV9PvyNiph4y4O84tGCHj1FZEE8Wjy4TySErklcH0BQNz6lSbRpiDi2XE6we2bcJ1DSUaw==\",\"challenge\": \"mLkHCmQZGbZEXefhWByeKo5zTFldYLIZFRGeHdvTFBc=\", \"version\": \"U2F_V2\", \"appId\": \"http://localhost:8000\"}]}";
     }
 }

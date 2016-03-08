@@ -3,6 +3,7 @@ package org.esec.mcg.androidu2f.token.msg;
 import java.util.Arrays;
 
 /**
+ * Byte array of challengeSha256 and applicationSha256
  * Created by yz on 2016/1/14.
  */
 public class RegistrationRequest {

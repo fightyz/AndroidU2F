@@ -7,6 +7,8 @@ import org.esec.mcg.androidu2f.codec.RawMessageCodec;
 import org.esec.mcg.androidu2f.token.impl.CryptoECDSA;
 import org.esec.mcg.androidu2f.token.impl.KeyHandleGeneratorWithKeyStore;
 import org.esec.mcg.androidu2f.token.impl.SCSecp256r1;
+import org.esec.mcg.androidu2f.token.msg.AuthenticationRequest;
+import org.esec.mcg.androidu2f.token.msg.AuthenticationResponse;
 import org.esec.mcg.androidu2f.token.msg.RegistrationRequest;
 import org.esec.mcg.androidu2f.token.msg.RegistrationResponse;
 import org.esec.mcg.utils.ByteUtil;
@@ -88,5 +90,20 @@ public class LocalU2FToken implements U2FToken {
         byte[] signature = crypto.sign(signedData, certificatePrivateKey);
         LogUtils.d(ByteUtil.ByteArrayToHexString(signature));
         return new RegistrationResponse(userPublicKey, keyHandle, attestationCertificate, signature);
+    }
+
+    @Override
+    public AuthenticationResponse authenticate(AuthenticationRequest authenticationRequest) throws U2FException {
+        byte[] applicationSha256 = authenticationRequest.getApplicationSha256();
+        byte[] challengeSha256 = authenticationRequest.getChallengeSha256();
+        byte[] keyHandle = authenticationRequest.getKeyHandle();
+
+        // TODO: 2016/3/8 counter should be stored safely
+        int counter = 1;
+        PrivateKey privateKey = keyHandleGenerator.getUserPrivateKey(keyHandle);
+        byte[] signedData = RawMessageCodec.encodeAuthenticationSignedBytes(applicationSha256, (byte)0x01, counter, challengeSha256);
+
+        byte[] signature = crypto.sign(signedData, privateKey);
+        return new AuthenticationResponse((byte)0x01, counter, signature);
     }
 }

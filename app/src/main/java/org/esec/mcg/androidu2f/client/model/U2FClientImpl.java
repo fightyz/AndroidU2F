@@ -5,9 +5,11 @@ import android.util.Base64;
 
 import org.esec.mcg.androidu2f.U2FException;
 import org.esec.mcg.androidu2f.codec.ClientDataCodec;
+import org.esec.mcg.androidu2f.token.msg.AuthenticationRequest;
 import org.esec.mcg.androidu2f.token.msg.RegistrationRequest;
 import org.esec.mcg.utils.ByteUtil;
 import org.esec.mcg.utils.logger.LogUtils;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -29,6 +31,7 @@ public class U2FClientImpl extends U2FClient {
     private String appId;
     private String serverChallengeBase64;
     private String facetID;
+    private String keyHandle;
 //    private String clientData;
 
     /**
@@ -55,7 +58,6 @@ public class U2FClientImpl extends U2FClient {
      */
     @Override
     public RegistrationRequest register(String u2fProtocolMessage) throws U2FException {
-//        LogUtils.d(u2fProtocolMessage);
         try {
             JSONObject reg = new JSONObject(u2fProtocolMessage);
             version = ((JSONObject)reg.getJSONArray("registerRequests").get(0)).getString("version");
@@ -81,6 +83,41 @@ public class U2FClientImpl extends U2FClient {
             LogUtils.d(ByteUtil.ByteArrayToHexString(clientDataSha256));
 
             return new RegistrationRequest(appIdSha256, clientDataSha256);
+        } catch (JSONException e) {
+            throw new U2FException("Rgister request JSON format is wrong.", e);
+        }
+    }
+
+    /**
+     * Decode U2F request message and generate raw message.
+     * @param u2fProtocolMessage
+     * @return
+     * @throws U2FException
+     */
+    public AuthenticationRequest sign(String u2fProtocolMessage) throws U2FException {
+        try {
+            JSONObject signRequest = new JSONObject(u2fProtocolMessage);
+            version = signRequest.getString("version");
+            appId = signRequest.getString("appId");
+            serverChallengeBase64 = signRequest.getString("challenge");
+            keyHandle = signRequest.getString("keyHandle");
+
+            // Check the u2f version
+            if (!version.equals(U2F_V2)) {
+                throw new U2FException(String.format("Unsupported protocol version: %s", version));
+            }
+
+            facetID = getFacetID(packageInfo);
+            verifyAppId(appId);
+
+            clientData = ClientDataCodec.encodeClientData(ClientDataCodec.REQUEST_TYPE_AUTHENTICATE, serverChallengeBase64, facetID, null);
+            //TODO Actually, application parameter should be "SHA-256 hash of the application identity of the application requesting the registration"
+            byte[] appIdSha256 = crypto.computeSha256(appId);
+            byte[] clientDataSha256 = crypto.computeSha256(clientData);
+
+            byte control = AuthenticationRequest.USER_PRESENCE_SIGN;
+            byte[] rawKeyHandle = android.util.Base64.decode(keyHandle, Base64.NO_WRAP);
+            return new AuthenticationRequest(control, clientDataSha256, appIdSha256, rawKeyHandle);
         } catch (JSONException e) {
             throw new U2FException("Rgister request JSON format is wrong.", e);
         }

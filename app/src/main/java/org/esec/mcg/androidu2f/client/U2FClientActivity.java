@@ -15,19 +15,23 @@ import org.esec.mcg.androidu2f.client.model.U2FClientImpl;
 import org.esec.mcg.androidu2f.codec.RawMessageCodec;
 import org.esec.mcg.androidu2f.msg.U2FIntentType;
 import org.esec.mcg.androidu2f.token.U2FToken;
+import org.esec.mcg.androidu2f.token.msg.AuthenticationRequest;
 import org.esec.mcg.androidu2f.token.msg.RegistrationRequest;
 import org.esec.mcg.utils.ByteUtil;
 import org.esec.mcg.utils.logger.LogUtils;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 public class U2FClientActivity extends AppCompatActivity {
 
     private static final int REG_ACTIVITY_RES_1 = 1;
-    private static final int REG_ACTIVITY_SIGN_2 = 2;
+    private static final int SIGN_ACTIVITY_RES_2 = 2;
 
     private String u2fIntentType;
     private String message;
+    private JSONArray signRequests;
+    private int signRequestIndex;
 
     private U2FToken u2fToken;
     private U2FClient u2fClient;
@@ -35,6 +39,7 @@ public class U2FClientActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        signRequestIndex = 0;
     }
 
     @Override
@@ -55,12 +60,13 @@ public class U2FClientActivity extends AppCompatActivity {
         if (u2fIntentType.equals(U2FIntentType.U2F_OPERATION_REG.name())) {
             try {
                 RegistrationRequest registrationRequest;
+
                 registrationRequest = u2fClient.register(message);
                 Intent i = new Intent("org.fidoalliance.intent.FIDO_OPERATION");
                 i.addCategory("android.intent.category.DEFAULT");
                 i.setType("application/fido.u2f_token+json");
                 Bundle data = new Bundle();
-                data.putByteArray("message", RawMessageCodec.encodeRegisterRequest(registrationRequest));
+                data.putByteArray("message", RawMessageCodec.encodeRegistrationRequest(registrationRequest));
                 data.putString("U2FIntentType", U2FIntentType.U2F_OPERATION_REG.name());
                 i.putExtras(data);
                 startActivityForResult(i, REG_ACTIVITY_RES_1); // Start token activity.
@@ -70,12 +76,27 @@ public class U2FClientActivity extends AppCompatActivity {
                 e.printStackTrace();
             }
         } else if (u2fIntentType.equals(U2FIntentType.U2F_OPERATION_SIGN.name())) { // Sign
-//            try {
-//
-//            } catch (U2FException e) {
-//                Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show();
-//                e.printStackTrace();
-//            }
+            try {
+                JSONObject sign = new JSONObject(message);
+                signRequests = sign.getJSONArray("signRequests");
+                int length = signRequests.length();
+                JSONObject signRequest = signRequests.getJSONObject(signRequestIndex);
+
+                AuthenticationRequest authenticationRequest = u2fClient.sign(signRequest.toString());
+                Intent i = new Intent("org.fidoalliance.intent.FIDO_OPERATION");
+                i.addCategory("android.intent.category.DEFAULT");
+                i.setType("application/fido.u2f_token+json");
+                Bundle data = new Bundle();
+                data.putByteArray("message", RawMessageCodec.encodeAuthenticationRequest(authenticationRequest));
+                data.putString("U2FIntentType", U2FIntentType.U2F_OPERATION_SIGN.name());
+                i.putExtras(data);
+                startActivityForResult(i, SIGN_ACTIVITY_RES_2); // Start token activity
+            } catch (U2FException e) {
+                Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show();
+                e.printStackTrace();
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -108,6 +129,8 @@ public class U2FClientActivity extends AppCompatActivity {
             bundleData.putString("U2FIntentType", U2FIntentType.U2F_OPERATION_REG_RESULT.name());
             i.putExtras(bundleData);
             setResult(RESULT_OK, i);
+        } else if (requestCode == SIGN_ACTIVITY_RES_2) {
+            // TODO: 2016/3/8
         }
 
         finish();

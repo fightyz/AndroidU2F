@@ -4,6 +4,7 @@ import android.content.Context;
 import android.security.KeyPairGeneratorSpec;
 import android.security.keystore.KeyGenParameterSpec;
 import android.security.keystore.KeyProperties;
+import android.util.Base64;
 
 import org.esec.mcg.androidu2f.U2FException;
 import org.esec.mcg.androidu2f.token.KeyHandleGenerator;
@@ -22,6 +23,7 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.PrivateKey;
+import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 import java.security.spec.ECGenParameterSpec;
 import java.util.Arrays;
@@ -138,9 +140,11 @@ public class KeyHandleGeneratorWithKeyStore implements KeyHandleGenerator {
     public byte[] generateKeyHandle(byte[] applicationSha256, byte[] challengeSha256) throws U2FException{
         byte[] keyHandle = new byte[applicationSha256.length + challengeSha256.length];
         ByteBuffer.wrap(keyHandle).put(applicationSha256).put(challengeSha256);
-        String keyHandleString = new String(keyHandle);
-//        String keyHandleString = Arrays.toString(keyHandle);
+//        String keyHandleString = new String(keyHandle);
+        String keyHandleString = android.util.Base64.encodeToString(keyHandle, Base64.NO_WRAP);
+        LogUtils.d("keyHandleString");
         LogUtils.d(keyHandleString);
+        LogUtils.d(ByteUtil.ByteArrayToHexString(keyHandle));
 
         try {
             final KeyStore keyStore = KeyStore.getInstance("AndroidKeyStore");
@@ -182,5 +186,31 @@ public class KeyHandleGeneratorWithKeyStore implements KeyHandleGenerator {
             e.printStackTrace();
         }
         return keyHandle;
+    }
+
+    @Override
+    public PrivateKey getUserPrivateKey(byte[] keyHandle) throws U2FException {
+        String keyHandleString = android.util.Base64.encodeToString(keyHandle, Base64.NO_WRAP);
+        try {
+            KeyStore keyStore = KeyStore.getInstance("AndroidKeyStore");
+            keyStore.load(null);
+            if (keyStore.containsAlias(keyHandleString)) {
+                return (PrivateKey)keyStore.getKey(keyHandleString, null);
+            } else {
+                throw new U2FException("Can not find user key");
+            }
+
+        } catch (KeyStoreException e) {
+            e.printStackTrace();
+        } catch (CertificateException e) {
+            e.printStackTrace();
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (UnrecoverableKeyException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 }

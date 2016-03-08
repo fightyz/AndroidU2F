@@ -24,7 +24,8 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class MainActivity extends AppCompatActivity
-        implements LoginFragment.OnFragmentInteractionListener, EnrollFragment.OnFragmentInteractionListener{
+        implements LoginFragment.OnFragmentInteractionListener, EnrollFragment.OnFragmentInteractionListener,
+                    SignFragment.OnFragmentInteractionListener {
 
     private final Map<String,String> details = new LinkedHashMap<String, String>();
 
@@ -114,7 +115,7 @@ public class MainActivity extends AppCompatActivity
 
         details.clear();
 //        Fragment fragment = sign ? new SignFragment(details, username, password) : new EnrollFragment(details, username, password);
-        Fragment fragment = sign ? null : (Fragment)EnrollFragment.newInstance(username, password);
+        Fragment fragment = sign ? (Fragment)SignFragment.newInstance(username, password) : (Fragment)EnrollFragment.newInstance(username, password);
         fragmentTransaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
         fragmentTransaction.replace(R.id.fragment_container, fragment);
         fragmentTransaction.addToBackStack(null);

@@ -58,7 +58,7 @@ public class U2FTokenActivity extends AppCompatActivity {
      */
     public void localProceed(View view) {
         u2fToken = new LocalU2FToken(this);
-        if (u2fIntentType.equals(U2FIntentType.U2F_OPERATION_REG.name())) {
+        if (u2fIntentType.equals(U2FIntentType.U2F_OPERATION_REG.name())) { // register
             RegistrationRequest registrationRequest;
             RegistrationResponse registrationResponse;
             try {
@@ -75,7 +75,7 @@ public class U2FTokenActivity extends AppCompatActivity {
             } catch (U2FException e) {
                 e.printStackTrace();
             }
-        } else if (u2fIntentType.equals(U2FIntentType.U2F_OPERATION_SIGN.name())) {
+        } else if (u2fIntentType.equals(U2FIntentType.U2F_OPERATION_SIGN.name())) { // sign
             AuthenticationRequest authenticationRequest;
             AuthenticationResponse authenticationResponse;
             try {
@@ -89,6 +89,8 @@ public class U2FTokenActivity extends AppCompatActivity {
                 setResult(RESULT_OK, i);
                 finish();
             } catch (U2FException e) {
+                setResult(RESULT_CANCELED);
+                finish();
                 e.printStackTrace();
             }
         }

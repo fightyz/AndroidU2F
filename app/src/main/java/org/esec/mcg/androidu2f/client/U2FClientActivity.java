@@ -81,7 +81,7 @@ public class U2FClientActivity extends AppCompatActivity {
                 signRequests = sign.getJSONArray("signRequests");
                 int length = signRequests.length();
                 JSONObject signRequest = signRequests.getJSONObject(signRequestIndex);
-
+                signRequestIndex++;
                 AuthenticationRequest authenticationRequest = u2fClient.sign(signRequest.toString());
                 Intent i = new Intent("org.fidoalliance.intent.FIDO_OPERATION");
                 i.addCategory("android.intent.category.DEFAULT");
@@ -111,9 +111,6 @@ public class U2FClientActivity extends AppCompatActivity {
             LogUtils.d(ByteUtil.ByteArrayToHexString(rawRegisterResponse));
 
             Bundle bundleData = new Bundle();
-//            String rawRegisterResponseBase64 = Base64.encodeBase64URLSafeString(rawRegisterResponse);
-//            String clientDataBase64 = Base64.encodeBase64URLSafeString(u2fClient.getClientData().getBytes());
-
             String rawRegisterResponseBase64 = android.util.Base64.encodeToString(rawRegisterResponse, Base64.URL_SAFE);
             String clientDataBase64 = android.util.Base64.encodeToString(u2fClient.getClientData().getBytes(), Base64.URL_SAFE);
             Log.d("clientData", "" + clientDataBase64);
@@ -130,7 +127,46 @@ public class U2FClientActivity extends AppCompatActivity {
             i.putExtras(bundleData);
             setResult(RESULT_OK, i);
         } else if (requestCode == SIGN_ACTIVITY_RES_2) {
-            // TODO: 2016/3/8
+            // If previous sign request failed, then do the next one.
+            if (resultCode == RESULT_CANCELED) {
+                try {
+                    JSONObject signRequest = signRequests.getJSONObject(signRequestIndex);
+                    signRequestIndex++;
+                    AuthenticationRequest authenticationRequest = u2fClient.sign(signRequest.toString());
+                    Intent i = new Intent("org.fidoalliance.intent.FIDO_OPERATION");
+                    i.addCategory("android.intent.category.DEFAULT");
+                    i.setType("application/fido.u2f_token+json");
+                    Bundle budleData = new Bundle();
+                    budleData.putByteArray("message", RawMessageCodec.encodeAuthenticationRequest(authenticationRequest));
+                    budleData.putString("U2FIntentType", U2FIntentType.U2F_OPERATION_SIGN.name());
+                    i.putExtras(budleData);
+                    startActivityForResult(i, SIGN_ACTIVITY_RES_2); // Start token activity
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                } catch (U2FException e) {
+                    e.printStackTrace();
+                }
+            } else if (resultCode == RESULT_OK) {
+                Intent i = new Intent("org.fidoalliance.intent.FIDO_OPERATION");
+                byte[] rawAuthenticationResponse = data.getByteArrayExtra("message");
+                Bundle bundleData = new Bundle();
+                String signatureData = android.util.Base64.encodeToString(rawAuthenticationResponse, Base64.URL_SAFE);
+                String clientDataBase64 = android.util.Base64.encodeToString(u2fClient.getClientData().getBytes(), Base64.URL_SAFE);
+                String keyHandle = u2fClient.getKeyHandle();
+                JSONObject responseData = new JSONObject();
+                try {
+                    responseData.put("keyHandle", keyHandle);
+                    responseData.put("signatureData", signatureData);
+                    responseData.put("clientData", clientDataBase64);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+                bundleData.putString("message", responseData.toString());
+                LogUtils.d(responseData.toString());
+                bundleData.putString("U2FIntentType", U2FIntentType.U2F_OPERATION_SIGN_RESULT.name());
+                i.putExtras(bundleData);
+                setResult(RESULT_OK, i);
+            }
         }
 
         finish();

@@ -31,7 +31,6 @@ public class U2FClientImpl extends U2FClient {
     private String appId;
     private String serverChallengeBase64;
     private String facetID;
-    private String keyHandle;
 //    private String clientData;
 
     /**
@@ -144,9 +143,5 @@ public class U2FClientImpl extends U2FClient {
             throw new U2FException("Can't get caller's facetID.", e);
         }
 //        return null;
-    }
-
-    public String getClientData() {
-        return clientData;
     }
 }

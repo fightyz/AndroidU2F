@@ -6,10 +6,14 @@ import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
 import android.app.Fragment;
+import android.os.Handler;
+import android.os.Message;
 import android.preference.PreferenceManager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import org.esec.mcg.androidu2f.client.op.U2FServerRequest;
 import org.esec.mcg.androidu2f.msg.U2FIntentType;
@@ -37,8 +41,8 @@ public class EnrollFragment extends Fragment {
     private String username;
     private String password;
 
-    private String registerRequest = "{\"authenticateRequests\": [], \n" +
-            "\"registerRequests\": [{\"challenge\": \"9s80ruHc6q9shJM5WLfOmz-ejb_Rm8dmWCnOvgZ2ovw\", \"version\": \"U2F_V2\", \"appId\": \"http://localhost:8081\"}]}";
+    private TextView statusText;
+    private UIHandler uiHandler;
 
     /**
      * Client's clientRegister operation.
@@ -81,6 +85,8 @@ public class EnrollFragment extends Fragment {
         parameters.put("password", password);
         parameters.put("version", "U2F_V2");
 
+        uiHandler = new UIHandler();
+
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -109,11 +115,16 @@ public class EnrollFragment extends Fragment {
                 try {
                     response = getServerRequest(new URL(endPoint + enrollPoint));
                     Bundle data = new Bundle();
-                    data.putString("message", response);
-                    data.putString("U2FIntentType", U2FIntentType.U2F_OPERATION_REG.name());
+                    data.putString("Request", response);
                     i.putExtras(data);
                 } catch (MalformedURLException e) {
-                    e.printStackTrace();
+//                    Toast.makeText(getActivity(), "Wrong URL", Toast.LENGTH_LONG).show();
+                    Bundle data = new Bundle();
+                    data.putString("Error", "Wrong URL");
+                    Message msg = new Message();
+                    msg.setData(data);
+                    uiHandler.sendMessage(msg);
+                    return;
                 }
 
                 // call u2f client
@@ -126,7 +137,9 @@ public class EnrollFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_enroll, container, false);
+        View view = inflater.inflate(R.layout.fragment_enroll, container, false);
+        statusText = (TextView)view.findViewById(R.id.status_text);
+        return view;
     }
 
     /**
@@ -176,4 +189,12 @@ public class EnrollFragment extends Fragment {
         public void onFragmentInteraction(Uri uri);
     }
 
+    private class UIHandler extends Handler {
+        @Override
+        public void handleMessage(Message msg) {
+            super.handleMessage(msg);
+            Bundle data = msg.getData();
+            statusText.setText(data.getString("Error"));
+        }
+    }
 }

@@ -23,7 +23,7 @@ public class U2FTokenActivity extends AppCompatActivity {
     private TextView operationMessageTextView;
 
     private String u2fIntentType;
-    private byte[] message;
+    private byte[] rawMessage;
 
     private U2FToken u2fToken;
 
@@ -41,9 +41,9 @@ public class U2FTokenActivity extends AppCompatActivity {
         super.onResume();
         Bundle extras = getIntent().getExtras();
         u2fIntentType = extras.getString("U2FIntentType");
-        message = extras.getByteArray("message");
+        rawMessage = extras.getByteArray("RawMessage");
         operationTextView.setText(u2fIntentType);
-        operationMessageTextView.setText(ByteUtil.ByteArrayToHexString(message));
+        operationMessageTextView.setText(ByteUtil.ByteArrayToHexString(rawMessage));
     }
 
     public void swipeProceed(View view) {
@@ -62,11 +62,11 @@ public class U2FTokenActivity extends AppCompatActivity {
             RegistrationRequest registrationRequest;
             RegistrationResponse registrationResponse;
             try {
-                registrationRequest = RawMessageCodec.decodeRegistrationRequest(message);
+                registrationRequest = RawMessageCodec.decodeRegistrationRequest(rawMessage);
                 registrationResponse = u2fToken.register(registrationRequest);
                 Intent i = new Intent("org.fidoalliance.intent.FIDO_OPERATION");
                 Bundle data = new Bundle();
-                data.putByteArray("message", RawMessageCodec.encodeRegistrationResponse(registrationResponse));
+                data.putByteArray("RawMessage", RawMessageCodec.encodeRegistrationResponse(registrationResponse));
                 data.putString("U2FIntentType", U2FIntentType.U2F_OPERATION_REG_RESULT.name());
                 i.putExtras(data);
 //                LogUtils.d(ByteUtil.ByteArrayToHexString(RawMessageCodec.encodeRegisterResponse(registrationResponse)));
@@ -79,11 +79,11 @@ public class U2FTokenActivity extends AppCompatActivity {
             AuthenticationRequest authenticationRequest;
             AuthenticationResponse authenticationResponse;
             try {
-                authenticationRequest = RawMessageCodec.decodeAuthenticationRequest(message);
+                authenticationRequest = RawMessageCodec.decodeAuthenticationRequest(rawMessage);
                 authenticationResponse = u2fToken.authenticate(authenticationRequest);
                 Intent i = new Intent("org.fidoalliance.intent.FIDO_OPERATION");
                 Bundle data = new Bundle();
-                data.putByteArray("message", RawMessageCodec.encodeAuthenticationResponse(authenticationResponse));
+                data.putByteArray("RawMessage", RawMessageCodec.encodeAuthenticationResponse(authenticationResponse));
                 data.putString("U2FIntentType", U2FIntentType.U2F_OPERATION_SIGN_RESULT.name());
                 i.putExtras(data);
                 setResult(RESULT_OK, i);

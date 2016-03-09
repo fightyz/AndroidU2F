@@ -23,37 +23,6 @@
             android:id="@+id/status_text"
             android:layout_gravity="center" />
 
-        <LinearLayout
-            android:orientation="horizontal"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:id="@+id/details"
-            android:paddingTop="25dp"
-            android:visibility="invisible">
-
-            <Button
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Start over"
-                android:id="@+id/restart"
-                android:layout_gravity="left|center_vertical"
-                android:onClick="restart" />
-
-            <Space
-                android:layout_width="0dp"
-                android:layout_height="fill_parent"
-                android:id="@+id/space"
-                android:layout_weight="1" />
-
-            <Button
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Details"
-                android:id="@+id/details_button"
-                android:layout_gravity="right|center_vertical"
-                android:onClick="details" />
-        </LinearLayout>
-
     </LinearLayout>
 
 </FrameLayout>

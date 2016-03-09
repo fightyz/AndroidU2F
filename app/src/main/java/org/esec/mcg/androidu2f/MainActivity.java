@@ -14,6 +14,7 @@ import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.Toast;
 
 import org.esec.mcg.androidu2f.client.curl.Curl;
 import org.esec.mcg.utils.HTTP;
@@ -28,6 +29,7 @@ public class MainActivity extends AppCompatActivity
                     SignFragment.OnFragmentInteractionListener {
 
     private final Map<String,String> details = new LinkedHashMap<String, String>();
+    private static final int REG_ACTIVITY_RES_1 = 1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -83,9 +85,14 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == 1) {
+        if (requestCode == REG_ACTIVITY_RES_1) {
+            if (resultCode == RESULT_CANCELED) {
+
+                Toast.makeText(this, "" + data.getExtras().getInt("ErrorCode"), Toast.LENGTH_LONG).show();
+                return;
+            }
             LogUtils.d("resultCode = " + resultCode);
-            String registerResponse = data.getStringExtra("message");
+            String registerResponse = data.getStringExtra("Response");
             LogUtils.d(registerResponse);
             //TODO send register response to server
 

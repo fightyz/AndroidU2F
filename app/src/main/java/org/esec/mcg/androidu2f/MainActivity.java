@@ -14,6 +14,7 @@ import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import org.esec.mcg.androidu2f.client.curl.Curl;
@@ -87,8 +88,8 @@ public class MainActivity extends AppCompatActivity
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == REG_ACTIVITY_RES_1) {
             if (resultCode == RESULT_CANCELED) {
-
-                Toast.makeText(this, "" + data.getExtras().getInt("ErrorCode"), Toast.LENGTH_LONG).show();
+                Fragment currentFragment = getFragmentManager().findFragmentById(R.id.fragment_container);
+                ((TextView)currentFragment.getView().findViewById(R.id.status_text)).setText(data.getExtras().getString("Response"));
                 return;
             }
             LogUtils.d("resultCode = " + resultCode);

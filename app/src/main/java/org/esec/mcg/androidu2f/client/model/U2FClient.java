@@ -8,12 +8,12 @@ import org.esec.mcg.androidu2f.token.msg.RegistrationRequest;
  * Created by yz on 2016/1/14.
  */
 public abstract class U2FClient {
-    protected String clientData;
+    protected static String clientData;
     protected String keyHandle;
     abstract public RegistrationRequest register(String u2fProtocolMessage) throws U2FException;
     abstract public AuthenticationRequest sign(String u2fProtocolMessage) throws U2FException;
 
-    public String getClientData() {
+    public static String getClientData() {
         return clientData;
     }
     public String getKeyHandle() { return keyHandle; }

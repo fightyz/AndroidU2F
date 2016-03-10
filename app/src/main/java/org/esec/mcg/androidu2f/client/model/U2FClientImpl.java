@@ -15,7 +15,9 @@ import org.json.JSONObject;
 
 import java.io.ByteArrayInputStream;
 import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.security.cert.Certificate;
+import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 
 /**
@@ -83,7 +85,11 @@ public class U2FClientImpl extends U2FClient {
 
             return new RegistrationRequest(appIdSha256, clientDataSha256);
         } catch (JSONException e) {
-            throw new U2FException("Rgister request JSON format is wrong.", e);
+            throw new U2FException("Register request JSON format is wrong.", e);
+        } catch (CertificateException e) {
+            throw new U2FException("Can not get the caller's apk signature(facet ID).", e);
+        } catch (NoSuchAlgorithmException e) {
+            throw new U2FException("Can not get the caller's apk signature(facet ID).", e);
         }
     }
 
@@ -119,6 +125,10 @@ public class U2FClientImpl extends U2FClient {
             return new AuthenticationRequest(control, clientDataSha256, appIdSha256, rawKeyHandle);
         } catch (JSONException e) {
             throw new U2FException("Rgister request JSON format is wrong.", e);
+        } catch (CertificateException e) {
+            throw new U2FException("Can not get the caller's apk signature(facet ID).", e);
+        } catch (NoSuchAlgorithmException e) {
+            throw new U2FException("Can not get the caller's apk signature(facet ID).", e);
         }
     }
 
@@ -131,17 +141,13 @@ public class U2FClientImpl extends U2FClient {
         return true;
     }
 
-    private String getFacetID(PackageInfo paramPackageInfo) throws U2FException {
-        try {
-            ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(paramPackageInfo.signatures[0].toByteArray());
-            Certificate certificate = CertificateFactory.getInstance("X509").generateCertificate(byteArrayInputStream);
-            MessageDigest messageDigest = MessageDigest.getInstance("SHA1");
-            String facetID = "android:apk-key-hash:" + Base64.encodeToString(messageDigest.digest(certificate.getEncoded()), Base64.DEFAULT);
-            LogUtils.d("android:apk-key-hash:" + Base64.encodeToString(messageDigest.digest(certificate.getEncoded()), Base64.DEFAULT));
-            return facetID;
-        } catch (Exception e) {
-            throw new U2FException("Can't get caller's facetID.", e);
-        }
-//        return null;
+    private String getFacetID(PackageInfo paramPackageInfo)
+            throws CertificateException, NoSuchAlgorithmException {
+        ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(paramPackageInfo.signatures[0].toByteArray());
+        Certificate certificate = CertificateFactory.getInstance("X509").generateCertificate(byteArrayInputStream);
+        MessageDigest messageDigest = MessageDigest.getInstance("SHA1");
+        String facetID = "android:apk-key-hash:" + Base64.encodeToString(messageDigest.digest(certificate.getEncoded()), Base64.DEFAULT | Base64.NO_WRAP);
+        LogUtils.d("android:apk-key-hash:" + Base64.encodeToString(messageDigest.digest(certificate.getEncoded()), Base64.DEFAULT | Base64.NO_WRAP));
+        return facetID;
     }
 }

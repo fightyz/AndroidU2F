@@ -13,6 +13,8 @@ import org.esec.mcg.androidu2f.U2FException;
 import org.esec.mcg.androidu2f.client.model.U2FClient;
 import org.esec.mcg.androidu2f.client.model.U2FClientImpl;
 import org.esec.mcg.androidu2f.codec.RawMessageCodec;
+import org.esec.mcg.androidu2f.codec.ResponseCodec;
+import org.esec.mcg.androidu2f.msg.ErrorCode;
 import org.esec.mcg.androidu2f.msg.U2FIntentType;
 import org.esec.mcg.androidu2f.msg.U2FRequestType;
 import org.esec.mcg.androidu2f.msg.U2FResponseType;
@@ -32,6 +34,7 @@ public class U2FClientActivity extends AppCompatActivity {
 
     private String request;
     private String requestType;
+    private String U2FOperationType;
     private JSONArray signRequests;
     private int signRequestIndex;
 
@@ -49,21 +52,26 @@ public class U2FClientActivity extends AppCompatActivity {
         super.onResume();
         Bundle extras = getIntent().getExtras();
         request = extras.getString("Request");
+        U2FOperationType = extras.getString("U2FIntentType");
 
-        // TODO: 2016/3/9 Exception
-        // Extract the "type" of the Request
         try {
             requestType = (new JSONObject(request)).getString("type");
-        } catch (JSONException e) {
-
-            e.printStackTrace();
-        }
-
-        // TODO: 2016/3/9 Exception
-        try {
-            // The caller's appid. In this case, the caller is self.
             u2fClient = new U2FClientImpl(this.getPackageManager().getPackageInfo(this.getPackageName(), this.getPackageManager().GET_SIGNATURES));
+        } catch (JSONException e) {
+            JSONObject error = ResponseCodec.encodeError(ErrorCode.BAD_REQUEST, ErrorCode.BAD_REQUEST.toString());
+            String u2fResponseType;
+            if (U2FOperationType.equals(U2FIntentType.U2F_OPERATION_REG)) {
+                u2fResponseType = U2FResponseType.u2f_register_response.name();
+            } else {
+                u2fResponseType = U2FResponseType.u2f_sign_response.name();
+            }
+            Intent i = ResponseCodec.encodeResponse(u2fResponseType, error);
+
+            setResult(RESULT_CANCELED, i);
+            finish();
+            return;
         } catch (PackageManager.NameNotFoundException e) {
+            // TODO: 2016/3/10 Handle exception
             e.printStackTrace();
             return;
         }
@@ -81,16 +89,11 @@ public class U2FClientActivity extends AppCompatActivity {
                 i.putExtras(data);
                 startActivityForResult(i, REG_ACTIVITY_RES_1); // Start token activity.
             } catch (U2FException e) {
-                // TODO Extract the specific reason of e?
-                Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show();
-                e.printStackTrace();
-                Intent i = new Intent("org.fidoalliance.intent.FIDO_OPERATION");
-                Bundle data = new Bundle();
-                data.putInt("ErrorCode", 2);
-                data.putString("type", U2FResponseType.u2f_register_response.name());
-                i.putExtras(data);
+                JSONObject error = ResponseCodec.encodeError(ErrorCode.BAD_REQUEST, e.getMessage());
+                Intent i = ResponseCodec.encodeResponse(U2FResponseType.u2f_register_response.name(), error);
                 setResult(RESULT_CANCELED, i);
                 finish();
+                return;
             }
         } else if (requestType.equals(U2FRequestType.u2f_sign_request.name())) { // Sign, type = u2f_sign_request
             try {
@@ -120,32 +123,19 @@ public class U2FClientActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == REG_ACTIVITY_RES_1) {
-            LogUtils.d("resultCode = " + resultCode);
-            Intent i = new Intent("org.fidoalliance.intent.FIDO_OPERATION");
-            byte[] rawRegisterResponse = data.getByteArrayExtra("RawMessage");
-
-            LogUtils.d(ByteUtil.ByteArrayToHexString(rawRegisterResponse));
-
-            Bundle bundleData = new Bundle();
-            String rawRegisterResponseBase64 = android.util.Base64.encodeToString(rawRegisterResponse, Base64.URL_SAFE);
-            String clientDataBase64 = android.util.Base64.encodeToString(u2fClient.getClientData().getBytes(), Base64.URL_SAFE);
-            Log.d("clientData", "" + clientDataBase64);
-            JSONObject registerResponse = new JSONObject();
-            JSONObject response = new JSONObject();
-            try {
-                registerResponse.put("registrationData", rawRegisterResponseBase64);
-                registerResponse.put("clientData", clientDataBase64);
-                response.put("type", U2FResponseType.u2f_register_response.name());
-                response.put("responseData", registerResponse);
-            } catch (JSONException e) {
-                e.printStackTrace();
+        if (requestCode == REG_ACTIVITY_RES_1) { // register
+            if (resultCode == RESULT_OK) { // success
+                JSONObject registerResponse = ResponseCodec.encodeRegisterResponse(data.getByteArrayExtra("RawMessage"), U2FClient.getClientData());
+                Intent i = ResponseCodec.encodeResponse(U2FResponseType.u2f_register_response.name(), registerResponse);
+                setResult(RESULT_OK, i);
+                finish();
+            } else if (resultCode == RESULT_CANCELED) { // fail
+                JSONObject error = ResponseCodec.encodeError(ErrorCode.BAD_REQUEST, ErrorCode.BAD_REQUEST.toString());
+                Intent i = ResponseCodec.encodeResponse(U2FResponseType.u2f_register_response.name(), error);
+                setResult(RESULT_CANCELED, i);
+                finish();
             }
 
-            bundleData.putString("Response", response.toString());
-//            bundleData.putString("U2FIntentType", U2FIntentType.U2F_OPERATION_REG_RESULT.name());
-            i.putExtras(bundleData);
-            setResult(RESULT_OK, i);
         } else if (requestCode == SIGN_ACTIVITY_RES_2) {
             // If previous sign request failed, then do the next one.
             if (resultCode == RESULT_CANCELED) {
@@ -168,7 +158,7 @@ public class U2FClientActivity extends AppCompatActivity {
                 }
             } else if (resultCode == RESULT_OK) {
                 Intent i = new Intent("org.fidoalliance.intent.FIDO_OPERATION");
-                byte[] rawAuthenticationResponse = data.getByteArrayExtra("message");
+                byte[] rawAuthenticationResponse = data.getByteArrayExtra("RawMessage");
                 Bundle bundleData = new Bundle();
                 String signatureData = android.util.Base64.encodeToString(rawAuthenticationResponse, Base64.URL_SAFE);
                 String clientDataBase64 = android.util.Base64.encodeToString(u2fClient.getClientData().getBytes(), Base64.URL_SAFE);

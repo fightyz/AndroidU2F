@@ -1,6 +1,7 @@
 package org.esec.mcg.androidu2f.token;
 
 import android.content.Context;
+import android.util.Base64;
 
 import org.esec.mcg.androidu2f.U2FException;
 import org.esec.mcg.androidu2f.codec.RawMessageCodec;
@@ -64,11 +65,11 @@ public class LocalU2FToken implements U2FToken {
         try {
             KeyStore keyStore = KeyStore.getInstance("AndroidKeyStore");
             keyStore.load(null);
-            PublicKey publicKey = keyStore.getCertificate(new String(keyHandle)).getPublicKey();
+            PublicKey publicKey = keyStore.getCertificate(android.util.Base64.encodeToString(keyHandle, Base64.NO_WRAP)).getPublicKey();
             byte[] userPublicKeyX509 = publicKey.getEncoded(); // this is x.509 encoded, so has 91 bytes.
             SubjectPublicKeyInfo subjectPublicKeyInfo = new SubjectPublicKeyInfo(ASN1Sequence.getInstance(userPublicKeyX509));
             userPublicKey = subjectPublicKeyInfo.getPublicKeyData().getBytes();
-            LogUtils.d(keyStore.getCertificate(new String(keyHandle)));
+            LogUtils.d(keyStore.getCertificate(android.util.Base64.encodeToString(keyHandle, Base64.NO_WRAP)));
             LogUtils.d(ByteUtil.ByteArrayToHexString(userPublicKeyX509));
             LogUtils.d(ByteUtil.ByteArrayToHexString(userPublicKey));
         } catch (KeyStoreException e) {

@@ -116,6 +116,7 @@ public class EnrollFragment extends Fragment {
                     response = getServerRequest(new URL(endPoint + enrollPoint));
                     Bundle data = new Bundle();
                     data.putString("Request", response);
+                    data.putString("U2FIntentType", U2FIntentType.U2F_OPERATION_REG.name());
                     i.putExtras(data);
                 } catch (MalformedURLException e) {
 //                    Toast.makeText(getActivity(), "Wrong URL", Toast.LENGTH_LONG).show();
@@ -127,7 +128,7 @@ public class EnrollFragment extends Fragment {
                     return;
                 }
 
-                // call u2f client
+                // call u2f client activity
                 getActivity().startActivityForResult(i, REG_ACTIVITY_RES_1);
             }
         }).start();

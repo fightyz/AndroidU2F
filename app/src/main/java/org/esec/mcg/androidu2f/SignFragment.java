@@ -87,7 +87,7 @@ public class SignFragment extends Fragment {
                 try {
                     response = getServerRequest(new URL(endPoint + signPoint));
                     Bundle data = new Bundle();
-                    data.putString("message", response);
+                    data.putString("Request", response);
                     data.putString("U2FIntentType", U2FIntentType.U2F_OPERATION_SIGN.name());
                     i.putExtras(data);
                 } catch (MalformedURLException e) {

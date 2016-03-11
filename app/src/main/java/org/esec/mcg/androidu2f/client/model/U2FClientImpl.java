@@ -73,6 +73,7 @@ public class U2FClientImpl extends U2FClient {
             facetID = getFacetID(packageInfo);
             verifyAppId(appId);
 
+            // TODO: 2016/3/11 Actually the "faceID" should be the origin. Change it.
             clientData = ClientDataCodec.encodeClientData(ClientDataCodec.REQUEST_TYPE_REGISTER, serverChallengeBase64, facetID, null);
             LogUtils.d("client data: " + clientData);
 

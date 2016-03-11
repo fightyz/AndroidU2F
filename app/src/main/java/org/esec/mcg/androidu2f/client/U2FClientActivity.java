@@ -97,9 +97,7 @@ public class U2FClientActivity extends AppCompatActivity {
             }
         } else if (requestType.equals(U2FRequestType.u2f_sign_request.name())) { // Sign, type = u2f_sign_request
             try {
-                JSONObject sign = new JSONObject(request);
-                signRequests = sign.getJSONArray("signRequests");
-                int length = signRequests.length();
+                signRequests = new JSONObject(request).getJSONArray("signRequests");
                 JSONObject signRequest = signRequests.getJSONObject(signRequestIndex);
                 signRequestIndex++;
                 AuthenticationRequest authenticationRequest = u2fClient.sign(signRequest.toString());

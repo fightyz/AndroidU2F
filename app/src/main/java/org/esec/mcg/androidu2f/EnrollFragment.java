@@ -1,8 +1,11 @@
 package org.esec.mcg.androidu2f;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Bundle;
 import android.app.Fragment;
@@ -16,10 +19,19 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import org.esec.mcg.androidu2f.client.op.U2FServerRequest;
+import org.esec.mcg.androidu2f.curl.FidoWebService;
 import org.esec.mcg.androidu2f.msg.U2FIntentType;
+import org.esec.mcg.utils.logger.LogUtils;
+import org.json.JSONException;
 
+import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.NetworkInterface;
 import java.net.URL;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertificateException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -101,6 +113,13 @@ public class EnrollFragment extends Fragment {
 //                } catch (IOException e) {
 //
 //                }
+                // Test for network
+                ConnectivityManager connectivityManager = (ConnectivityManager) getActivity().getSystemService(Context.CONNECTIVITY_SERVICE);
+                NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
+                if (networkInfo == null && !networkInfo.isConnected()) {
+                    return;
+                }
+
                 // non-normative, defined according to UAF protocol.
                 Intent i = new Intent("org.fidoalliance.intent.FIDO_OPERATION");
                 i.addCategory("android.intent.category.DEFAULT");
@@ -113,15 +132,17 @@ public class EnrollFragment extends Fragment {
 
                 final String response;
                 try {
-                    response = getServerRequest(new URL(endPoint + enrollPoint));
+//                    response = getServerRequest(new URL(endPoint + enrollPoint));
+                    response = FidoWebService.callFidoWebService(FidoWebService.SKFE_PREREGISTER_WEBSERVICE, getActivity().getResources(), username, null);
+                    LogUtils.d(response);
                     Bundle data = new Bundle();
                     data.putString("Request", response);
                     data.putString("U2FIntentType", U2FIntentType.U2F_OPERATION_REG.name());
                     i.putExtras(data);
-                } catch (MalformedURLException e) {
+                } catch (U2FException e) {
 //                    Toast.makeText(getActivity(), "Wrong URL", Toast.LENGTH_LONG).show();
                     Bundle data = new Bundle();
-                    data.putString("Error", "Wrong URL");
+                    data.putString("Error", e.getMessage());
                     Message msg = new Message();
                     msg.setData(data);
                     uiHandler.sendMessage(msg);

@@ -21,8 +21,12 @@ import android.widget.Toast;
 import org.esec.mcg.androidu2f.client.op.U2FServerRequest;
 import org.esec.mcg.androidu2f.curl.FidoWebService;
 import org.esec.mcg.androidu2f.msg.U2FIntentType;
+import org.esec.mcg.androidu2f.msg.U2FRequestType;
+import org.esec.mcg.androidu2f.msg.U2FResponseType;
 import org.esec.mcg.utils.logger.LogUtils;
 import org.json.JSONException;
+import org.json.JSONObject;
+import org.json.JSONTokener;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -132,14 +136,21 @@ public class EnrollFragment extends Fragment {
 
                 final String response;
                 try {
+                    // TODO: 2016/3/11 The response is specific to StrongAuth U2F Server. 
 //                    response = getServerRequest(new URL(endPoint + enrollPoint));
                     response = FidoWebService.callFidoWebService(FidoWebService.SKFE_PREREGISTER_WEBSERVICE, getActivity().getResources(), username, null);
-                    LogUtils.d(response);
+                    JSONObject formalResponse = new JSONObject(response);
+                    JSONObject request = formalResponse.getJSONObject("Challenge");
+                    JSONObject newRequest = new JSONObject();
+                    newRequest.put("type", U2FRequestType.u2f_register_request);
+                    newRequest.put("registerRequests", request.getJSONArray("RegisterRequest"));
+                    newRequest.put("signRequests", request.getJSONArray("SignRequest"));
+                    LogUtils.d(newRequest.toString());
                     Bundle data = new Bundle();
-                    data.putString("Request", response);
+                    data.putString("Request", newRequest.toString());
                     data.putString("U2FIntentType", U2FIntentType.U2F_OPERATION_REG.name());
                     i.putExtras(data);
-                } catch (U2FException e) {
+                } catch (U2FException | JSONException e) {
 //                    Toast.makeText(getActivity(), "Wrong URL", Toast.LENGTH_LONG).show();
                     Bundle data = new Bundle();
                     data.putString("Error", e.getMessage());

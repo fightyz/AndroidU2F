@@ -86,6 +86,7 @@ public class U2FClientImpl extends U2FClient {
 
             return new RegistrationRequest(appIdSha256, clientDataSha256);
         } catch (JSONException e) {
+            e.printStackTrace();
             throw new U2FException("Register request JSON format is wrong.", e);
         } catch (CertificateException e) {
             throw new U2FException("Can not get the caller's apk signature(facet ID).", e);

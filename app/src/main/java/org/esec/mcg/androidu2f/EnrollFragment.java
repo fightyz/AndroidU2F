@@ -136,7 +136,7 @@ public class EnrollFragment extends Fragment {
 
                 final String response;
                 try {
-                    // TODO: 2016/3/11 The response is specific to StrongAuth U2F Server. 
+                    // TODO: 2016/3/11 The response is specific to StrongAuth U2F Server.
 //                    response = getServerRequest(new URL(endPoint + enrollPoint));
                     response = FidoWebService.callFidoWebService(FidoWebService.SKFE_PREREGISTER_WEBSERVICE, getActivity().getResources(), username, null);
                     JSONObject formalResponse = new JSONObject(response);
@@ -145,6 +145,7 @@ public class EnrollFragment extends Fragment {
                     newRequest.put("type", U2FRequestType.u2f_register_request);
                     newRequest.put("registerRequests", request.getJSONArray("RegisterRequest"));
                     newRequest.put("signRequests", request.getJSONArray("SignRequest"));
+                    MainActivity.sessionId = request.getString("sessionId");
                     LogUtils.d(newRequest.toString());
                     Bundle data = new Bundle();
                     data.putString("Request", newRequest.toString());

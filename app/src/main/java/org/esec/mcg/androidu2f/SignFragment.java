@@ -3,6 +3,8 @@ package org.esec.mcg.androidu2f;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Bundle;
 import android.app.Fragment;
@@ -11,7 +13,12 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import org.esec.mcg.androidu2f.curl.FidoWebService;
 import org.esec.mcg.androidu2f.msg.U2FIntentType;
+import org.esec.mcg.androidu2f.msg.U2FRequestType;
+import org.esec.mcg.utils.logger.LogUtils;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -74,6 +81,13 @@ public class SignFragment extends Fragment {
         new Thread(new Runnable() {
             @Override
             public void run() {
+                // Test for network
+                ConnectivityManager connectivityManager = (ConnectivityManager) getActivity().getSystemService(Context.CONNECTIVITY_SERVICE);
+                NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
+                if (networkInfo == null && !networkInfo.isConnected()) {
+                    return;
+                }
+
                 Intent i = new Intent("org.fidoalliance.intent.FIDO_OPERATION");
                 i.addCategory("android.intent.category.DEFAULT");
                 i.setType("application/fido.u2f_client+json");
@@ -85,12 +99,19 @@ public class SignFragment extends Fragment {
 
                 final String response;
                 try {
-                    response = getServerRequest(new URL(endPoint + signPoint));
+//                    response = getServerRequest(new URL(endPoint + signPoint));
+                    response = FidoWebService.callFidoWebService(FidoWebService.SKFE_PREAUTHENTICATE_WEBSERVICE, getActivity().getResources(), username, null);
+                    LogUtils.d(response);
+                    JSONObject formalResponse = new JSONObject(response);
+                    JSONObject request = formalResponse.getJSONObject("Challenge");
+                    JSONObject newRequest = new JSONObject();
+                    newRequest.put("type", U2FRequestType.u2f_sign_request);
+                    newRequest.put("signRequests", request.getJSONArray("SignRequest"));
                     Bundle data = new Bundle();
-                    data.putString("Request", response);
+                    data.putString("Request", newRequest.toString());
                     data.putString("U2FIntentType", U2FIntentType.U2F_OPERATION_SIGN.name());
                     i.putExtras(data);
-                } catch (MalformedURLException e) {
+                } catch (U2FException | JSONException e) {
                     e.printStackTrace();
                 }
                 getActivity().startActivityForResult(i, SIGN_ACTIVITY_RES_2);

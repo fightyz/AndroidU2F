@@ -141,7 +141,7 @@ public class KeyHandleGeneratorWithKeyStore implements KeyHandleGenerator {
         byte[] keyHandle = new byte[applicationSha256.length + challengeSha256.length];
         ByteBuffer.wrap(keyHandle).put(applicationSha256).put(challengeSha256);
 //        String keyHandleString = new String(keyHandle);
-        String keyHandleString = android.util.Base64.encodeToString(keyHandle, Base64.NO_WRAP);
+        String keyHandleString = android.util.Base64.encodeToString(keyHandle, Base64.NO_WRAP | Base64.URL_SAFE);
         LogUtils.d("keyHandleString");
         LogUtils.d(keyHandleString);
         LogUtils.d(ByteUtil.ByteArrayToHexString(keyHandle));
@@ -190,7 +190,7 @@ public class KeyHandleGeneratorWithKeyStore implements KeyHandleGenerator {
 
     @Override
     public PrivateKey getUserPrivateKey(byte[] keyHandle) throws U2FException {
-        String keyHandleString = android.util.Base64.encodeToString(keyHandle, Base64.NO_WRAP);
+        String keyHandleString = android.util.Base64.encodeToString(keyHandle, Base64.NO_WRAP | Base64.URL_SAFE);
         try {
             KeyStore keyStore = KeyStore.getInstance("AndroidKeyStore");
             keyStore.load(null);

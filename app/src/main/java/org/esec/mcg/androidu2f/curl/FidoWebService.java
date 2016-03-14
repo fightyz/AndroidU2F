@@ -91,6 +91,18 @@ public class FidoWebService {
                     fidoserviceurl = "https://demo.strongauth.com".concat("/skfe/rest/preregister");
                     payload = new JSONObject().put(JSON_KEY_USERNAME_LABEL, username).toString();
                     break;
+                case SKFE_REGISTER_WEBSERVICE:
+                    fidoserviceurl = "https://demo.strongauth.com".concat("/skfe/rest/register");
+                    payload = new JSONObject().put("response", response).put("metadata", createMetadata).toString();
+                    break;
+                case SKFE_PREAUTHENTICATE_WEBSERVICE:
+                    fidoserviceurl = "https://demo.strongauth.com".concat("/skfe/rest/preauthenticate");
+                    payload = new JSONObject().put(JSON_KEY_USERNAME_LABEL, username).toString();
+                    break;
+                case SKFE_AUTHENTICATE_WEBSERVICE:
+                    fidoserviceurl = "https://demo.strongauth.com".concat("/skfe/rest/authenticate");
+                    payload = new JSONObject().put("response", response).put("metadata", lastUsedMetadata).toString();
+                    break;
                 default:
                     return "Invalid webservice called..".concat(": ") + webServiceType;
             }

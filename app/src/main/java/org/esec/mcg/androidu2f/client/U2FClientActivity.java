@@ -97,6 +97,7 @@ public class U2FClientActivity extends AppCompatActivity {
             }
         } else if (requestType.equals(U2FRequestType.u2f_sign_request.name())) { // Sign, type = u2f_sign_request
             try {
+                signRequestIndex = 0;
                 signRequests = new JSONObject(request).getJSONArray("signRequests");
                 JSONObject signRequest = signRequests.getJSONObject(signRequestIndex);
                 signRequestIndex++;
@@ -138,16 +139,22 @@ public class U2FClientActivity extends AppCompatActivity {
             // If previous sign request failed, then do the next one.
             if (resultCode == RESULT_CANCELED) {
                 try {
+                    if (signRequests.length() == signRequestIndex) {
+                        LogUtils.d("out of band");
+                    } else {
+                        LogUtils.d("????");
+                    }
                     JSONObject signRequest = signRequests.getJSONObject(signRequestIndex);
+                    LogUtils.d(signRequest.toString());
                     signRequestIndex++;
                     AuthenticationRequest authenticationRequest = u2fClient.sign(signRequest.toString());
                     Intent i = new Intent("org.fidoalliance.intent.FIDO_OPERATION");
                     i.addCategory("android.intent.category.DEFAULT");
                     i.setType("application/fido.u2f_token+json");
-                    Bundle budleData = new Bundle();
-                    budleData.putByteArray("message", RawMessageCodec.encodeAuthenticationRequest(authenticationRequest));
-                    budleData.putString("U2FIntentType", U2FIntentType.U2F_OPERATION_SIGN.name());
-                    i.putExtras(budleData);
+                    Bundle bundleData = new Bundle();
+                    bundleData.putByteArray("RawMessage", RawMessageCodec.encodeAuthenticationRequest(authenticationRequest));
+                    bundleData.putString("U2FIntentType", U2FIntentType.U2F_OPERATION_SIGN.name());
+                    i.putExtras(bundleData);
                     startActivityForResult(i, SIGN_ACTIVITY_RES_2); // Start token activity
                 } catch (JSONException e) {
                     e.printStackTrace();
@@ -155,29 +162,34 @@ public class U2FClientActivity extends AppCompatActivity {
                     e.printStackTrace();
                 }
             } else if (resultCode == RESULT_OK) {
-                Intent i = new Intent("org.fidoalliance.intent.FIDO_OPERATION");
-                byte[] rawAuthenticationResponse = data.getByteArrayExtra("RawMessage");
-                Bundle bundleData = new Bundle();
-                String signatureData = android.util.Base64.encodeToString(rawAuthenticationResponse, Base64.URL_SAFE);
-                String clientDataBase64 = android.util.Base64.encodeToString(u2fClient.getClientData().getBytes(), Base64.URL_SAFE);
-                String keyHandle = u2fClient.getKeyHandle();
-                JSONObject responseData = new JSONObject();
-                try {
-                    responseData.put("keyHandle", keyHandle);
-                    responseData.put("signatureData", signatureData);
-                    responseData.put("clientData", clientDataBase64);
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-                bundleData.putString("message", responseData.toString());
-                LogUtils.d(responseData.toString());
-                bundleData.putString("U2FIntentType", U2FIntentType.U2F_OPERATION_SIGN_RESULT.name());
-                i.putExtras(bundleData);
+                LogUtils.d("=============");
+                JSONObject signResponse = ResponseCodec.encodeSignResponse(u2fClient.getKeyHandle(), data.getByteArrayExtra("RawMessage"), u2fClient.getClientData());
+                Intent i = ResponseCodec.encodeResponse(U2FResponseType.u2f_sign_response.name(), signResponse);
+//                Intent i = new Intent("org.fidoalliance.intent.FIDO_OPERATION");
                 setResult(RESULT_OK, i);
+                finish();
+//                byte[] rawAuthenticationResponse = data.getByteArrayExtra("RawMessage");
+//                Bundle bundleData = new Bundle();
+//                String signatureData = android.util.Base64.encodeToString(rawAuthenticationResponse, Base64.URL_SAFE);
+//                String clientDataBase64 = android.util.Base64.encodeToString(u2fClient.getClientData().getBytes(), Base64.URL_SAFE);
+//                String keyHandle = u2fClient.getKeyHandle();
+//                JSONObject responseData = new JSONObject();
+//                try {
+//                    responseData.put("keyHandle", keyHandle);
+//                    responseData.put("signatureData", signatureData);
+//                    responseData.put("clientData", clientDataBase64);
+//                } catch (JSONException e) {
+//                    e.printStackTrace();
+//                }
+//                bundleData.putString("message", responseData.toString());
+//                LogUtils.d(responseData.toString());
+//                bundleData.putString("U2FIntentType", U2FIntentType.U2F_OPERATION_SIGN_RESULT.name());
+//                i.putExtras(bundleData);
+//                setResult(RESULT_OK, i);
             }
         }
 
-        finish();
+//        finish();
     }
 
     public void swipeProceed(View view) {

@@ -7,6 +7,7 @@ import android.util.Base64;
 import org.esec.mcg.androidu2f.msg.ErrorCode;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.spongycastle.jcajce.provider.symmetric.ARC4;
 
 /**
  * Created by yz on 2016/3/10.
@@ -50,5 +51,21 @@ public class ResponseCodec {
             // TODO: 2016/3/10 Handle exception
             throw new RuntimeException(e);
         }
+    }
+
+    public static JSONObject encodeSignResponse(String keyHandle, byte[] authenticationResponse, String clientData) {
+        String signatureDataBase64 = Base64.encodeToString(authenticationResponse, Base64.NO_WRAP | Base64.URL_SAFE);
+        String clientDataBase64 = Base64.encodeToString(clientData.getBytes(), Base64.NO_WRAP | Base64.URL_SAFE);
+        JSONObject signResponse = new JSONObject();
+        try {
+            signResponse.put("keyHandle", keyHandle);
+            signResponse.put("signatureData", signatureDataBase64);
+            signResponse.put("clientData", clientDataBase64);
+            return signResponse;
+        } catch (JSONException e) {
+            // TODO: 2016/3/14 Handle exception
+            throw new RuntimeException(e);
+        }
+
     }
 }

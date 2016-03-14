@@ -123,7 +123,7 @@ public class U2FClientImpl extends U2FClient {
             byte[] clientDataSha256 = crypto.computeSha256(clientData);
 
             byte control = AuthenticationRequest.USER_PRESENCE_SIGN;
-            byte[] rawKeyHandle = android.util.Base64.decode(keyHandle, Base64.NO_WRAP);
+            byte[] rawKeyHandle = android.util.Base64.decode(keyHandle, Base64.NO_WRAP | Base64.URL_SAFE);
             return new AuthenticationRequest(control, clientDataSha256, appIdSha256, rawKeyHandle);
         } catch (JSONException e) {
             throw new U2FException("Rgister request JSON format is wrong.", e);
@@ -131,6 +131,8 @@ public class U2FClientImpl extends U2FClient {
             throw new U2FException("Can not get the caller's apk signature(facet ID).", e);
         } catch (NoSuchAlgorithmException e) {
             throw new U2FException("Can not get the caller's apk signature(facet ID).", e);
+        } catch (IllegalArgumentException e) {
+            throw new U2FException("Bad Base64 encoding of key Handle.", e);
         }
     }
 
@@ -140,6 +142,7 @@ public class U2FClientImpl extends U2FClient {
      * @return
      */
     private boolean verifyAppId(String appId) {
+        LogUtils.d(appId);
         return true;
     }
 
@@ -150,6 +153,7 @@ public class U2FClientImpl extends U2FClient {
         MessageDigest messageDigest = MessageDigest.getInstance("SHA1");
         String facetID = "android:apk-key-hash:" + Base64.encodeToString(messageDigest.digest(certificate.getEncoded()), Base64.DEFAULT | Base64.NO_WRAP);
         LogUtils.d("android:apk-key-hash:" + Base64.encodeToString(messageDigest.digest(certificate.getEncoded()), Base64.DEFAULT | Base64.NO_WRAP));
+        facetID = "https://demo.strongauth.com";
         return facetID;
     }
 }

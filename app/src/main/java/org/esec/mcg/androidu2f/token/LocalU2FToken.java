@@ -65,11 +65,11 @@ public class LocalU2FToken implements U2FToken {
         try {
             KeyStore keyStore = KeyStore.getInstance("AndroidKeyStore");
             keyStore.load(null);
-            PublicKey publicKey = keyStore.getCertificate(android.util.Base64.encodeToString(keyHandle, Base64.NO_WRAP)).getPublicKey();
+            PublicKey publicKey = keyStore.getCertificate(android.util.Base64.encodeToString(keyHandle, Base64.NO_WRAP | Base64.URL_SAFE)).getPublicKey();
             byte[] userPublicKeyX509 = publicKey.getEncoded(); // this is x.509 encoded, so has 91 bytes.
             SubjectPublicKeyInfo subjectPublicKeyInfo = new SubjectPublicKeyInfo(ASN1Sequence.getInstance(userPublicKeyX509));
             userPublicKey = subjectPublicKeyInfo.getPublicKeyData().getBytes();
-            LogUtils.d(keyStore.getCertificate(android.util.Base64.encodeToString(keyHandle, Base64.NO_WRAP)));
+            LogUtils.d(keyStore.getCertificate(android.util.Base64.encodeToString(keyHandle, Base64.NO_WRAP | Base64.URL_SAFE)));
             LogUtils.d(ByteUtil.ByteArrayToHexString(userPublicKeyX509));
             LogUtils.d(ByteUtil.ByteArrayToHexString(userPublicKey));
         } catch (KeyStoreException e) {

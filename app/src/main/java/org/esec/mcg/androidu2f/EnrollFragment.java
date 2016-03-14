@@ -131,8 +131,8 @@ public class EnrollFragment extends Fragment {
 
                 // Get the U2F Server's enroll url
                 SharedPreferences pf = PreferenceManager.getDefaultSharedPreferences(getActivity());
-                String endPoint = pf.getString("server_endpoint", "http://192.168.1.101:8000");
-                String enrollPoint = pf.getString("enroll", "/enroll");
+                String endPoint = pf.getString("server_endpoint", "https://demo.strongauth.com");
+                String enrollPoint = pf.getString("enroll", "/");
 
                 final String response;
                 try {
@@ -141,14 +141,14 @@ public class EnrollFragment extends Fragment {
                     response = FidoWebService.callFidoWebService(FidoWebService.SKFE_PREREGISTER_WEBSERVICE, getActivity().getResources(), username, null);
                     JSONObject formalResponse = new JSONObject(response);
                     JSONObject request = formalResponse.getJSONObject("Challenge");
-                    JSONObject newRequest = new JSONObject();
-                    newRequest.put("type", U2FRequestType.u2f_register_request);
-                    newRequest.put("registerRequests", request.getJSONArray("RegisterRequest"));
-                    newRequest.put("signRequests", request.getJSONArray("SignRequest"));
+                    JSONObject formalRequest = new JSONObject();
+                    formalRequest.put("type", U2FRequestType.u2f_register_request);
+                    formalRequest.put("registerRequests", request.getJSONArray("RegisterRequest"));
+                    formalRequest.put("signRequests", request.getJSONArray("SignRequest"));
                     MainActivity.sessionId = request.getString("sessionId");
-                    LogUtils.d(newRequest.toString());
+                    LogUtils.d(formalRequest.toString());
                     Bundle data = new Bundle();
-                    data.putString("Request", newRequest.toString());
+                    data.putString("Request", formalRequest.toString());
                     data.putString("U2FIntentType", U2FIntentType.U2F_OPERATION_REG.name());
                     i.putExtras(data);
                 } catch (U2FException | JSONException e) {

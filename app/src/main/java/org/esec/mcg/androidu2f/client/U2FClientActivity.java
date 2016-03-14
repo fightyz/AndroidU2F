@@ -9,6 +9,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
+import org.esec.mcg.androidu2f.Constants;
 import org.esec.mcg.androidu2f.U2FException;
 import org.esec.mcg.androidu2f.client.model.U2FClient;
 import org.esec.mcg.androidu2f.client.model.U2FClientImpl;
@@ -29,16 +30,12 @@ import org.json.JSONObject;
 
 public class U2FClientActivity extends AppCompatActivity {
 
-    private static final int REG_ACTIVITY_RES_1 = 1;
-    private static final int SIGN_ACTIVITY_RES_2 = 2;
-
     private String request;
     private String requestType;
     private String U2FOperationType;
     private JSONArray signRequests;
     private int signRequestIndex;
 
-    private U2FToken u2fToken;
     private U2FClient u2fClient;
 
     @Override
@@ -87,7 +84,7 @@ public class U2FClientActivity extends AppCompatActivity {
                 data.putByteArray("RawMessage", RawMessageCodec.encodeRegistrationRequest(registrationRequest));
                 data.putString("U2FIntentType", U2FIntentType.U2F_OPERATION_REG.name());
                 i.putExtras(data);
-                startActivityForResult(i, REG_ACTIVITY_RES_1); // Start token activity.
+                startActivityForResult(i, Constants.REG_ACTIVITY_RES_1); // Start token activity.
             } catch (U2FException e) {
                 JSONObject error = ResponseCodec.encodeError(ErrorCode.BAD_REQUEST, e.getMessage());
                 Intent i = ResponseCodec.encodeResponse(U2FResponseType.u2f_register_response.name(), error);
@@ -109,7 +106,7 @@ public class U2FClientActivity extends AppCompatActivity {
                 data.putByteArray("RawMessage", RawMessageCodec.encodeAuthenticationRequest(authenticationRequest));
                 data.putString("U2FIntentType", U2FIntentType.U2F_OPERATION_SIGN.name());
                 i.putExtras(data);
-                startActivityForResult(i, SIGN_ACTIVITY_RES_2); // Start token activity
+                startActivityForResult(i, Constants.SIGN_ACTIVITY_RES_2); // Start token activity
             } catch (U2FException e) {
                 Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show();
                 e.printStackTrace();
@@ -122,27 +119,30 @@ public class U2FClientActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == REG_ACTIVITY_RES_1) { // register
+        if (requestCode == Constants.REG_ACTIVITY_RES_1) { // register
             if (resultCode == RESULT_OK) { // success
                 JSONObject registerResponse = ResponseCodec.encodeRegisterResponse(data.getByteArrayExtra("RawMessage"), U2FClient.getClientData());
                 Intent i = ResponseCodec.encodeResponse(U2FResponseType.u2f_register_response.name(), registerResponse);
                 setResult(RESULT_OK, i);
                 finish();
             } else if (resultCode == RESULT_CANCELED) { // fail
-                JSONObject error = ResponseCodec.encodeError(ErrorCode.BAD_REQUEST, ErrorCode.BAD_REQUEST.toString());
+                JSONObject error = ResponseCodec.encodeError(ErrorCode.OTHER_ERROR, ErrorCode.OTHER_ERROR.toString().concat(" Wrong in Token."));
                 Intent i = ResponseCodec.encodeResponse(U2FResponseType.u2f_register_response.name(), error);
                 setResult(RESULT_CANCELED, i);
                 finish();
             }
 
-        } else if (requestCode == SIGN_ACTIVITY_RES_2) {
+        } else if (requestCode == Constants.SIGN_ACTIVITY_RES_2) {
             // If previous sign request failed, then do the next one.
             if (resultCode == RESULT_CANCELED) {
                 try {
                     if (signRequests.length() == signRequestIndex) {
                         LogUtils.d("out of band");
-                    } else {
-                        LogUtils.d("????");
+                        JSONObject error = ResponseCodec.encodeError(ErrorCode.DEVICE_INELIGIBLE, ErrorCode.DEVICE_INELIGIBLE.toString());
+                        Intent i = ResponseCodec.encodeResponse(U2FResponseType.u2f_sign_response.name(), error);
+                        setResult(RESULT_CANCELED, i);
+                        finish();
+                        return;
                     }
                     JSONObject signRequest = signRequests.getJSONObject(signRequestIndex);
                     LogUtils.d(signRequest.toString());
@@ -155,41 +155,22 @@ public class U2FClientActivity extends AppCompatActivity {
                     bundleData.putByteArray("RawMessage", RawMessageCodec.encodeAuthenticationRequest(authenticationRequest));
                     bundleData.putString("U2FIntentType", U2FIntentType.U2F_OPERATION_SIGN.name());
                     i.putExtras(bundleData);
-                    startActivityForResult(i, SIGN_ACTIVITY_RES_2); // Start token activity
-                } catch (JSONException e) {
+                    startActivityForResult(i, Constants.SIGN_ACTIVITY_RES_2); // Start token activity
+                } catch (JSONException | U2FException e) {
                     e.printStackTrace();
-                } catch (U2FException e) {
-                    e.printStackTrace();
+                    JSONObject error = ResponseCodec.encodeError(ErrorCode.OTHER_ERROR, ErrorCode.OTHER_ERROR.toString().concat(" Wrong in Token."));
+                    Intent i = ResponseCodec.encodeResponse(U2FResponseType.u2f_sign_response.name(), error);
+                    setResult(RESULT_CANCELED, i);
+                    finish();
                 }
             } else if (resultCode == RESULT_OK) {
                 LogUtils.d("=============");
                 JSONObject signResponse = ResponseCodec.encodeSignResponse(u2fClient.getKeyHandle(), data.getByteArrayExtra("RawMessage"), u2fClient.getClientData());
                 Intent i = ResponseCodec.encodeResponse(U2FResponseType.u2f_sign_response.name(), signResponse);
-//                Intent i = new Intent("org.fidoalliance.intent.FIDO_OPERATION");
                 setResult(RESULT_OK, i);
                 finish();
-//                byte[] rawAuthenticationResponse = data.getByteArrayExtra("RawMessage");
-//                Bundle bundleData = new Bundle();
-//                String signatureData = android.util.Base64.encodeToString(rawAuthenticationResponse, Base64.URL_SAFE);
-//                String clientDataBase64 = android.util.Base64.encodeToString(u2fClient.getClientData().getBytes(), Base64.URL_SAFE);
-//                String keyHandle = u2fClient.getKeyHandle();
-//                JSONObject responseData = new JSONObject();
-//                try {
-//                    responseData.put("keyHandle", keyHandle);
-//                    responseData.put("signatureData", signatureData);
-//                    responseData.put("clientData", clientDataBase64);
-//                } catch (JSONException e) {
-//                    e.printStackTrace();
-//                }
-//                bundleData.putString("message", responseData.toString());
-//                LogUtils.d(responseData.toString());
-//                bundleData.putString("U2FIntentType", U2FIntentType.U2F_OPERATION_SIGN_RESULT.name());
-//                i.putExtras(bundleData);
-//                setResult(RESULT_OK, i);
             }
         }
-
-//        finish();
     }
 
     public void swipeProceed(View view) {

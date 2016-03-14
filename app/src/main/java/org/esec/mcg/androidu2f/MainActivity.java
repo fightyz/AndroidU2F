@@ -33,8 +33,6 @@ public class MainActivity extends AppCompatActivity
                     SignFragment.OnFragmentInteractionListener {
 
     private final Map<String,String> details = new LinkedHashMap<String, String>();
-    private static final int REG_ACTIVITY_RES_1 = 1;
-    private static final int SIGN_ACTIVITY_RES_2 = 2;
     public static String sessionId;
 
     @Override
@@ -92,13 +90,12 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == REG_ACTIVITY_RES_1) {
+        if (requestCode == Constants.REG_ACTIVITY_RES_1) {
             if (resultCode == RESULT_CANCELED) {
                 Fragment currentFragment = getFragmentManager().findFragmentById(R.id.fragment_container);
                 ((TextView)currentFragment.getView().findViewById(R.id.status_text)).setText(data.getExtras().getString("Response"));
                 return;
             }
-            LogUtils.d("resultCode = " + resultCode);
             String registerResponse = data.getStringExtra("Response");
             LogUtils.d(registerResponse);
             //TODO send register response to StrongAuth U2F Server
@@ -130,7 +127,7 @@ public class MainActivity extends AppCompatActivity
 
 
 //            HTTP.post(new URL(endPoint + bindPoint), )
-        } else if (SIGN_ACTIVITY_RES_2 == requestCode) {
+        } else if (Constants.SIGN_ACTIVITY_RES_2 == requestCode) {
             if (resultCode == RESULT_CANCELED) {
                 LogUtils.d("sign failed!");
                 return;

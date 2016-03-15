@@ -2,8 +2,21 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="org.esec.mcg.androidu2f" >
 
+    <!-- 读写手机状态和身份 -->
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+    <!-- 网络访问权限 -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+    <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
+    <!-- 打电话权限 -->
+    <uses-permission android:name="android.permission.CALL_PHONE" />
+    <!-- nfc权限 -->
+    <uses-permission android:name="android.permission.NFC" />
+    <!-- 手机震动 -->
+    <uses-permission android:name="android.permission.VIBRATE" />
 
     <application
         android:allowBackup="true"
@@ -47,6 +60,12 @@
 
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
+        </activity>
+        <activity android:name="com.wepayplugin.nfc.ui.PayStartActivity" android:configChanges="keyboardHidden|orientation|screenSize" android:theme="@android:style/Theme.Translucent" android:screenOrientation="portrait" >
+        </activity>
+        <activity android:name="com.wepayplugin.nfc.ui.SwiperCardActivity" android:configChanges="keyboardHidden|orientation|screenSize" android:screenOrientation="portrait" >
+        </activity>
+        <activity android:name="com.wepayplugin.nfc.ui.PayResultActivity" android:configChanges="keyboardHidden|orientation|screenSize" android:screenOrientation="portrait" >
         </activity>
     </application>
 

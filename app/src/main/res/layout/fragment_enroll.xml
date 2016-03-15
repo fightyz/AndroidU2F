@@ -13,14 +13,14 @@
         <ProgressBar
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:id="@+id/progressBar"
+            android:id="@+id/enroll_progressBar"
             android:layout_gravity="center" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Authenticating, please wait..."
-            android:id="@+id/status_text"
+            android:text="Registering, please wait..."
+            android:id="@+id/enroll_status_text"
             android:layout_gravity="center" />
 
     </LinearLayout>

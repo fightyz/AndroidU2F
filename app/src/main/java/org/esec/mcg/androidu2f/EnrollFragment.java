@@ -15,6 +15,7 @@ import android.preference.PreferenceManager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -52,12 +53,12 @@ public class EnrollFragment extends Fragment {
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String USERNAME = "username";
     private static final String PASSWORD = "password";
-    private static final int REG_ACTIVITY_RES_1 = 1;
 
     private String username;
     private String password;
 
     private TextView statusText;
+    private ProgressBar progressBar;
     private UIHandler uiHandler;
 
     /**
@@ -162,7 +163,7 @@ public class EnrollFragment extends Fragment {
                 }
 
                 // call u2f client activity
-                getActivity().startActivityForResult(i, REG_ACTIVITY_RES_1);
+                getActivity().startActivityForResult(i, Constants.REG_ACTIVITY_RES_1);
             }
         }).start();
     }
@@ -172,7 +173,7 @@ public class EnrollFragment extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_enroll, container, false);
-        statusText = (TextView)view.findViewById(R.id.status_text);
+        statusText = (TextView)view.findViewById(R.id.enroll_status_text);
         return view;
     }
 
@@ -229,6 +230,7 @@ public class EnrollFragment extends Fragment {
             super.handleMessage(msg);
             Bundle data = msg.getData();
             statusText.setText(data.getString("Error"));
+            progressBar.setVisibility(View.INVISIBLE);
         }
     }
 }

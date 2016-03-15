@@ -46,6 +46,7 @@ public class U2FClientActivity extends AppCompatActivity {
 
     @Override
     protected void onResume() {
+        LogUtils.d("onResume");
         super.onResume();
         Bundle extras = getIntent().getExtras();
         request = extras.getString("Request");
@@ -94,9 +95,21 @@ public class U2FClientActivity extends AppCompatActivity {
             }
         } else if (requestType.equals(U2FRequestType.u2f_sign_request.name())) { // Sign, type = u2f_sign_request
             try {
-                signRequestIndex = 0;
-                signRequests = new JSONObject(request).getJSONArray("signRequests");
+                if (signRequestIndex == 0) {
+                    signRequests = new JSONObject(request).getJSONArray("signRequests");
+                }
+                if (signRequestIndex == signRequests.length()) {
+                    LogUtils.d("out of band");
+                    JSONObject error = ResponseCodec.encodeError(ErrorCode.DEVICE_INELIGIBLE, ErrorCode.DEVICE_INELIGIBLE.toString());
+                    Intent i = ResponseCodec.encodeResponse(U2FResponseType.u2f_sign_response.name(), error);
+                    setResult(RESULT_CANCELED, i);
+                    finish();
+                    return;
+                }
+
                 JSONObject signRequest = signRequests.getJSONObject(signRequestIndex);
+                LogUtils.d("Index = " + signRequestIndex);
+                LogUtils.d("signRequest = " + signRequest.toString());
                 signRequestIndex++;
                 AuthenticationRequest authenticationRequest = u2fClient.sign(signRequest.toString());
                 Intent i = new Intent("org.fidoalliance.intent.FIDO_OPERATION");
@@ -107,11 +120,12 @@ public class U2FClientActivity extends AppCompatActivity {
                 data.putString("U2FIntentType", U2FIntentType.U2F_OPERATION_SIGN.name());
                 i.putExtras(data);
                 startActivityForResult(i, Constants.SIGN_ACTIVITY_RES_2); // Start token activity
-            } catch (U2FException e) {
-                Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show();
+            } catch (U2FException | JSONException e) {
                 e.printStackTrace();
-            } catch (JSONException e) {
-                e.printStackTrace();
+                JSONObject error = ResponseCodec.encodeError(ErrorCode.OTHER_ERROR, ErrorCode.OTHER_ERROR.toString().concat(" Wrong in Token."));
+                Intent i = ResponseCodec.encodeResponse(U2FResponseType.u2f_sign_response.name(), error);
+                setResult(RESULT_CANCELED, i);
+                finish();
             }
         }
     }
@@ -133,36 +147,39 @@ public class U2FClientActivity extends AppCompatActivity {
             }
 
         } else if (requestCode == Constants.SIGN_ACTIVITY_RES_2) {
+            LogUtils.d("onActivityResult");
             // If previous sign request failed, then do the next one.
             if (resultCode == RESULT_CANCELED) {
-                try {
-                    if (signRequests.length() == signRequestIndex) {
-                        LogUtils.d("out of band");
-                        JSONObject error = ResponseCodec.encodeError(ErrorCode.DEVICE_INELIGIBLE, ErrorCode.DEVICE_INELIGIBLE.toString());
-                        Intent i = ResponseCodec.encodeResponse(U2FResponseType.u2f_sign_response.name(), error);
-                        setResult(RESULT_CANCELED, i);
-                        finish();
-                        return;
-                    }
-                    JSONObject signRequest = signRequests.getJSONObject(signRequestIndex);
-                    LogUtils.d(signRequest.toString());
-                    signRequestIndex++;
-                    AuthenticationRequest authenticationRequest = u2fClient.sign(signRequest.toString());
-                    Intent i = new Intent("org.fidoalliance.intent.FIDO_OPERATION");
-                    i.addCategory("android.intent.category.DEFAULT");
-                    i.setType("application/fido.u2f_token+json");
-                    Bundle bundleData = new Bundle();
-                    bundleData.putByteArray("RawMessage", RawMessageCodec.encodeAuthenticationRequest(authenticationRequest));
-                    bundleData.putString("U2FIntentType", U2FIntentType.U2F_OPERATION_SIGN.name());
-                    i.putExtras(bundleData);
-                    startActivityForResult(i, Constants.SIGN_ACTIVITY_RES_2); // Start token activity
-                } catch (JSONException | U2FException e) {
-                    e.printStackTrace();
-                    JSONObject error = ResponseCodec.encodeError(ErrorCode.OTHER_ERROR, ErrorCode.OTHER_ERROR.toString().concat(" Wrong in Token."));
-                    Intent i = ResponseCodec.encodeResponse(U2FResponseType.u2f_sign_response.name(), error);
-                    setResult(RESULT_CANCELED, i);
-                    finish();
-                }
+//                try {
+//                    if (signRequests.length() == signRequestIndex) {
+//                        LogUtils.d("out of band");
+//                        JSONObject error = ResponseCodec.encodeError(ErrorCode.DEVICE_INELIGIBLE, ErrorCode.DEVICE_INELIGIBLE.toString());
+//                        Intent i = ResponseCodec.encodeResponse(U2FResponseType.u2f_sign_response.name(), error);
+//                        setResult(RESULT_CANCELED, i);
+//                        finish();
+//                        return;
+//                    }
+//                    JSONObject signRequest = signRequests.getJSONObject(signRequestIndex);
+//
+//                    LogUtils.d(signRequest.toString());
+//                    LogUtils.d("index = " + signRequestIndex);
+//                    signRequestIndex++;
+//                    AuthenticationRequest authenticationRequest = u2fClient.sign(signRequest.toString());
+//                    Intent i = new Intent("org.fidoalliance.intent.FIDO_OPERATION");
+//                    i.addCategory("android.intent.category.DEFAULT");
+//                    i.setType("application/fido.u2f_token+json");
+//                    Bundle bundleData = new Bundle();
+//                    bundleData.putByteArray("RawMessage", RawMessageCodec.encodeAuthenticationRequest(authenticationRequest));
+//                    bundleData.putString("U2FIntentType", U2FIntentType.U2F_OPERATION_SIGN.name());
+//                    i.putExtras(bundleData);
+//                    startActivityForResult(i, Constants.SIGN_ACTIVITY_RES_2); // Start token activity
+//                } catch (JSONException | U2FException e) {
+//                    e.printStackTrace();
+//                    JSONObject error = ResponseCodec.encodeError(ErrorCode.OTHER_ERROR, ErrorCode.OTHER_ERROR.toString().concat(" Wrong in Token."));
+//                    Intent i = ResponseCodec.encodeResponse(U2FResponseType.u2f_sign_response.name(), error);
+//                    setResult(RESULT_CANCELED, i);
+//                    finish();
+//                }
             } else if (resultCode == RESULT_OK) {
                 LogUtils.d("=============");
                 JSONObject signResponse = ResponseCodec.encodeSignResponse(u2fClient.getKeyHandle(), data.getByteArrayExtra("RawMessage"), u2fClient.getClientData());

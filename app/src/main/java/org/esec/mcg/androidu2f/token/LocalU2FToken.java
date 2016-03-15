@@ -1,6 +1,7 @@
 package org.esec.mcg.androidu2f.token;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.util.Base64;
 
 import org.esec.mcg.androidu2f.U2FException;
@@ -30,6 +31,8 @@ import java.security.cert.X509Certificate;
  * Created by yz on 2016/1/14.
  */
 public class LocalU2FToken implements U2FToken {
+
+    public static boolean USER_PRESECE = false;
 
     private final X509Certificate attestationCertificate;
     private final PrivateKey certificatePrivateKey;
@@ -100,7 +103,13 @@ public class LocalU2FToken implements U2FToken {
         byte[] keyHandle = authenticationRequest.getKeyHandle();
 
         // TODO: 2016/3/8 counter should be stored safely
-        int counter = 1;
+        SharedPreferences sharedPreferences = context.getSharedPreferences("org.esec.mcg.android.fido.PREFERENCE_FILE_KEY"
+        .concat(".").concat(Base64.encodeToString(keyHandle, Base64.NO_WRAP | Base64.URL_SAFE)), Context.MODE_PRIVATE);
+        int counter = sharedPreferences.getInt("Counter", 1);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putInt("Counter", counter + 1);
+        editor.commit();
+
         PrivateKey privateKey = keyHandleGenerator.getUserPrivateKey(keyHandle);
         byte[] signedData = RawMessageCodec.encodeAuthenticationSignedBytes(applicationSha256, (byte)0x01, counter, challengeSha256);
 

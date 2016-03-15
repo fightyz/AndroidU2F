@@ -8,10 +8,14 @@ import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Bundle;
 import android.app.Fragment;
+import android.os.Handler;
+import android.os.Message;
 import android.preference.PreferenceManager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ProgressBar;
+import android.widget.TextView;
 
 import org.esec.mcg.androidu2f.curl.FidoWebService;
 import org.esec.mcg.androidu2f.msg.U2FIntentType;
@@ -35,6 +39,10 @@ import java.util.Map;
  * create an instance of this fragment.
  */
 public class SignFragment extends Fragment {
+    private TextView statusText;
+    private ProgressBar progressBar;
+    private UIHandler uiHandler;
+
     private static final String USERNAME = "username";
     private static final String PASSWORD = "password";
     private static final int SIGN_ACTIVITY_RES_2 = 2;
@@ -78,6 +86,8 @@ public class SignFragment extends Fragment {
         parameters.put("password", password);
         parameters.put("version", "U2F_V2");
 
+        uiHandler = new UIHandler();
+
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -113,6 +123,12 @@ public class SignFragment extends Fragment {
                     i.putExtras(data);
                 } catch (U2FException | JSONException e) {
                     e.printStackTrace();
+                    Bundle data = new Bundle();
+                    data.putString("Error", e.getMessage());
+                    Message msg = new Message();
+                    msg.setData(data);
+                    uiHandler.sendMessage(msg);
+                    return;
                 }
                 getActivity().startActivityForResult(i, SIGN_ACTIVITY_RES_2);
             }
@@ -123,7 +139,10 @@ public class SignFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_sign, container, false);
+        View view = inflater.inflate(R.layout.fragment_sign, container, false);
+        statusText = (TextView)view.findViewById(R.id.sign_status_text);
+        progressBar = (ProgressBar)view.findViewById(R.id.sign_progressBar);
+        return view;
     }
 
     // TODO: Rename method, update argument and hook method into UI event
@@ -172,5 +191,15 @@ public class SignFragment extends Fragment {
      */
     private String getServerRequest(URL url) {
         return "{\"type\": \"u2f_sign_request\", \"signRequests\": [{\"keyHandle\":\"ASF4Os1wJysH6uWvJV9PvyNiph4y4O84tGCHj1FZEE8Wjy4TySErklcH0BQNz6lSbRpiDi2XE6we2bcJ1DSUaw==\",\"challenge\": \"mLkHCmQZGbZEXefhWByeKo5zTFldYLIZFRGeHdvTFBc=\", \"version\": \"U2F_V2\", \"appId\": \"http://localhost:8000\"}]}";
+    }
+
+    private class UIHandler extends Handler {
+        @Override
+        public void handleMessage(Message msg) {
+            super.handleMessage(msg);
+            Bundle data = msg.getData();
+            statusText.setText(data.getString("Error"));
+            progressBar.setVisibility(View.INVISIBLE);
+        }
     }
 }

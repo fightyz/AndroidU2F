@@ -22,6 +22,7 @@ import org.esec.mcg.androidu2f.msg.U2FResponseType;
 import org.esec.mcg.androidu2f.token.U2FToken;
 import org.esec.mcg.androidu2f.token.msg.AuthenticationRequest;
 import org.esec.mcg.androidu2f.token.msg.RegistrationRequest;
+import org.esec.mcg.androidu2f.token.msg.U2FTokenIntentType;
 import org.esec.mcg.utils.ByteUtil;
 import org.esec.mcg.utils.logger.LogUtils;
 import org.json.JSONArray;
@@ -83,7 +84,7 @@ public class U2FClientActivity extends AppCompatActivity {
                 i.setType("application/fido.u2f_token+json");
                 Bundle data = new Bundle();
                 data.putByteArray("RawMessage", RawMessageCodec.encodeRegistrationRequest(registrationRequest));
-                data.putString("U2FIntentType", U2FIntentType.U2F_OPERATION_REG.name());
+                data.putString("U2FTokenIntentType", U2FTokenIntentType.U2F_OPERATION_REG.name());
                 i.putExtras(data);
                 startActivityForResult(i, Constants.REG_ACTIVITY_RES_1); // Start token activity.
             } catch (U2FException e) {
@@ -117,7 +118,7 @@ public class U2FClientActivity extends AppCompatActivity {
                 i.setType("application/fido.u2f_token+json");
                 Bundle data = new Bundle();
                 data.putByteArray("RawMessage", RawMessageCodec.encodeAuthenticationRequest(authenticationRequest));
-                data.putString("U2FIntentType", U2FIntentType.U2F_OPERATION_SIGN.name());
+                data.putString("U2FTokenIntentType", U2FTokenIntentType.U2F_OPERATION_SIGN.name());
                 i.putExtras(data);
                 startActivityForResult(i, Constants.SIGN_ACTIVITY_RES_2); // Start token activity
             } catch (U2FException | JSONException e) {

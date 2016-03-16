@@ -8,6 +8,7 @@ import android.util.Base64;
 
 import org.esec.mcg.androidu2f.U2FException;
 import org.esec.mcg.androidu2f.token.KeyHandleGenerator;
+import org.esec.mcg.androidu2f.token.U2FTokenException;
 import org.esec.mcg.utils.ByteUtil;
 import org.esec.mcg.utils.logger.LogUtils;
 
@@ -137,7 +138,7 @@ public class KeyHandleGeneratorWithKeyStore implements KeyHandleGenerator {
     }
 
     @Override
-    public byte[] generateKeyHandle(byte[] applicationSha256, byte[] challengeSha256) throws U2FException{
+    public byte[] generateKeyHandle(byte[] applicationSha256, byte[] challengeSha256) throws U2FTokenException{
         byte[] keyHandle = new byte[applicationSha256.length + challengeSha256.length];
         ByteBuffer.wrap(keyHandle).put(applicationSha256).put(challengeSha256);
 //        String keyHandleString = new String(keyHandle);
@@ -189,7 +190,7 @@ public class KeyHandleGeneratorWithKeyStore implements KeyHandleGenerator {
     }
 
     @Override
-    public PrivateKey getUserPrivateKey(byte[] keyHandle) throws U2FException {
+    public PrivateKey getUserPrivateKey(byte[] keyHandle) throws U2FTokenException {
         String keyHandleString = android.util.Base64.encodeToString(keyHandle, Base64.NO_WRAP | Base64.URL_SAFE);
         try {
             KeyStore keyStore = KeyStore.getInstance("AndroidKeyStore");
@@ -197,7 +198,7 @@ public class KeyHandleGeneratorWithKeyStore implements KeyHandleGenerator {
             if (keyStore.containsAlias(keyHandleString)) {
                 return (PrivateKey)keyStore.getKey(keyHandleString, null);
             } else {
-                throw new U2FException("Can not find user key");
+                throw new U2FTokenException("Can not find user key");
             }
 
         } catch (KeyStoreException e) {

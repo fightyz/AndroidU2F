@@ -10,6 +10,6 @@ import java.security.PrivateKey;
  */
 public interface KeyHandleGenerator {
     byte[] generateKeyHandle(byte[] applicationSha256, KeyPair keyPair);
-    byte[] generateKeyHandle(byte[] applicationSha256, byte[] challengeSha256) throws U2FException;
-    PrivateKey getUserPrivateKey(byte[] keyHandle) throws U2FException;
+    byte[] generateKeyHandle(byte[] applicationSha256, byte[] challengeSha256) throws U2FTokenException;
+    PrivateKey getUserPrivateKey(byte[] keyHandle) throws U2FTokenException;
 }

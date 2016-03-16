@@ -174,6 +174,7 @@ public class EnrollFragment extends Fragment {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_enroll, container, false);
         statusText = (TextView)view.findViewById(R.id.enroll_status_text);
+        progressBar = (ProgressBar)view.findViewById(R.id.enroll_progressBar);
         return view;
     }
 

@@ -2,6 +2,7 @@ package org.esec.mcg.androidu2f.token.impl;
 
 import org.esec.mcg.androidu2f.U2FException;
 import org.esec.mcg.androidu2f.token.Crypto;
+import org.esec.mcg.androidu2f.token.U2FTokenException;
 
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -20,18 +21,18 @@ public class CryptoECDSA implements Crypto {
     }
 
     @Override
-    public byte[] sign(byte[] signedData, PrivateKey certificatePrivateKey) throws U2FException {
+    public byte[] sign(byte[] signedData, PrivateKey certificatePrivateKey) throws U2FTokenException {
         try {
             Signature signature = Signature.getInstance("SHA256withECDSA");
             signature.initSign(certificatePrivateKey);
             signature.update(signedData);
             return signature.sign();
         } catch (NoSuchAlgorithmException e) {
-            throw new U2FException("Error when signing", e);
+            throw new U2FTokenException("Error when signing", e);
         } catch (SignatureException e) {
-            throw new U2FException("Error when signing", e);
+            throw new U2FTokenException("Error when signing", e);
         } catch (InvalidKeyException e) {
-            throw new U2FException("Error when signing", e);
+            throw new U2FTokenException("Error when signing", e);
         }
     }
 }

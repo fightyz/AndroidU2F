@@ -1,16 +1,20 @@
-package org.esec.mcg.androidu2f.token;
+package org.esec.mcg.androidu2f.token.impl;
 
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.util.Base64;
 
-import org.esec.mcg.androidu2f.U2FException;
-import org.esec.mcg.androidu2f.codec.RawMessageCodec;
-import org.esec.mcg.androidu2f.token.impl.CryptoECDSA;
-import org.esec.mcg.androidu2f.token.impl.KeyHandleGeneratorWithKeyStore;
-import org.esec.mcg.androidu2f.token.impl.SCSecp256r1;
+import org.esec.mcg.androidu2f.token.AttestationCertificate;
+import org.esec.mcg.androidu2f.token.Crypto;
+import org.esec.mcg.androidu2f.token.DataStore;
+import org.esec.mcg.androidu2f.token.KeyHandleGenerator;
+import org.esec.mcg.androidu2f.token.KeyPairGenerator;
+import org.esec.mcg.androidu2f.token.U2FToken;
+import org.esec.mcg.androidu2f.token.U2FTokenException;
+import org.esec.mcg.androidu2f.token.UserPresenceVerifier;
 import org.esec.mcg.androidu2f.token.msg.AuthenticationRequest;
 import org.esec.mcg.androidu2f.token.msg.AuthenticationResponse;
+import org.esec.mcg.androidu2f.token.msg.RawMessageCodec;
 import org.esec.mcg.androidu2f.token.msg.RegistrationRequest;
 import org.esec.mcg.androidu2f.token.msg.RegistrationResponse;
 import org.esec.mcg.utils.ByteUtil;
@@ -45,7 +49,7 @@ public class LocalU2FToken implements U2FToken {
     private Context context;
 
     public LocalU2FToken(Context context) {
-        attestationCertificate = (X509Certificate)AttestationCertificate.getAttestationCertificate();
+        attestationCertificate = (X509Certificate) AttestationCertificate.getAttestationCertificate();
         certificatePrivateKey = AttestationCertificate.getAttestationPrivateKey();
         keyPairGenerator = new SCSecp256r1();
 
@@ -57,7 +61,7 @@ public class LocalU2FToken implements U2FToken {
     }
 
     @Override
-    public RegistrationResponse register(RegistrationRequest registrationRequest) throws U2FException{
+    public RegistrationResponse register(RegistrationRequest registrationRequest) throws U2FTokenException {
         byte[] applicationSha256 = registrationRequest.getApplicationSha256();
         byte[] challengeSha256 = registrationRequest.getChallengeSha256();
 
@@ -76,13 +80,13 @@ public class LocalU2FToken implements U2FToken {
             LogUtils.d(ByteUtil.ByteArrayToHexString(userPublicKeyX509));
             LogUtils.d(ByteUtil.ByteArrayToHexString(userPublicKey));
         } catch (KeyStoreException e) {
-            throw new U2FException("Local token register error.", e);
+            throw new U2FTokenException("Local token register error.", e);
         } catch (CertificateException e) {
-            throw new U2FException("Local token register error.", e);
+            throw new U2FTokenException("Local token register error.", e);
         } catch (NoSuchAlgorithmException e) {
-            throw new U2FException("Local token register error.", e);
+            throw new U2FTokenException("Local token register error.", e);
         } catch (IOException e) {
-            throw new U2FException("Local token register error.", e);
+            throw new U2FTokenException("Local token register error.", e);
         }
 
         byte[] signedData = RawMessageCodec.encodeRegistrationSignedBytes(applicationSha256, challengeSha256,
@@ -97,7 +101,7 @@ public class LocalU2FToken implements U2FToken {
     }
 
     @Override
-    public AuthenticationResponse authenticate(AuthenticationRequest authenticationRequest) throws U2FException {
+    public AuthenticationResponse authenticate(AuthenticationRequest authenticationRequest) throws U2FTokenException {
         byte[] applicationSha256 = authenticationRequest.getApplicationSha256();
         byte[] challengeSha256 = authenticationRequest.getChallengeSha256();
         byte[] keyHandle = authenticationRequest.getKeyHandle();

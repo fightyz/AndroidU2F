@@ -23,6 +23,11 @@ import java.util.Random;
 
 public class U2FTokenActivity extends AppCompatActivity {
 
+    public static final String TEST_OF_PRESENCE_REQUIRED = "error:test-of-user-presence-required";
+    public static final String INVALID_KEY_HANDLE = "error:bad-key-handle";
+    public static final byte[] SW_TEST_OF_PRESENCE_REQUIRED = {0x69, (byte)0x85};
+    public static final byte[] SW_INVALID_KEY_HANDLE = {0x6a, (byte)0x80};
+
     private String u2fTokenIntentType;
     private byte[] rawMessage;
 
@@ -104,7 +109,19 @@ public class U2FTokenActivity extends AppCompatActivity {
                 setResult(RESULT_OK, i);
                 finish();
             } catch (U2FTokenException e) {
-                setResult(RESULT_CANCELED);
+                Bundle data = new Bundle();
+                Intent i = new Intent("org.fidoalliance.intent.FIDO_OPERATION");
+                if (e.getMessage().equals(TEST_OF_PRESENCE_REQUIRED)) {
+                    data.putByteArray(TEST_OF_PRESENCE_REQUIRED, SW_TEST_OF_PRESENCE_REQUIRED);
+                    i.putExtras(data);
+                    setResult(RESULT_CANCELED, i);
+                } else if (e.getMessage().equals(INVALID_KEY_HANDLE)) {
+                    data.putByteArray(INVALID_KEY_HANDLE, SW_INVALID_KEY_HANDLE);
+                    i.putExtras(data);
+                    setResult(RESULT_CANCELED, i);
+                } else {
+                    setResult(RESULT_CANCELED);
+                }
                 finish();
                 e.printStackTrace();
             }

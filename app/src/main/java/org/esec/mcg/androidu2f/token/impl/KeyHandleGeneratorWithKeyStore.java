@@ -141,7 +141,6 @@ public class KeyHandleGeneratorWithKeyStore implements KeyHandleGenerator {
     public byte[] generateKeyHandle(byte[] applicationSha256, byte[] challengeSha256) throws U2FTokenException{
         byte[] keyHandle = new byte[applicationSha256.length + challengeSha256.length];
         ByteBuffer.wrap(keyHandle).put(applicationSha256).put(challengeSha256);
-//        String keyHandleString = new String(keyHandle);
         String keyHandleString = android.util.Base64.encodeToString(keyHandle, Base64.NO_WRAP | Base64.URL_SAFE);
         LogUtils.d("keyHandleString");
         LogUtils.d(keyHandleString);
@@ -164,15 +163,8 @@ public class KeyHandleGeneratorWithKeyStore implements KeyHandleGenerator {
                             KeyProperties.PURPOSE_SIGN)
                             .setAlgorithmParameterSpec(new ECGenParameterSpec("secp256r1"))
                             .setDigests(KeyProperties.DIGEST_SHA256)
-//                    .setUserAuthenticationRequired(true)
-//                    .setUserAuthenticationValidityDurationSeconds(5 * 60)
                             .build()
             );
-
-            KeyPair keyPair = keyPairGenerator.generateKeyPair();
-
-//            LogUtils.d(ByteUtil.ByteArrayToHexString(keyPair.getPublic().getEncoded()));
-//            LogUtils.d(ByteUtil.ByteArrayToHexString(keyPair.getPrivate().getEncoded()));
         } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
         } catch (NoSuchProviderException e) {
@@ -213,5 +205,24 @@ public class KeyHandleGeneratorWithKeyStore implements KeyHandleGenerator {
             e.printStackTrace();
         }
         return null;
+    }
+
+    @Override
+    public boolean checkKeyHandle(byte[] keyHandle) throws U2FTokenException {
+        String keyHandleString = Base64.encodeToString(keyHandle, Base64.NO_WRAP | Base64.URL_SAFE);
+        final KeyStore keyStore;
+        try {
+            keyStore = KeyStore.getInstance("AndroidKeyStore");
+            keyStore.load(null);
+            if (keyStore.containsAlias(keyHandleString)) {
+                return true;
+            } else {
+                return false;
+            }
+        } catch (KeyStoreException |CertificateException
+                | NoSuchAlgorithmException | IOException e) {
+            e.printStackTrace();
+            throw new U2FTokenException("Wrong with Key Store.", e);
+        }
     }
 }

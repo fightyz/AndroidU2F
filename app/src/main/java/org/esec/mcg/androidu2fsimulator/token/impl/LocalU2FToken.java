@@ -5,7 +5,6 @@ import android.content.SharedPreferences;
 import android.util.Base64;
 import android.util.Log;
 
-import org.esec.mcg.androidu2fsimulator.token.AttestationCertificate;
 import org.esec.mcg.androidu2fsimulator.token.Crypto;
 import org.esec.mcg.androidu2fsimulator.token.DataStore;
 import org.esec.mcg.androidu2fsimulator.token.KeyHandleGenerator;

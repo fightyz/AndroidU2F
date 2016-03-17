@@ -1,10 +1,8 @@
 package org.esec.mcg.androidu2f.codec;
 
 import org.esec.mcg.androidu2f.U2FException;
-import org.esec.mcg.androidu2f.token.msg.AuthenticationRequest;
-import org.esec.mcg.androidu2f.token.msg.AuthenticationResponse;
-import org.esec.mcg.androidu2f.token.msg.RegistrationRequest;
-import org.esec.mcg.androidu2f.token.msg.RegistrationResponse;
+import org.esec.mcg.androidu2f.client.msg.AuthenticationRequest;
+import org.esec.mcg.androidu2f.client.msg.RegistrationRequest;
 
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
@@ -107,48 +105,6 @@ public class RawMessageCodec {
         } catch (IOException e) {
             throw new U2FException("Error when parsing raw AuthenticationRequest", e);
         }
-    }
-
-    public static byte[] encodeRegistrationResponse(RegistrationResponse registrationResponse) throws U2FException {
-        byte[] userPublicKey = registrationResponse.getUserPublicKey();
-        byte[] keyHandle = registrationResponse.getKeyHandle();
-        X509Certificate attestationCertificate = registrationResponse.getAttestationCertificate();
-        byte[] signature = registrationResponse.getSignature();
-
-        byte[] attestationCertificateBytes;
-        try {
-            attestationCertificateBytes = attestationCertificate.getEncoded();
-        } catch (CertificateEncodingException e) {
-            throw new U2FException("Error when encoding attestation certificate.", e);
-        }
-
-        if (keyHandle.length > 255) {
-            throw new U2FException("keyHandle length cannot be longer than 255 bytes!");
-        }
-
-        byte[] result = new byte[1 + userPublicKey.length + 1 + keyHandle.length
-                + attestationCertificateBytes.length + signature.length];
-        ByteBuffer.wrap(result)
-                .put(REGISTRATION_RESERVED_BYTE_VALUE)
-                .put(userPublicKey)
-                .put((byte) keyHandle.length)
-                .put(keyHandle)
-                .put(attestationCertificateBytes)
-                .put(signature);
-        return result;
-    }
-
-    public static byte[] encodeAuthenticationResponse(AuthenticationResponse authenticationResponse) {
-        byte userPresence = authenticationResponse.getUserPresence();
-        int counter = authenticationResponse.getCounter();
-        byte[] signature = authenticationResponse.getSignature();
-
-        byte[] result = new byte[1 + 4 + signature.length];
-        ByteBuffer.wrap(result)
-                .put(userPresence)
-                .putInt(counter)
-                .put(signature);
-        return result;
     }
 
     public static byte[] encodeAuthenticationRequest(AuthenticationRequest authenticationRequest) {

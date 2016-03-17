@@ -1,25 +1,24 @@
-package org.esec.mcg.androidu2f.token.impl;
+package org.esec.mcg.androidu2fsimulator.token.impl;
 
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.util.Base64;
+import android.util.Log;
 
-import org.esec.mcg.androidu2f.token.AttestationCertificate;
-import org.esec.mcg.androidu2f.token.Crypto;
-import org.esec.mcg.androidu2f.token.DataStore;
-import org.esec.mcg.androidu2f.token.KeyHandleGenerator;
-import org.esec.mcg.androidu2f.token.KeyPairGenerator;
-import org.esec.mcg.androidu2f.token.U2FToken;
-import org.esec.mcg.androidu2f.token.U2FTokenActivity;
-import org.esec.mcg.androidu2f.token.U2FTokenException;
-import org.esec.mcg.androidu2f.token.UserPresenceVerifier;
-import org.esec.mcg.androidu2f.token.msg.AuthenticationRequest;
-import org.esec.mcg.androidu2f.token.msg.AuthenticationResponse;
-import org.esec.mcg.androidu2f.token.msg.RawMessageCodec;
-import org.esec.mcg.androidu2f.token.msg.RegistrationRequest;
-import org.esec.mcg.androidu2f.token.msg.RegistrationResponse;
-import org.esec.mcg.utils.ByteUtil;
-import org.esec.mcg.utils.logger.LogUtils;
+import org.esec.mcg.androidu2fsimulator.token.AttestationCertificate;
+import org.esec.mcg.androidu2fsimulator.token.Crypto;
+import org.esec.mcg.androidu2fsimulator.token.DataStore;
+import org.esec.mcg.androidu2fsimulator.token.KeyHandleGenerator;
+import org.esec.mcg.androidu2fsimulator.token.KeyPairGenerator;
+import org.esec.mcg.androidu2fsimulator.token.U2FToken;
+import org.esec.mcg.androidu2fsimulator.token.U2FTokenActivity;
+import org.esec.mcg.androidu2fsimulator.token.U2FTokenException;
+import org.esec.mcg.androidu2fsimulator.token.UserPresenceVerifier;
+import org.esec.mcg.androidu2fsimulator.token.msg.AuthenticationRequest;
+import org.esec.mcg.androidu2fsimulator.token.msg.AuthenticationResponse;
+import org.esec.mcg.androidu2fsimulator.token.msg.RawMessageCodec;
+import org.esec.mcg.androidu2fsimulator.token.msg.RegistrationRequest;
+import org.esec.mcg.androidu2fsimulator.token.msg.RegistrationResponse;
 import org.spongycastle.asn1.ASN1Sequence;
 import org.spongycastle.asn1.x509.SubjectPublicKeyInfo;
 
@@ -65,19 +64,15 @@ public class LocalU2FToken implements U2FToken {
         byte[] challengeSha256 = registrationRequest.getChallengeSha256();
 
         byte[] keyHandle = keyHandleGenerator.generateKeyHandle(applicationSha256, challengeSha256);
-        LogUtils.d(ByteUtil.ByteArrayToHexString(keyHandle));
-
+        String keyHandleString = Base64.encodeToString(keyHandle, Base64.NO_WRAP | Base64.URL_SAFE);
         byte[] userPublicKey;
         try {
             KeyStore keyStore = KeyStore.getInstance("AndroidKeyStore");
             keyStore.load(null);
-            PublicKey publicKey = keyStore.getCertificate(android.util.Base64.encodeToString(keyHandle, Base64.NO_WRAP | Base64.URL_SAFE)).getPublicKey();
+            PublicKey publicKey = keyStore.getCertificate(keyHandleString).getPublicKey();
             byte[] userPublicKeyX509 = publicKey.getEncoded(); // this is x.509 encoded, so has 91 bytes.
             SubjectPublicKeyInfo subjectPublicKeyInfo = new SubjectPublicKeyInfo(ASN1Sequence.getInstance(userPublicKeyX509));
             userPublicKey = subjectPublicKeyInfo.getPublicKeyData().getBytes();
-            LogUtils.d(keyStore.getCertificate(android.util.Base64.encodeToString(keyHandle, Base64.NO_WRAP | Base64.URL_SAFE)));
-            LogUtils.d(ByteUtil.ByteArrayToHexString(userPublicKeyX509));
-            LogUtils.d(ByteUtil.ByteArrayToHexString(userPublicKey));
         } catch (KeyStoreException e) {
             throw new U2FTokenException("Local token register error.", e);
         } catch (CertificateException e) {
@@ -92,10 +87,8 @@ public class LocalU2FToken implements U2FToken {
                 keyHandle, userPublicKey);
 
         if (certificatePrivateKey == null) {
-            LogUtils.e("attestation certificate private key is null");
         }
         byte[] signature = crypto.sign(signedData, certificatePrivateKey);
-        LogUtils.d(ByteUtil.ByteArrayToHexString(signature));
         return new RegistrationResponse(userPublicKey, keyHandle, attestationCertificate, signature);
     }
 
@@ -107,18 +100,20 @@ public class LocalU2FToken implements U2FToken {
         byte control = authenticationRequest.getControl();
 
         if (control == AuthenticationRequest.USER_PRESENCE_SIGN) {
+            Log.d("key Handle", Base64.encodeToString(keyHandle, Base64.NO_WRAP | Base64.URL_SAFE).substring(keyHandle.length - 10));
+            PrivateKey privateKey = keyHandleGenerator.getUserPrivateKey(keyHandle);
+
             // TODO: 2016/3/8 counter should be stored safely
             SharedPreferences sharedPreferences = context.getSharedPreferences("org.esec.mcg.android.fido.PREFERENCE_FILE_KEY"
-                    .concat(".").concat(Base64.encodeToString(keyHandle, Base64.NO_WRAP | Base64.URL_SAFE)), Context.MODE_PRIVATE);
+                    .concat(".").concat(Base64.encodeToString(keyHandle, Base64.NO_WRAP | Base64.URL_SAFE).substring(keyHandle.length - 10)), Context.MODE_PRIVATE);
             int counter = sharedPreferences.getInt("Counter", 1);
             SharedPreferences.Editor editor = sharedPreferences.edit();
             editor.putInt("Counter", counter + 1);
             editor.commit();
-
-            PrivateKey privateKey = keyHandleGenerator.getUserPrivateKey(keyHandle);
             byte[] signedData = RawMessageCodec.encodeAuthenticationSignedBytes(applicationSha256, (byte)0x01, counter, challengeSha256);
 
             byte[] signature = crypto.sign(signedData, privateKey);
+            Log.d("Counter", ""+counter);
             return new AuthenticationResponse((byte)0x01, counter, signature);
         } else if (control == AuthenticationRequest.CHECK_ONLY) {
             boolean keyHandlePresence = keyHandleGenerator.checkKeyHandle(keyHandle);

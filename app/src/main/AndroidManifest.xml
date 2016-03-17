@@ -52,8 +52,7 @@
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
-        <activity android:name=".token.U2FTokenActivity"
-                  android:launchMode="singleTop">
+        <activity android:name="org.esec.mcg.androidu2fsimulator.token.U2FTokenActivity">
             <intent-filter>
                 <action android:name="org.fidoalliance.intent.FIDO_OPERATION" />
 
@@ -62,12 +61,13 @@
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
-        <activity android:name="com.wepayplugin.nfc.ui.PayStartActivity" android:configChanges="keyboardHidden|orientation|screenSize" android:theme="@android:style/Theme.Translucent" android:screenOrientation="portrait" >
-        </activity>
-        <activity android:name="com.wepayplugin.nfc.ui.SwiperCardActivity" android:configChanges="keyboardHidden|orientation|screenSize" android:screenOrientation="portrait" >
-        </activity>
-        <activity android:name="com.wepayplugin.nfc.ui.PayResultActivity" android:configChanges="keyboardHidden|orientation|screenSize" android:screenOrientation="portrait" >
-        </activity>
+    <activity android:name="com.wepayplugin.nfc.ui.PayStartActivity" android:configChanges="keyboardHidden|orientation|screenSize" android:theme="@android:style/Theme.Translucent" android:screenOrientation="portrait" >
+    </activity>
+    <activity android:name="com.wepayplugin.nfc.ui.SwiperCardActivity" android:configChanges="keyboardHidden|orientation|screenSize" android:screenOrientation="portrait" >
+    </activity>
+    <activity android:name="com.wepayplugin.nfc.ui.PayResultActivity" android:configChanges="keyboardHidden|orientation|screenSize" android:screenOrientation="portrait" >
+    </activity>
+
     </application>
 
 </manifest>

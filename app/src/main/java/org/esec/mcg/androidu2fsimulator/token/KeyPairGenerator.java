@@ -1,4 +1,4 @@
-package org.esec.mcg.androidu2f.token;
+package org.esec.mcg.androidu2fsimulator.token;
 
 import java.security.KeyPair;
 import java.security.PublicKey;

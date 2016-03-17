@@ -1,19 +1,14 @@
-package org.esec.mcg.androidu2f.token.impl;
+package org.esec.mcg.androidu2fsimulator.token.impl;
 
 import android.content.Context;
-import android.security.KeyPairGeneratorSpec;
 import android.security.keystore.KeyGenParameterSpec;
 import android.security.keystore.KeyProperties;
 import android.util.Base64;
 
-import org.esec.mcg.androidu2f.U2FException;
-import org.esec.mcg.androidu2f.token.KeyHandleGenerator;
-import org.esec.mcg.androidu2f.token.U2FTokenException;
-import org.esec.mcg.utils.ByteUtil;
-import org.esec.mcg.utils.logger.LogUtils;
+import org.esec.mcg.androidu2fsimulator.token.KeyHandleGenerator;
+import org.esec.mcg.androidu2fsimulator.token.U2FTokenException;
 
 import java.io.IOException;
-import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.security.GeneralSecurityException;
 import java.security.InvalidAlgorithmParameterException;
@@ -27,13 +22,11 @@ import java.security.PrivateKey;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 import java.security.spec.ECGenParameterSpec;
-import java.util.Arrays;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
-import javax.security.auth.x500.X500Principal;
 
 /**
  * Created by yz on 2016/1/19.
@@ -127,9 +120,7 @@ public class KeyHandleGeneratorWithKeyStore implements KeyHandleGenerator {
 
         byte[] result = null;
         try {
-            LogUtils.d(ByteUtil.ByteArrayToHexString(key.getEncoded()));
             result = wrap(key);
-            LogUtils.d(ByteUtil.ByteArrayToHexString(result));
             unwrap(result);
         } catch (GeneralSecurityException e) {
             e.printStackTrace();
@@ -141,10 +132,7 @@ public class KeyHandleGeneratorWithKeyStore implements KeyHandleGenerator {
     public byte[] generateKeyHandle(byte[] applicationSha256, byte[] challengeSha256) throws U2FTokenException{
         byte[] keyHandle = new byte[applicationSha256.length + challengeSha256.length];
         ByteBuffer.wrap(keyHandle).put(applicationSha256).put(challengeSha256);
-        String keyHandleString = android.util.Base64.encodeToString(keyHandle, Base64.NO_WRAP | Base64.URL_SAFE);
-        LogUtils.d("keyHandleString");
-        LogUtils.d(keyHandleString);
-        LogUtils.d(ByteUtil.ByteArrayToHexString(keyHandle));
+        String keyHandleString = Base64.encodeToString(keyHandle, Base64.NO_WRAP | Base64.URL_SAFE);
 
         try {
             final KeyStore keyStore = KeyStore.getInstance("AndroidKeyStore");
@@ -155,7 +143,7 @@ public class KeyHandleGeneratorWithKeyStore implements KeyHandleGenerator {
                 keyStore.deleteEntry(keyHandleString);
             }
 
-            java.security.KeyPairGenerator keyPairGenerator = java.security.KeyPairGenerator.getInstance(
+            KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance(
                     KeyProperties.KEY_ALGORITHM_EC, "AndroidKeyStore");
             keyPairGenerator.initialize(
                     new KeyGenParameterSpec.Builder(
@@ -165,6 +153,7 @@ public class KeyHandleGeneratorWithKeyStore implements KeyHandleGenerator {
                             .setDigests(KeyProperties.DIGEST_SHA256)
                             .build()
             );
+            keyPairGenerator.generateKeyPair();
         } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
         } catch (NoSuchProviderException e) {
@@ -183,7 +172,7 @@ public class KeyHandleGeneratorWithKeyStore implements KeyHandleGenerator {
 
     @Override
     public PrivateKey getUserPrivateKey(byte[] keyHandle) throws U2FTokenException {
-        String keyHandleString = android.util.Base64.encodeToString(keyHandle, Base64.NO_WRAP | Base64.URL_SAFE);
+        String keyHandleString = Base64.encodeToString(keyHandle, Base64.NO_WRAP | Base64.URL_SAFE);
         try {
             KeyStore keyStore = KeyStore.getInstance("AndroidKeyStore");
             keyStore.load(null);

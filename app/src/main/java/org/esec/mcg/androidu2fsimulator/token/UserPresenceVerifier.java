@@ -1,4 +1,4 @@
-package org.esec.mcg.androidu2f.token;
+package org.esec.mcg.androidu2fsimulator.token;
 
 /**
  * Created by yz on 2016/1/18.

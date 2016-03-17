@@ -1,7 +1,7 @@
 /**
  * MD5加密算法
  */
-package org.esec.mcg.androidu2f.token;
+package org.esec.mcg.androidu2fsimulator.token;
 
 import org.json.JSONArray;
 import org.json.JSONException;

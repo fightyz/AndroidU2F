@@ -1,4 +1,4 @@
-package org.esec.mcg.androidu2f.token.msg;
+package org.esec.mcg.androidu2fsimulator.token.msg;
 
 import java.security.cert.X509Certificate;
 import java.util.Arrays;

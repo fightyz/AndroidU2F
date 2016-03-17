@@ -1,22 +1,21 @@
-package org.esec.mcg.androidu2f.token;
+package org.esec.mcg.androidu2fsimulator.token;
 
 import android.content.Intent;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
 import com.wepayplugin.nfcstd.WepayPlugin;
 
-import org.esec.mcg.androidu2f.token.impl.LocalU2FToken;
-import org.esec.mcg.androidu2f.token.msg.AuthenticationRequest;
-import org.esec.mcg.androidu2f.token.msg.AuthenticationResponse;
-import org.esec.mcg.androidu2f.token.msg.RawMessageCodec;
-import org.esec.mcg.androidu2f.token.msg.RegistrationRequest;
-import org.esec.mcg.androidu2f.token.msg.RegistrationResponse;
-import org.esec.mcg.androidu2f.token.msg.U2FTokenIntentType;
-import org.esec.mcg.utils.logger.LogUtils;
+import org.esec.mcg.androidu2fsimulator.token.impl.LocalU2FToken;
+import org.esec.mcg.androidu2fsimulator.token.msg.AuthenticationRequest;
+import org.esec.mcg.androidu2fsimulator.token.msg.AuthenticationResponse;
+import org.esec.mcg.androidu2fsimulator.token.msg.RawMessageCodec;
+import org.esec.mcg.androidu2fsimulator.token.msg.RegistrationRequest;
+import org.esec.mcg.androidu2fsimulator.token.msg.RegistrationResponse;
+import org.esec.mcg.androidu2fsimulator.token.msg.U2FTokenIntentType;
 import org.json.JSONObject;
 
 import java.util.Random;
@@ -80,13 +79,13 @@ public class U2FTokenActivity extends AppCompatActivity {
         u2fToken = new LocalU2FToken(this);
         if (u2fTokenIntentType.equals(U2FTokenIntentType.U2F_OPERATION_REG.name())) { // register
             try {
+                USER_PRESENCE = false;
                 RegistrationRequest registrationRequest = RawMessageCodec.decodeRegistrationRequest(rawMessage);
                 RegistrationResponse registrationResponse = u2fToken.register(registrationRequest);
                 Intent i = new Intent("org.fidoalliance.intent.FIDO_OPERATION");
                 Bundle data = new Bundle();
                 data.putByteArray("RawMessage", RawMessageCodec.encodeRegistrationResponse(registrationResponse));
                 i.putExtras(data);
-                USER_PRESENCE = false;
                 setResult(RESULT_OK, i);
                 finish();
             } catch (U2FTokenException e) {
@@ -101,11 +100,11 @@ public class U2FTokenActivity extends AppCompatActivity {
             try {
                 AuthenticationRequest authenticationRequest = RawMessageCodec.decodeAuthenticationRequest(rawMessage);
                 AuthenticationResponse authenticationResponse = u2fToken.authenticate(authenticationRequest);
+                USER_PRESENCE = false;
                 Intent i = new Intent("org.fidoalliance.intent.FIDO_OPERATION");
                 Bundle data = new Bundle();
                 data.putByteArray("RawMessage", RawMessageCodec.encodeAuthenticationResponse(authenticationResponse));
                 i.putExtras(data);
-                USER_PRESENCE = false;
                 setResult(RESULT_OK, i);
                 finish();
             } catch (U2FTokenException e) {

@@ -1,4 +1,4 @@
-package org.esec.mcg.androidu2f.token.msg;
+package org.esec.mcg.androidu2fsimulator.token.msg;
 
 import java.util.Arrays;
 import java.util.Objects;

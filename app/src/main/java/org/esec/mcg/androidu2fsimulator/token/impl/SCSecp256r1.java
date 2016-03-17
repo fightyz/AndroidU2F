@@ -1,6 +1,6 @@
-package org.esec.mcg.androidu2f.token.impl;
+package org.esec.mcg.androidu2fsimulator.token.impl;
 
-import org.esec.mcg.androidu2f.token.KeyPairGenerator;
+import org.esec.mcg.androidu2fsimulator.token.KeyPairGenerator;
 import org.spongycastle.jce.ECNamedCurveTable;
 import org.spongycastle.jce.spec.ECParameterSpec;
 

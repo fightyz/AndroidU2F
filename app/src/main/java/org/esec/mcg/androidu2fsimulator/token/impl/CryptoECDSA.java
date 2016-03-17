@@ -1,8 +1,7 @@
-package org.esec.mcg.androidu2f.token.impl;
+package org.esec.mcg.androidu2fsimulator.token.impl;
 
-import org.esec.mcg.androidu2f.U2FException;
-import org.esec.mcg.androidu2f.token.Crypto;
-import org.esec.mcg.androidu2f.token.U2FTokenException;
+import org.esec.mcg.androidu2fsimulator.token.Crypto;
+import org.esec.mcg.androidu2fsimulator.token.U2FTokenException;
 
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;

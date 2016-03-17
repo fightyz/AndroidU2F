@@ -1,6 +1,6 @@
-package org.esec.mcg.androidu2f.token.msg;
+package org.esec.mcg.androidu2fsimulator.token.msg;
 
-import org.esec.mcg.androidu2f.token.U2FTokenException;
+import org.esec.mcg.androidu2fsimulator.token.U2FTokenException;
 
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;

@@ -53,7 +53,7 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".client.JavaCardTokenActivity">
+        <activity android:name=".client.card.JavaCardTokenActivity">
             <intent-filter>
                 <action android:name="org.fidoalliance.intent.FIDO_OPERATION" />
 

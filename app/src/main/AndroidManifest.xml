@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="org.esec.mcg.androidu2f" >
+    package="org.esec.mcg.androidu2f">
 
     <!-- 读写手机状态和身份 -->
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
@@ -8,7 +8,7 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
     <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
     <!-- 打电话权限 -->
@@ -23,11 +23,11 @@
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:supportsRtl="true"
-        android:theme="@style/AppTheme" >
+        android:theme="@style/AppTheme">
         <activity
             android:name=".MainActivity"
             android:label="@string/app_name"
-            android:theme="@style/AppTheme.NoActionBar" >
+            android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -36,14 +36,14 @@
         </activity>
         <activity
             android:name=".SettingsActivity"
-            android:label="@string/title_activity_settings" >
+            android:label="@string/title_activity_settings">
             <intent-filter>
                 <action android:name="org.esec.mcg.androidu2f.SettingsActivity" />
 
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
-        <activity android:name=".client.U2FClientActivity" >
+        <activity android:name=".client.U2FClientActivity">
             <intent-filter>
                 <action android:name="org.fidoalliance.intent.FIDO_OPERATION" />
 
@@ -61,13 +61,35 @@
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
-    <activity android:name="com.wepayplugin.nfc.ui.PayStartActivity" android:configChanges="keyboardHidden|orientation|screenSize" android:theme="@android:style/Theme.Translucent" android:screenOrientation="portrait" >
-    </activity>
-    <activity android:name="com.wepayplugin.nfc.ui.SwiperCardActivity" android:configChanges="keyboardHidden|orientation|screenSize" android:screenOrientation="portrait" >
-    </activity>
-    <activity android:name="com.wepayplugin.nfc.ui.PayResultActivity" android:configChanges="keyboardHidden|orientation|screenSize" android:screenOrientation="portrait" >
-    </activity>
+        <activity
+            android:name="com.wepayplugin.nfc.ui.PayStartActivity"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:screenOrientation="portrait"
+            android:theme="@android:style/Theme.Translucent"></activity>
+        <activity
+            android:name="com.wepayplugin.nfc.ui.SwiperCardActivity"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:screenOrientation="portrait"></activity>
+        <activity
+            android:name="com.wepayplugin.nfc.ui.PayResultActivity"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:screenOrientation="portrait"></activity>
+        <activity android:name=".client.JavaCardTokenActivity">
+            <intent-filter>
+                <action android:name="org.fidoalliance.intent.FIDO_OPERATION" />
 
+                <data android:mimeType="application/fido.u2f_token+json" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.nfc.action.TECH_DISCOVERED" />
+                <action android:name="android.nfc.action.TAG_DISCOVERED" />
+            </intent-filter>
+            <meta-data
+                android:name="android.nfc.action.TECH_DISCOVERED"
+                android:resource="@xml/nfc_tech_filter" />
+        </activity>
     </application>
 
 </manifest>

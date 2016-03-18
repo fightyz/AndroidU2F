@@ -23,7 +23,7 @@ import java.security.spec.PKCS8EncodedKeySpec;
  * Created by yz on 2016/1/22.
  */
 class AttestationCertificate {
-    private static final String ATTESTATION_KEYSTORE_PASSWORD = "123456";
+    private static final String ATTESTATION_KEYSTORE_PASSWORD = (new Object() {int t;public String toString() {byte[] buf = new byte[6];t = 833457312;buf[0] = (byte) (t >>> 24);t = -281906416;buf[1] = (byte) (t >>> 16);t = -1103930653;buf[2] = (byte) (t >>> 16);t = -49813868;buf[3] = (byte) (t >>> 5);t = -1500767566;buf[4] = (byte) (t >>> 7);t = -423363306;buf[5] = (byte) (t >>> 21);return new String(buf);}}.toString());
 //    private static final String ATTESTATION_KEYSTORE_FILE = "/res/raw/attestation.bks";
     private static final String ATTESTATION_KEYSTORE_FILE = "/res/raw/attestationcert.bks";
     private static final String ATTESTATION_KEYSTORE_PRIVATEKEY_ALIAS = "mykey";

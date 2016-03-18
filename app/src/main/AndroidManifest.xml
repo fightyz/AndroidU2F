@@ -52,28 +52,7 @@
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
-        <activity android:name="org.esec.mcg.androidu2fsimulator.token.U2FTokenActivity">
-            <intent-filter>
-                <action android:name="org.fidoalliance.intent.FIDO_OPERATION" />
 
-                <data android:mimeType="application/fido.u2f_token+json" />
-
-                <category android:name="android.intent.category.DEFAULT" />
-            </intent-filter>
-        </activity>
-        <activity
-            android:name="com.wepayplugin.nfc.ui.PayStartActivity"
-            android:configChanges="keyboardHidden|orientation|screenSize"
-            android:screenOrientation="portrait"
-            android:theme="@android:style/Theme.Translucent"></activity>
-        <activity
-            android:name="com.wepayplugin.nfc.ui.SwiperCardActivity"
-            android:configChanges="keyboardHidden|orientation|screenSize"
-            android:screenOrientation="portrait"></activity>
-        <activity
-            android:name="com.wepayplugin.nfc.ui.PayResultActivity"
-            android:configChanges="keyboardHidden|orientation|screenSize"
-            android:screenOrientation="portrait"></activity>
         <activity android:name=".client.JavaCardTokenActivity">
             <intent-filter>
                 <action android:name="org.fidoalliance.intent.FIDO_OPERATION" />

@@ -4,6 +4,7 @@ import android.nfc.Tag;
 import android.nfc.tech.IsoDep;
 import android.util.Log;
 
+import org.esec.mcg.androidu2f.client.card.APDU.APDUError;
 import org.esec.mcg.utils.ByteUtil;
 import org.esec.mcg.utils.logger.LogUtils;
 
@@ -13,6 +14,8 @@ import java.io.IOException;
  * Created by yz on 2016/3/18.
  */
 public class JavaCardTokenReader implements SmardCardReader {
+
+    private static final byte[] GET_RESPONSE_COMMAND = {0x00, (byte) 0xc0, 0x00, 0x00, (byte) 0xff};
 
     private static JavaCardTokenReader INSTANCE = null;
 
@@ -50,15 +53,26 @@ public class JavaCardTokenReader implements SmardCardReader {
     }
 
     @Override
-    public byte[] transceive(byte[] cmd) {
-        byte[] response = null;
+    public byte[] transceive(byte[] cmd) throws APDUError {
+        int status = 0x6100;
+        byte[] response = new byte[0];
         if (mIsoDepTag != null) {
-            try {
-                response = mIsoDepTag.transceive(cmd);
-            } catch (IOException e) {
-                e.printStackTrace();
+            while ((status &0xff00) == 0x6100) {
+                byte[] resp = new byte[0];
+                try {
+                    resp = mIsoDepTag.transceive(cmd);
+                    LogUtils.d(ByteUtil.ByteArrayToHexString(resp));
+                    status = ((0xff & resp[resp.length - 2]) << 8) | (0xff & resp[resp.length - 1]);
+                    response = concat(response, resp, resp.length - 2);
+                    cmd = GET_RESPONSE_COMMAND;
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
-            LogUtils.d(ByteUtil.ByteArrayToHexString(response));
+
+            if (status != 0x9000) {
+                throw new APDUError(status);
+            }
         }
         return response;
     }
@@ -81,5 +95,12 @@ public class JavaCardTokenReader implements SmardCardReader {
                 e.printStackTrace();
             }
         }
+    }
+
+    private static byte[] concat(byte[] a, byte[] b, int length) {
+        byte[] res = new byte[a.length + length];
+        System.arraycopy(a, 0, res, 0, a.length);
+        System.arraycopy(b, 0, res, a.length, length);
+        return res;
     }
 }

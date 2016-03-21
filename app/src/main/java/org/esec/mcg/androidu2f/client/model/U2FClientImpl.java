@@ -61,6 +61,14 @@ public class U2FClientImpl extends U2FClient {
     public RegistrationRequest register(String u2fProtocolMessage) throws U2FException {
         try {
             JSONObject reg = new JSONObject(u2fProtocolMessage);
+//            JSONArray signReqs;
+//            if ((signReqs = reg.getJSONArray("signRequests")) != null) {
+//                for (int i = 0; i < signReqs.length(); i++) {
+//                    JSONObject signReq = signReqs.getJSONObject(i);
+//                    sign(signReq.toString(), false);
+//                }
+//            }
+
             version = ((JSONObject)reg.getJSONArray("registerRequests").get(0)).getString("version");
             appId = ((JSONObject)reg.getJSONArray("registerRequests").get(0)).getString("appId");
             serverChallengeBase64 = ((JSONObject)reg.getJSONArray("registerRequests").get(0)).getString("challenge");
@@ -70,6 +78,7 @@ public class U2FClientImpl extends U2FClient {
                 throw new U2FException(String.format("Unsupported protocol version: %s", version));
             }
 
+            // TODO: 2016/3/21 The facetID should be the orign, and it should be in appid's json.
             facetID = getFacetID(packageInfo);
             verifyAppId(appId);
 
@@ -101,7 +110,7 @@ public class U2FClientImpl extends U2FClient {
      * @return
      * @throws U2FException
      */
-    public AuthenticationRequest sign(String u2fProtocolMessage) throws U2FException {
+    public AuthenticationRequest sign(String u2fProtocolMessage, boolean isSign) throws U2FException {
         try {
             JSONObject signRequest = new JSONObject(u2fProtocolMessage);
             version = signRequest.getString("version");
@@ -122,7 +131,13 @@ public class U2FClientImpl extends U2FClient {
             byte[] appIdSha256 = crypto.computeSha256(appId);
             byte[] clientDataSha256 = crypto.computeSha256(clientData);
 
-            byte control = AuthenticationRequest.USER_PRESENCE_SIGN;
+            byte control;
+            if (isSign) {
+                control = AuthenticationRequest.USER_PRESENCE_SIGN;
+            } else {
+                control = AuthenticationRequest.CHECK_ONLY;
+            }
+
             byte[] rawKeyHandle = android.util.Base64.decode(keyHandle, Base64.NO_WRAP | Base64.URL_SAFE);
             return new AuthenticationRequest(control, clientDataSha256, appIdSha256, rawKeyHandle);
         } catch (JSONException e) {

@@ -11,7 +11,7 @@ public abstract class U2FClient {
     protected static String clientData;
     protected String keyHandle;
     abstract public RegistrationRequest register(String u2fProtocolMessage) throws U2FException;
-    abstract public AuthenticationRequest sign(String u2fProtocolMessage) throws U2FException;
+    abstract public AuthenticationRequest sign(String u2fProtocolMessage, boolean isSign) throws U2FException;
 
     public static String getClientData() {
         return clientData;

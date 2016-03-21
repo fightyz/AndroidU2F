@@ -18,4 +18,9 @@ public class SignBuilder extends APDUBuilder {
         setCData(rawMessage);
         return this;
     }
+
+    public SignBuilder setControl(byte control) {
+        setParams(control, (byte)0x00);
+        return this;
+    }
 }

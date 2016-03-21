@@ -74,7 +74,6 @@ public class JavaCardTokenActivity extends AppCompatActivity implements ReadCard
 //            if (u2fTokenIntentType.equals(U2FTokenIntentType.U2F_OPERATION_REG.name())) {
 //                operation_type = U2FTokenIntentType.U2F_OPERATION_REG;
 //            }
-            // TODO: 2016/3/18  
             startReadTask();
         } else {
             LogUtils.d("tag is null");
@@ -84,14 +83,16 @@ public class JavaCardTokenActivity extends AppCompatActivity implements ReadCard
     private void startReadTask() {
         // TODO: 2016/3/18 post a handler.
         Enum operation = null;
+        byte control = 0x00;
         if (u2fTokenIntentType.equals(U2FTokenIntentType.U2F_OPERATION_REG.name())) {
             operation = U2FTokenIntentType.U2F_OPERATION_REG;
         } else if (u2fTokenIntentType.equals(U2FTokenIntentType.U2F_OPERATION_SIGN.name())) {
             operation = U2FTokenIntentType.U2F_OPERATION_SIGN;
             // because rawMessage's first byte is control byte
+            control = rawMessage[0];
             System.arraycopy(rawMessage, 1, rawMessage, 0, rawMessage.length - 1);
         }
-        ReadCardTask task = new ReadCardTask(mReader, this, rawMessage, operation);
+        ReadCardTask task = new ReadCardTask(mReader, this, control, rawMessage, operation);
         task.startExecute();
     }
 
@@ -109,8 +110,15 @@ public class JavaCardTokenActivity extends AppCompatActivity implements ReadCard
     @Override
     public void onCardReadFial(APDUError e) {
         // TODO: 2016/3/21 Handle this
-        setResult(RESULT_CANCELED);
-        finish();
+        LogUtils.d("Status Word: " + e.getMessage());
+        if (e.getCode() == 0x6a80) {
+            setResult(RESULT_OK);
+            finish();
+        } else if (e.getCode() == 0x6985) { // already registered
+            setResult(RESULT_CANCELED);
+            finish();
+        }
+        return;
     }
 
 }

@@ -4,7 +4,9 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
+import android.widget.Toast;
 
 import org.esec.mcg.androidu2f.Constants;
 import org.esec.mcg.androidu2f.U2FException;
@@ -31,6 +33,7 @@ public class U2FClientActivity extends AppCompatActivity {
     private String U2FOperationType;
     private JSONArray signRequests;
     private int signRequestIndex;
+//    private int regRequestIndex;
 
     private U2FClient u2fClient;
 
@@ -38,6 +41,7 @@ public class U2FClientActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         signRequestIndex = 0;
+//        regRequestIndex = 0;
     }
 
     @Override
@@ -73,6 +77,40 @@ public class U2FClientActivity extends AppCompatActivity {
         // Register, type = u2f_register_request
         if (requestType.equals(U2FRequestType.u2f_register_request.name())) {
             try {
+
+                try {
+                    if (signRequestIndex == 0) {
+                        signRequests = new JSONObject(request).getJSONArray("signRequests");
+                    }
+                    LogUtils.d("signRequestIndex = " + signRequestIndex);
+                    LogUtils.d("length = " + signRequests.length());
+                    if (signRequests != null && signRequestIndex < signRequests.length()) {
+                        JSONObject signReq = signRequests.getJSONObject(signRequestIndex);
+                        signRequestIndex++;
+                        AuthenticationRequest authenticationRequest = u2fClient.sign(signReq.toString(), false);
+                        Intent i = new Intent("org.fidoalliance.intent.FIDO_OPERATION");
+                        i.addCategory("android.intent.category.DEFAULT");
+                        i.setType("application/fido.u2f_token+json");
+                        Bundle data = new Bundle();
+                        data.putByteArray("RawMessage", RawMessageCodec.encodeAuthenticationRequest(authenticationRequest));
+                        data.putString("U2FTokenIntentType", U2FTokenIntentType.U2F_OPERATION_SIGN.name());
+                        i.putExtras(data);
+                        startActivityForResult(i, Constants.REG_ACTIVITY_RES_3); // Start token activity
+                        return;
+                    }
+//                    else if (signRequestIndex == signRequests.length() && signRequests.length() > 0) {
+//                        Toast.makeText(this, "Token already registered.", Toast.LENGTH_LONG).show();
+//                        JSONObject error = ResponseCodec.encodeError(ErrorCode.BAD_REQUEST, "Token already registered.");
+//                        Intent i = ResponseCodec.encodeResponse(U2FResponseType.u2f_register_response.name(), error);
+//                        setResult(RESULT_CANCELED, i);
+//                        finish();
+//                        return;
+//                    }
+
+                } catch (JSONException e) {
+                    throw new U2FException("Bad Request", e);
+                }
+
                 RegistrationRequest registrationRequest = u2fClient.register(request);
                 Intent i = new Intent("org.fidoalliance.intent.FIDO_OPERATION");
                 i.addCategory("android.intent.category.DEFAULT");
@@ -107,7 +145,7 @@ public class U2FClientActivity extends AppCompatActivity {
                 LogUtils.d("Index = " + signRequestIndex);
                 LogUtils.d("signRequest = " + signRequest.toString());
                 signRequestIndex++;
-                AuthenticationRequest authenticationRequest = u2fClient.sign(signRequest.toString());
+                AuthenticationRequest authenticationRequest = u2fClient.sign(signRequest.toString(), true);
                 Intent i = new Intent("org.fidoalliance.intent.FIDO_OPERATION");
                 i.addCategory("android.intent.category.DEFAULT");
                 i.setType("application/fido.u2f_token+json");
@@ -142,7 +180,19 @@ public class U2FClientActivity extends AppCompatActivity {
                 finish();
             }
 
-        } else if (requestCode == Constants.SIGN_ACTIVITY_RES_2) {
+        } else if (requestCode == Constants.REG_ACTIVITY_RES_3) {
+            if (resultCode == RESULT_OK) {
+                LogUtils.d("OKokok");
+            } else if (resultCode == RESULT_CANCELED) {
+                Toast.makeText(this, "Token had been registered. ", Toast.LENGTH_LONG).show();
+                JSONObject error = ResponseCodec.encodeError(ErrorCode.DEVICE_INELIGIBLE, ErrorCode.DEVICE_INELIGIBLE.toString());
+                Intent i = ResponseCodec.encodeResponse(U2FResponseType.u2f_sign_response.name(), error);
+                setResult(RESULT_CANCELED, i);
+                finish();
+            }
+        }
+
+        else if (requestCode == Constants.SIGN_ACTIVITY_RES_2) {
             LogUtils.d("onActivityResult");
             // If previous sign request failed, then do the next one.
             if (resultCode == RESULT_CANCELED) {

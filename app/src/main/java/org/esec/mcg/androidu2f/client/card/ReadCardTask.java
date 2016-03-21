@@ -16,16 +16,19 @@ public class ReadCardTask {
     private JavaCardTokenReader mReader;
     private OnCardReadFinishListener mListener;
     private Enum operation;
+    private byte control;
+
     private static final byte[] AID = {(byte)0xa0, 0x00, 0x00, 0x06, 0x47, 0x2f, 0x00, 0x01};
     private static final byte[] U2F_V2 = {'U', '2', 'F', '_', 'V', '2'};
 
     private byte[] mRawMessage;
 
-    public ReadCardTask(JavaCardTokenReader reader, OnCardReadFinishListener listener, byte[] rawMessage, Enum op) {
+    public ReadCardTask(JavaCardTokenReader reader, OnCardReadFinishListener listener, byte control, byte[] rawMessage, Enum op) {
         mReader = reader;
         mListener = listener;
         mRawMessage = rawMessage;
         operation = op;
+        this.control = control;
     }
 
     public void startExecute() {
@@ -84,10 +87,12 @@ public class ReadCardTask {
         }
 
         private byte[] doSign() throws APDUError {
-            mSigncmd = new SignBuilder().setRawMessage(mRawMessage).build();
+            SignBuilder sb = new SignBuilder().setRawMessage(mRawMessage);
+            sb.setControl(control);
+            mSigncmd = sb.build();
             LogUtils.d(ByteUtil.ByteArrayToHexString(mSigncmd));
             byte[] response = mReader.transceive(mSigncmd);
-            LogUtils.d(ByteUtil.ByteArrayToHexString(response));
+//            LogUtils.d(ByteUtil.ByteArrayToHexString(response));
             return response;
         }
     }

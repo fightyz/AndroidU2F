@@ -11,6 +11,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.widget.TextView;
 
+import org.esec.mcg.androidu2f.Constants;
 import org.esec.mcg.androidu2f.R;
 import org.esec.mcg.androidu2f.client.card.APDU.APDUError;
 import org.esec.mcg.utils.ByteUtil;
@@ -70,12 +71,9 @@ public class JavaCardTokenActivity extends AppCompatActivity implements ReadCard
             mReader = JavaCardTokenReader.getInstance();
             mReader.init(tag);
             mReader.connect();
-//            enum operation_type;
-//            if (u2fTokenIntentType.equals(U2FTokenIntentType.U2F_OPERATION_REG.name())) {
-//                operation_type = U2FTokenIntentType.U2F_OPERATION_REG;
-//            }
             startReadTask();
         } else {
+            // TODO: 2016/3/22 User presence, lost tag exception.
             LogUtils.d("tag is null");
         }
     }
@@ -110,15 +108,11 @@ public class JavaCardTokenActivity extends AppCompatActivity implements ReadCard
     @Override
     public void onCardReadFial(APDUError e) {
         // TODO: 2016/3/21 Handle this
+        Intent i = new Intent("org.fidoalliance.intent.FIDO_OPERATION");
+        i.putExtra("SW", e.getCode());
         LogUtils.d("Status Word: " + e.getMessage());
-        if (e.getCode() == 0x6a80) {
-            setResult(RESULT_OK);
-            finish();
-        } else if (e.getCode() == 0x6985) { // already registered
-            setResult(RESULT_CANCELED);
-            finish();
-        }
-        return;
+        setResult(RESULT_CANCELED, i);
+        finish();
     }
 
 }

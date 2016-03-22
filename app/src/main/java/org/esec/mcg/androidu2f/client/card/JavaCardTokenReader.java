@@ -66,6 +66,7 @@ public class JavaCardTokenReader implements SmardCardReader {
                     response = concat(response, resp, resp.length - 2);
                     cmd = GET_RESPONSE_COMMAND;
                 } catch (IOException e) {
+                    // TODO: 2016/3/22  
                     e.printStackTrace();
                 }
             }

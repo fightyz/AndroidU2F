@@ -49,8 +49,8 @@ public class ReadCardTask {
         @Override
         protected byte[] doInBackground(Boolean... sign) {
             try {
-                byte[] response = null;
-                response = mReader.transceive(mSelectToken);
+                byte[] response = mReader.transceive(mSelectToken);
+                // TODO: 2016/3/22 Check the AID
                 LogUtils.d(ByteUtil.ByteArrayToHexString(response));
                 if (operation.equals(U2FTokenIntentType.U2F_OPERATION_REG)) {
                     response = doRegister();

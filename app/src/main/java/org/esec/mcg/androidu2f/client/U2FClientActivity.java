@@ -37,6 +37,8 @@ public class U2FClientActivity extends AppCompatActivity {
 
     private U2FClient u2fClient;
 
+    private static boolean CHECK_ONLY_SUCCESS;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -84,6 +86,7 @@ public class U2FClientActivity extends AppCompatActivity {
                     }
                     LogUtils.d("signRequestIndex = " + signRequestIndex);
                     LogUtils.d("length = " + signRequests.length());
+
                     if (signRequests != null && signRequestIndex < signRequests.length()) {
                         JSONObject signReq = signRequests.getJSONObject(signRequestIndex);
                         signRequestIndex++;
@@ -98,14 +101,6 @@ public class U2FClientActivity extends AppCompatActivity {
                         startActivityForResult(i, Constants.REG_ACTIVITY_RES_3); // Start token activity
                         return;
                     }
-//                    else if (signRequestIndex == signRequests.length() && signRequests.length() > 0) {
-//                        Toast.makeText(this, "Token already registered.", Toast.LENGTH_LONG).show();
-//                        JSONObject error = ResponseCodec.encodeError(ErrorCode.BAD_REQUEST, "Token already registered.");
-//                        Intent i = ResponseCodec.encodeResponse(U2FResponseType.u2f_register_response.name(), error);
-//                        setResult(RESULT_CANCELED, i);
-//                        finish();
-//                        return;
-//                    }
 
                 } catch (JSONException e) {
                     throw new U2FException("Bad Request", e);
@@ -174,60 +169,59 @@ public class U2FClientActivity extends AppCompatActivity {
                 setResult(RESULT_OK, i);
                 finish();
             } else if (resultCode == RESULT_CANCELED) { // fail
-                JSONObject error = ResponseCodec.encodeError(ErrorCode.OTHER_ERROR, ErrorCode.OTHER_ERROR.toString().concat(" Wrong in Token."));
-                Intent i = ResponseCodec.encodeResponse(U2FResponseType.u2f_register_response.name(), error);
-                setResult(RESULT_CANCELED, i);
-                finish();
+                if (data.getIntExtra("SW", 0) == Constants.SW_TEST_OF_USER_PRESENCE_REQUIRED) {
+                    Toast.makeText(this, "Please show me your token.", Toast.LENGTH_LONG).show();
+                    JSONObject error = ResponseCodec.encodeError(ErrorCode.OTHER_ERROR, ErrorCode.OTHER_ERROR.toString().concat(" Wrong in Token."));
+                    Intent i = ResponseCodec.encodeResponse(U2FResponseType.u2f_register_response.name(), error);
+                    setResult(RESULT_CANCELED, i);
+                    finish();
+                } else {
+                    throw new RuntimeException("should not happend!!!");
+                }
+
             }
 
-        } else if (requestCode == Constants.REG_ACTIVITY_RES_3) {
+        } else if (requestCode == Constants.REG_ACTIVITY_RES_3) { // Reg: sign's check only
             if (resultCode == RESULT_OK) {
-                LogUtils.d("OKokok");
+                throw new RuntimeException("This shouldn't happen!!!!");
             } else if (resultCode == RESULT_CANCELED) {
-                Toast.makeText(this, "Token had been registered. ", Toast.LENGTH_LONG).show();
-                JSONObject error = ResponseCodec.encodeError(ErrorCode.DEVICE_INELIGIBLE, ErrorCode.DEVICE_INELIGIBLE.toString());
-                Intent i = ResponseCodec.encodeResponse(U2FResponseType.u2f_sign_response.name(), error);
-                setResult(RESULT_CANCELED, i);
-                finish();
+                if (data.getIntExtra("SW", 0) == Constants.SW_TEST_OF_USER_PRESENCE_REQUIRED) { // success, key handle had been registered
+                    Toast.makeText(this, "Token had been registered. ", Toast.LENGTH_LONG).show();
+                    JSONObject error = ResponseCodec.encodeError(ErrorCode.DEVICE_INELIGIBLE, ErrorCode.DEVICE_INELIGIBLE.toString());
+                    Intent i = ResponseCodec.encodeResponse(U2FResponseType.u2f_register_response.name(), error);
+                    setResult(RESULT_CANCELED, i);
+                    finish();
+                } else if (data.getIntExtra("SW", 0) == Constants.SW_INVALID_KEY_HANDLE) { // fail, bad key handle
+                    if (signRequestIndex == signRequests.length()) {
+                        Toast.makeText(this, "Bad Key Handle. Do register", Toast.LENGTH_LONG).show();
+
+                    }
+                } else {
+                    throw new RuntimeException("shouldn't happen!!!");
+                }
             }
         }
 
-        else if (requestCode == Constants.SIGN_ACTIVITY_RES_2) {
+        else if (requestCode == Constants.SIGN_ACTIVITY_RES_2) { // sign
             LogUtils.d("onActivityResult");
             // If previous sign request failed, then do the next one.
             if (resultCode == RESULT_CANCELED) {
-//                try {
-//                    if (signRequests.length() == signRequestIndex) {
-//                        LogUtils.d("out of band");
-//                        JSONObject error = ResponseCodec.encodeError(ErrorCode.DEVICE_INELIGIBLE, ErrorCode.DEVICE_INELIGIBLE.toString());
-//                        Intent i = ResponseCodec.encodeResponse(U2FResponseType.u2f_sign_response.name(), error);
-//                        setResult(RESULT_CANCELED, i);
-//                        finish();
-//                        return;
-//                    }
-//                    JSONObject signRequest = signRequests.getJSONObject(signRequestIndex);
-//
-//                    LogUtils.d(signRequest.toString());
-//                    LogUtils.d("index = " + signRequestIndex);
-//                    signRequestIndex++;
-//                    AuthenticationRequest authenticationRequest = u2fClient.sign(signRequest.toString());
-//                    Intent i = new Intent("org.fidoalliance.intent.FIDO_OPERATION");
-//                    i.addCategory("android.intent.category.DEFAULT");
-//                    i.setType("application/fido.u2f_token+json");
-//                    Bundle bundleData = new Bundle();
-//                    bundleData.putByteArray("RawMessage", RawMessageCodec.encodeAuthenticationRequest(authenticationRequest));
-//                    bundleData.putString("U2FIntentType", U2FIntentType.U2F_OPERATION_SIGN.name());
-//                    i.putExtras(bundleData);
-//                    startActivityForResult(i, Constants.SIGN_ACTIVITY_RES_2); // Start token activity
-//                } catch (JSONException | U2FException e) {
-//                    e.printStackTrace();
-//                    JSONObject error = ResponseCodec.encodeError(ErrorCode.OTHER_ERROR, ErrorCode.OTHER_ERROR.toString().concat(" Wrong in Token."));
-//                    Intent i = ResponseCodec.encodeResponse(U2FResponseType.u2f_sign_response.name(), error);
-//                    setResult(RESULT_CANCELED, i);
-//                    finish();
-//                }
+                if (data.getIntExtra("SW", 0) == Constants.SW_TEST_OF_USER_PRESENCE_REQUIRED) {
+                    Toast.makeText(this, "Please show me your token.", Toast.LENGTH_LONG).show();
+                    JSONObject error = ResponseCodec.encodeError(ErrorCode.OTHER_ERROR, ErrorCode.OTHER_ERROR.toString().concat(" Wrong in Token."));
+                    Intent i = ResponseCodec.encodeResponse(U2FResponseType.u2f_register_response.name(), error);
+                    setResult(RESULT_CANCELED, i);
+                    finish();
+                } else if (data.getIntExtra("SW", 0) == Constants.SW_INVALID_KEY_HANDLE) {
+                    Toast.makeText(this, "Bad Key Handle..", Toast.LENGTH_LONG).show();
+                    JSONObject error = ResponseCodec.encodeError(ErrorCode.DEVICE_INELIGIBLE, ErrorCode.DEVICE_INELIGIBLE.toString());
+                    Intent i = ResponseCodec.encodeResponse(U2FResponseType.u2f_sign_response.name(), error);
+                    setResult(RESULT_CANCELED, i);
+                    finish();
+                } else {
+                    throw new RuntimeException("shouldnt happendddd.");
+                }
             } else if (resultCode == RESULT_OK) {
-                LogUtils.d("=============");
                 JSONObject signResponse = ResponseCodec.encodeSignResponse(u2fClient.getKeyHandle(), data.getByteArrayExtra("RawMessage"), u2fClient.getClientData());
                 Intent i = ResponseCodec.encodeResponse(U2FResponseType.u2f_sign_response.name(), signResponse);
                 setResult(RESULT_OK, i);

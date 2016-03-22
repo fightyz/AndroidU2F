@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
+    xmlns:mytv="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:paddingBottom="@dimen/activity_vertical_margin"
@@ -9,9 +10,27 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context=".client.card.JavaCardTokenActivity">
 
-    <TextView
-        android:id="@+id/java_card_message"
+    <org.esec.mcg.androidu2f.client.card.VerticalLinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="show me nfc card"/>
+        android:layout_gravity="center"
+        android:background="#00dd00">
+
+        <TextView
+            android:id="@+id/java_card_message"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="show me nfc card"/>
+
+        <org.esec.mcg.androidu2f.client.card.MyTextView
+            android:id="@+id/my_tv"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/java_card_message"
+            android:background="#fff000"
+            mytv:text="this is my text view"
+            mytv:textSize="30sp"/>
+
+    </org.esec.mcg.androidu2f.client.card.VerticalLinearLayout>
+
 </RelativeLayout>

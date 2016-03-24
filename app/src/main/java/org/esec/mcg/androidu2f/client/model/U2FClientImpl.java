@@ -155,11 +155,11 @@ public class U2FClientImpl extends U2FClient {
     }
 
     @Override
-    public AuthenticationRequest[] signBatch(JSONArray signRequestsBatch) throws U2FException {
+    public AuthenticationRequest[] signBatch(JSONArray signRequestsBatch, boolean sign) throws U2FException {
         try {
             AuthenticationRequest[] authenticationRequestsBatch = new AuthenticationRequest[signRequestsBatch.length()];
             for (int i = 0; i < signRequestsBatch.length(); i++) {
-                authenticationRequestsBatch[i] = sign(signRequestsBatch.getJSONObject(i).toString(), false);
+                authenticationRequestsBatch[i] = sign(signRequestsBatch.getJSONObject(i).toString(), sign);
             }
             return authenticationRequestsBatch;
         } catch (JSONException e) {

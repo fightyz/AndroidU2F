@@ -92,12 +92,11 @@ public class U2FClientActivity extends AppCompatActivity {
                 if (requestJson.has("signRequests")) {
                     signRequests = requestJson.getJSONArray("signRequests");
                     if (signRequests.length() != 0) {
-
                         AuthenticationRequest[] authenticationRequestsBatch = u2fClient.signBatch(signRequests, false);
                         RegistrationRequest registrationRequest = u2fClient.register(request);
-                        Intent i = genTokenIntent(U2FTokenIntentType.U2F_OPERATION_SIGN_BATCH,
+                        Intent i = genTokenIntent(U2FTokenIntentType.U2F_OPERATION_REG,
                                 RawMessageCodec.encodeRegistrationRequest(registrationRequest), authenticationRequestsBatch);
-                        startActivityForResult(i, Constants.REG_ACTIVITY_RES_3);
+                        startActivityForResult(i, Constants.REG_ACTIVITY_RES_1);
                     } else {
                         RegistrationRequest registrationRequest = u2fClient.register(request);
                         Intent i = genTokenIntent(U2FTokenIntentType.U2F_OPERATION_REG,
@@ -165,14 +164,23 @@ public class U2FClientActivity extends AppCompatActivity {
         if (requestCode == Constants.REG_ACTIVITY_RES_1) { // register
             LogUtils.d("REG_ACTIVITY_RES_1");
             if (resultCode == RESULT_OK) { // success
-                JSONObject registerResponse = ResponseCodec.encodeRegisterResponse(data.getByteArrayExtra("RawMessage"), U2FClient.getClientData());
-                Intent i = ResponseCodec.encodeResponse(U2FResponseType.u2f_register_response.name(), registerResponse);
-                setResult(RESULT_OK, i);
-                finish();
+                if (data.getIntExtra("SW", 0) == Constants.SW_TEST_OF_USER_PRESENCE_REQUIRED) { // token had already been registered
+                    Toast.makeText(this, "Token had already been registered.", Toast.LENGTH_LONG).show();
+                    JSONObject error = ResponseCodec.encodeError(ErrorCode.DEVICE_INELIGIBLE , ErrorCode.DEVICE_INELIGIBLE .toString().concat("Token had already been registered."));
+                    Intent i = ResponseCodec.encodeResponse(U2FResponseType.u2f_register_response.name(), error);
+                    setResult(RESULT_CANCELED, i);
+                    finish();
+                } else {
+                    JSONObject registerResponse = ResponseCodec.encodeRegisterResponse(data.getByteArrayExtra("RawMessage"), U2FClient.getClientData());
+                    Intent i = ResponseCodec.encodeResponse(U2FResponseType.u2f_register_response.name(), registerResponse);
+                    setResult(RESULT_OK, i);
+                    finish();
+                }
+
             } else if (resultCode == RESULT_CANCELED) { // fail
                 if (data.getIntExtra("SW", 0) == Constants.SW_TEST_OF_USER_PRESENCE_REQUIRED) {
                     Toast.makeText(this, "Please show me your token.", Toast.LENGTH_LONG).show();
-                    JSONObject error = ResponseCodec.encodeError(ErrorCode.OTHER_ERROR, ErrorCode.OTHER_ERROR.toString().concat(" Wrong in Token."));
+                    JSONObject error = ResponseCodec.encodeError(ErrorCode.OTHER_ERROR, ErrorCode.OTHER_ERROR.toString().concat("Please show me your token."));
                     Intent i = ResponseCodec.encodeResponse(U2FResponseType.u2f_register_response.name(), error);
                     setResult(RESULT_CANCELED, i);
                     finish();
@@ -262,6 +270,7 @@ public class U2FClientActivity extends AppCompatActivity {
         switch (intentType) {
             case U2F_OPERATION_REG:
                 data.putByteArray("RawMessage", rawMessage);
+                data.putParcelableArray("signBatch", authenticationRequests);
                 i.putExtra(U2FTokenIntentType.U2F_OPERATION_REG.name(), data);
                 break;
             case U2F_OPERATION_SIGN:

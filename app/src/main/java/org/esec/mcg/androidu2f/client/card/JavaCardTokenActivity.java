@@ -7,6 +7,7 @@ import android.nfc.NfcAdapter;
 import android.nfc.Tag;
 import android.nfc.tech.IsoDep;
 import android.nfc.tech.NfcA;
+import android.os.Parcelable;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.widget.TextView;
@@ -14,6 +15,7 @@ import android.widget.TextView;
 import org.esec.mcg.androidu2f.Constants;
 import org.esec.mcg.androidu2f.R;
 import org.esec.mcg.androidu2f.client.card.APDU.APDUError;
+import org.esec.mcg.androidu2fsimulator.token.msg.AuthenticationRequest;
 import org.esec.mcg.utils.ByteUtil;
 import org.esec.mcg.utils.logger.LogUtils;
 
@@ -28,6 +30,8 @@ public class JavaCardTokenActivity extends AppCompatActivity implements ReadCard
 
     private String u2fTokenIntentType;
     private byte[] rawMessage;
+    private AuthenticationRequest[] signBatch;
+    private int signBatchIndex;
 
     private TextView mJavaCardMessage;
 
@@ -49,6 +53,29 @@ public class JavaCardTokenActivity extends AppCompatActivity implements ReadCard
         mFilters = new IntentFilter[] {ndef};
         mTechList = new String[][] { new String[] {IsoDep.class.getName()},
                                      new String[] {NfcA.class.getName()}};
+        LogUtils.d("JavaCardTokenActivity");
+
+        if (getIntent().getBundleExtra("signBatch") != null) {
+            Bundle extras = getIntent().getBundleExtra("signBatch");
+            Parcelable[] allParcelables = extras.getParcelableArray(U2FTokenIntentType.U2F_OPERATION_SIGN_BATCH.name());
+            if (allParcelables != null) {
+                LogUtils.d(allParcelables.length);
+                LogUtils.d("===================");
+                signBatch = new AuthenticationRequest[allParcelables.length];
+                for (int i = 0; i < allParcelables.length; i++) {
+                    signBatch[i] = (AuthenticationRequest)allParcelables[i];
+                }
+                LogUtils.d(signBatch[0].getApplicationSha256());
+            }
+        } else if (getIntent().getBundleExtra(U2FTokenIntentType.U2F_OPERATION_REG.name()) != null) {
+            u2fTokenIntentType = U2FTokenIntentType.U2F_OPERATION_REG.name();
+            rawMessage = getIntent().getExtras().getByteArray("RawMessage");
+        } else if (getIntent().getBundleExtra(U2FTokenIntentType.U2F_OPERATION_SIGN.name()) != null) {
+            u2fTokenIntentType = U2FTokenIntentType.U2F_OPERATION_SIGN.name();
+            rawMessage = getIntent().getExtras().getByteArray("RawMessage");
+        } else {
+            throw new RuntimeException("Illegal intent");
+        }
     }
 
     @Override
@@ -58,7 +85,7 @@ public class JavaCardTokenActivity extends AppCompatActivity implements ReadCard
             mAdapter.enableForegroundDispatch(this, mPendingintent, mFilters, mTechList);
         }
 
-        Bundle extras = getIntent().getExtras();
+        Bundle extras = getIntent().getBundleExtra("signBatch");
         u2fTokenIntentType = extras.getString("U2FTokenIntentType");
         rawMessage = extras.getByteArray("RawMessage");
     }

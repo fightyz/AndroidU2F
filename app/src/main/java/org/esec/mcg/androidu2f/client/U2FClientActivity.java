@@ -2,6 +2,8 @@ package org.esec.mcg.androidu2f.client;
 
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.net.Uri;
+import android.provider.Settings;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -10,23 +12,27 @@ import android.widget.Toast;
 
 import org.esec.mcg.androidu2f.Constants;
 import org.esec.mcg.androidu2f.U2FException;
+import org.esec.mcg.androidu2f.client.card.JavaCardTokenActivity;
 import org.esec.mcg.androidu2f.client.model.U2FClient;
 import org.esec.mcg.androidu2f.client.model.U2FClientImpl;
 import org.esec.mcg.androidu2f.client.msg.U2FTokenIntentType;
 import org.esec.mcg.androidu2f.codec.RawMessageCodec;
 import org.esec.mcg.androidu2f.codec.ResponseCodec;
-import org.esec.mcg.androidu2f.client.msg.AuthenticationRequest;
 import org.esec.mcg.androidu2f.msg.ErrorCode;
 import org.esec.mcg.androidu2f.client.msg.RegistrationRequest;
 import org.esec.mcg.androidu2f.msg.U2FIntentType;
 import org.esec.mcg.androidu2f.msg.U2FRequestType;
 import org.esec.mcg.androidu2f.msg.U2FResponseType;
+import org.esec.mcg.androidu2fsimulator.token.msg.AuthenticationRequest;
+import org.esec.mcg.androidu2fsimulator.token.msg.User;
 import org.esec.mcg.utils.logger.LogUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 public class U2FClientActivity extends AppCompatActivity {
+
+    public static int OVERLAY_PERMISSION_REQ_CODE = 1234;
 
     private String request;
     private String requestType;
@@ -44,6 +50,13 @@ public class U2FClientActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         signRequestIndex = 0;
 //        regRequestIndex = 0;
+        if (!Settings.canDrawOverlays(this)) {
+            Intent i = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                    Uri.parse("package:" + getPackageName()));
+            startActivityForResult(i, OVERLAY_PERMISSION_REQ_CODE);
+        } else {
+            LogUtils.d("555");
+        }
     }
 
     @Override
@@ -58,6 +71,7 @@ public class U2FClientActivity extends AppCompatActivity {
             requestType = (new JSONObject(request)).getString("type");
             u2fClient = new U2FClientImpl(this.getPackageManager().getPackageInfo(this.getPackageName(), this.getPackageManager().GET_SIGNATURES));
         } catch (JSONException e) {
+            // "type" field is wrong, can't be resolved.
             JSONObject error = ResponseCodec.encodeError(ErrorCode.BAD_REQUEST, ErrorCode.BAD_REQUEST.toString());
             String u2fResponseType;
             if (U2FOperationType.equals(U2FIntentType.U2F_OPERATION_REG)) {
@@ -72,50 +86,31 @@ public class U2FClientActivity extends AppCompatActivity {
             return;
         } catch (PackageManager.NameNotFoundException e) {
             // TODO: 2016/3/10 Handle exception
-            e.printStackTrace();
-            return;
+            throw new RuntimeException(e);
         }
 
         // Register, type = u2f_register_request
         if (requestType.equals(U2FRequestType.u2f_register_request.name())) {
             try {
-
-                try {
-                    if (signRequestIndex == 0) {
-                        signRequests = new JSONObject(request).getJSONArray("signRequests");
+                JSONObject requestJson = new JSONObject(request);
+                if (requestJson.has("signRequests") && !CHECK_ONLY_SUCCESS) {
+                    signRequests = requestJson.getJSONArray("signRequests");
+                    if (signRequests.length() != 0) {
+                        AuthenticationRequest[] authenticationRequestsBatch = u2fClient.signBatch(signRequests);
+                        Intent i = genTokenIntent(U2FTokenIntentType.U2F_OPERATION_SIGN_BATCH,
+                                null, authenticationRequestsBatch);
+                        startActivityForResult(i, Constants.REG_ACTIVITY_RES_3);
                     }
-                    LogUtils.d("signRequestIndex = " + signRequestIndex);
-                    LogUtils.d("length = " + signRequests.length());
-
-                    if (signRequests != null && signRequestIndex < signRequests.length()) {
-                        JSONObject signReq = signRequests.getJSONObject(signRequestIndex);
-                        signRequestIndex++;
-                        AuthenticationRequest authenticationRequest = u2fClient.sign(signReq.toString(), false);
-                        Intent i = new Intent("org.fidoalliance.intent.FIDO_OPERATION");
-                        i.addCategory("android.intent.category.DEFAULT");
-                        i.setType("application/fido.u2f_token+json");
-                        Bundle data = new Bundle();
-                        data.putByteArray("RawMessage", RawMessageCodec.encodeAuthenticationRequest(authenticationRequest));
-                        data.putString("U2FTokenIntentType", U2FTokenIntentType.U2F_OPERATION_SIGN.name());
-                        i.putExtras(data);
-                        startActivityForResult(i, Constants.REG_ACTIVITY_RES_3); // Start token activity
-                        return;
-                    }
-
-                } catch (JSONException e) {
-                    throw new U2FException("Bad Request", e);
+                } else {
+                    LogUtils.d("===========");
+                    RegistrationRequest registrationRequest = u2fClient.register(request);
+                    Intent i = genTokenIntent(U2FTokenIntentType.U2F_OPERATION_REG,
+                            RawMessageCodec.encodeRegistrationRequest(registrationRequest), null);
+                    startActivityForResult(i, Constants.REG_ACTIVITY_RES_1); // Start token activity.
                 }
 
-                RegistrationRequest registrationRequest = u2fClient.register(request);
-                Intent i = new Intent("org.fidoalliance.intent.FIDO_OPERATION");
-                i.addCategory("android.intent.category.DEFAULT");
-                i.setType("application/fido.u2f_token+json");
-                Bundle data = new Bundle();
-                data.putByteArray("RawMessage", RawMessageCodec.encodeRegistrationRequest(registrationRequest));
-                data.putString("U2FTokenIntentType", U2FTokenIntentType.U2F_OPERATION_REG.name());
-                i.putExtras(data);
-                startActivityForResult(i, Constants.REG_ACTIVITY_RES_1); // Start token activity.
-            } catch (U2FException e) {
+            } catch (U2FException | JSONException e) {
+                LogUtils.d("------------------");
                 JSONObject error = ResponseCodec.encodeError(ErrorCode.BAD_REQUEST, e.getMessage());
                 Intent i = ResponseCodec.encodeResponse(U2FResponseType.u2f_register_response.name(), error);
                 setResult(RESULT_CANCELED, i);
@@ -141,13 +136,8 @@ public class U2FClientActivity extends AppCompatActivity {
                 LogUtils.d("signRequest = " + signRequest.toString());
                 signRequestIndex++;
                 AuthenticationRequest authenticationRequest = u2fClient.sign(signRequest.toString(), true);
-                Intent i = new Intent("org.fidoalliance.intent.FIDO_OPERATION");
-                i.addCategory("android.intent.category.DEFAULT");
-                i.setType("application/fido.u2f_token+json");
-                Bundle data = new Bundle();
-                data.putByteArray("RawMessage", RawMessageCodec.encodeAuthenticationRequest(authenticationRequest));
-                data.putString("U2FTokenIntentType", U2FTokenIntentType.U2F_OPERATION_SIGN.name());
-                i.putExtras(data);
+                Intent i = genTokenIntent(U2FTokenIntentType.U2F_OPERATION_SIGN,
+                        RawMessageCodec.encodeAuthenticationRequest(authenticationRequest), null);
                 startActivityForResult(i, Constants.SIGN_ACTIVITY_RES_2); // Start token activity
             } catch (U2FException | JSONException e) {
                 e.printStackTrace();
@@ -163,6 +153,7 @@ public class U2FClientActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == Constants.REG_ACTIVITY_RES_1) { // register
+            LogUtils.d("REG_ACTIVITY_RES_1");
             if (resultCode == RESULT_OK) { // success
                 JSONObject registerResponse = ResponseCodec.encodeRegisterResponse(data.getByteArrayExtra("RawMessage"), U2FClient.getClientData());
                 Intent i = ResponseCodec.encodeResponse(U2FResponseType.u2f_register_response.name(), registerResponse);
@@ -182,6 +173,8 @@ public class U2FClientActivity extends AppCompatActivity {
             }
 
         } else if (requestCode == Constants.REG_ACTIVITY_RES_3) { // Reg: sign's check only
+            LogUtils.d("sign's check only");
+            CHECK_ONLY_SUCCESS = true;
             if (resultCode == RESULT_OK) {
                 throw new RuntimeException("This shouldn't happen!!!!");
             } else if (resultCode == RESULT_CANCELED) {
@@ -192,10 +185,12 @@ public class U2FClientActivity extends AppCompatActivity {
                     setResult(RESULT_CANCELED, i);
                     finish();
                 } else if (data.getIntExtra("SW", 0) == Constants.SW_INVALID_KEY_HANDLE) { // fail, bad key handle
-                    if (signRequestIndex == signRequests.length()) {
-                        Toast.makeText(this, "Bad Key Handle. Do register", Toast.LENGTH_LONG).show();
-
-                    }
+//                    if (signRequestIndex == signRequests.length()) {
+//                        Toast.makeText(this, "Bad Key Handle. Do register", Toast.LENGTH_LONG).show();
+//
+//                    }
+                    Toast.makeText(this, "Bad Key Handle. Do register", Toast.LENGTH_LONG).show();
+                    CHECK_ONLY_SUCCESS = true;
                 } else {
                     throw new RuntimeException("shouldn't happen!!!");
                 }
@@ -227,6 +222,11 @@ public class U2FClientActivity extends AppCompatActivity {
                 setResult(RESULT_OK, i);
                 finish();
             }
+        } else if (requestCode == OVERLAY_PERMISSION_REQ_CODE) {
+//            if ()
+            LogUtils.d("666");
+        } else {
+            LogUtils.d("can not happedndd!!");
         }
     }
 
@@ -234,5 +234,32 @@ public class U2FClientActivity extends AppCompatActivity {
         Intent intent = new Intent();
         setResult(RESULT_OK, intent);
         finish();
+    }
+
+    private static Intent genTokenIntent(U2FTokenIntentType intentType,
+                                         byte[] rawMessage,
+                                         AuthenticationRequest[] authenticationRequests) {
+        Intent i = new Intent();
+        i.setAction("org.fidoalliance.intent.FIDO_OPERATION");
+        i.addCategory("android.intent.category.DEFAULT");
+        i.setType("application/fido.u2f_token+json");
+
+        Bundle data = new Bundle();
+
+        switch (intentType) {
+            case U2F_OPERATION_REG:
+                data.putByteArray("RawMessage", rawMessage);
+                i.putExtra(U2FTokenIntentType.U2F_OPERATION_REG.name(), data);
+                break;
+            case U2F_OPERATION_SIGN:
+                data.putByteArray("RawMessage", rawMessage);
+                i.putExtra(U2FTokenIntentType.U2F_OPERATION_SIGN.name(), data);
+                break;
+            case U2F_OPERATION_SIGN_BATCH:
+                data.putParcelableArray("signBatch", authenticationRequests);
+                i.putExtra(U2FTokenIntentType.U2F_OPERATION_SIGN_BATCH.name(), data);
+                break;
+        }
+        return i;
     }
 }

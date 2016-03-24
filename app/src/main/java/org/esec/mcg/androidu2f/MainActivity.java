@@ -128,16 +128,6 @@ public class MainActivity extends AppCompatActivity
             } catch (JSONException e) {
                 e.printStackTrace();
             }
-
-//            SharedPreferences pf = PreferenceManager.getDefaultSharedPreferences(this);
-//            String endPoint = pf.getString("server_endpoint", null);
-//            String bindPoint = pf.getString("bind", null);
-//
-//            String headerStr = "Content-Type:Application/json Accept:Application/json";
-//            Curl.postInSeperateThread(endPoint + bindPoint, headerStr, registerResponse);
-
-
-//            HTTP.post(new URL(endPoint + bindPoint), )
         } else if (Constants.SIGN_ACTIVITY_RES_2 == requestCode) {
             if (resultCode == RESULT_CANCELED) {
                 Fragment currentFragment = getFragmentManager().findFragmentById(R.id.fragment_container);

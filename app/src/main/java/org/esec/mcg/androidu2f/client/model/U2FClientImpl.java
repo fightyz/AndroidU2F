@@ -4,9 +4,9 @@ import android.content.pm.PackageInfo;
 import android.util.Base64;
 
 import org.esec.mcg.androidu2f.U2FException;
-import org.esec.mcg.androidu2f.client.msg.AuthenticationRequest;
 import org.esec.mcg.androidu2f.client.msg.RegistrationRequest;
 import org.esec.mcg.androidu2f.codec.ClientDataCodec;
+import org.esec.mcg.androidu2fsimulator.token.msg.AuthenticationRequest;
 import org.esec.mcg.utils.ByteUtil;
 import org.esec.mcg.utils.logger.LogUtils;
 import org.json.JSONArray;
@@ -24,6 +24,9 @@ import java.security.cert.CertificateFactory;
  * Created by yz on 2016/1/14.
  */
 public class U2FClientImpl extends U2FClient {
+
+    public static final byte CHECK_ONLY = 0x07;
+    public static final byte USER_PRESENCE_SIGN = 0x03;
 
     private static final String U2F_V2 = "U2F_V2";
 
@@ -133,9 +136,9 @@ public class U2FClientImpl extends U2FClient {
 
             byte control;
             if (isSign) {
-                control = AuthenticationRequest.USER_PRESENCE_SIGN;
+                control = USER_PRESENCE_SIGN;
             } else {
-                control = AuthenticationRequest.CHECK_ONLY;
+                control = CHECK_ONLY;
             }
 
             byte[] rawKeyHandle = android.util.Base64.decode(keyHandle, Base64.NO_WRAP | Base64.URL_SAFE);
@@ -149,6 +152,20 @@ public class U2FClientImpl extends U2FClient {
         } catch (IllegalArgumentException e) {
             throw new U2FException("Bad Base64 encoding of key Handle.", e);
         }
+    }
+
+    @Override
+    public AuthenticationRequest[] signBatch(JSONArray signRequestsBatch) throws U2FException {
+        try {
+            AuthenticationRequest[] authenticationRequestsBatch = new AuthenticationRequest[signRequestsBatch.length()];
+            for (int i = 0; i < signRequestsBatch.length(); i++) {
+                authenticationRequestsBatch[i] = sign(signRequestsBatch.getJSONObject(i).toString(), false);
+            }
+            return authenticationRequestsBatch;
+        } catch (JSONException e) {
+            throw new U2FException("Rgister request JSON format is wrong.", e);
+        }
+
     }
 
     //TODO Implement this function

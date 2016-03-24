@@ -1,8 +1,8 @@
 package org.esec.mcg.androidu2f.codec;
 
 import org.esec.mcg.androidu2f.U2FException;
-import org.esec.mcg.androidu2f.client.msg.AuthenticationRequest;
 import org.esec.mcg.androidu2f.client.msg.RegistrationRequest;
+import org.esec.mcg.androidu2fsimulator.token.msg.AuthenticationRequest;
 
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
@@ -122,4 +122,8 @@ public class RawMessageCodec {
                 .put(keyHandle);
         return result;
     }
+
+//    public static byte[] encodeAuthenticationRequestBatch(AuthenticationRequest[] authenticationRequestsBatch) {
+//
+//    }
 }

@@ -41,8 +41,6 @@ public class U2FClientActivity extends AppCompatActivity {
 
     private U2FClient u2fClient;
 
-    private static boolean CHECK_ONLY_SUCCESS;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -128,26 +126,6 @@ public class U2FClientActivity extends AppCompatActivity {
                             null, authenticationRequestsBatch);
                     startActivityForResult(i, Constants.SIGN_ACTIVITY_RES_2);
                 }
-//                if (signRequestIndex == 0) {
-//                    signRequests = new JSONObject(request).getJSONArray("signRequests");
-//                }
-//                if (signRequestIndex == signRequests.length()) {
-//                    LogUtils.d("out of band");
-//                    JSONObject error = ResponseCodec.encodeError(ErrorCode.DEVICE_INELIGIBLE, ErrorCode.DEVICE_INELIGIBLE.toString());
-//                    Intent i = ResponseCodec.encodeResponse(U2FResponseType.u2f_sign_response.name(), error);
-//                    setResult(RESULT_CANCELED, i);
-//                    finish();
-//                    return;
-//                }
-//
-//                JSONObject signRequest = signRequests.getJSONObject(signRequestIndex);
-//                LogUtils.d("Index = " + signRequestIndex);
-//                LogUtils.d("signRequest = " + signRequest.toString());
-//                signRequestIndex++;
-//                AuthenticationRequest authenticationRequest = u2fClient.sign(signRequest.toString(), true);
-//                Intent i = genTokenIntent(U2FTokenIntentType.U2F_OPERATION_SIGN,
-//                        RawMessageCodec.encodeAuthenticationRequest(authenticationRequest), null);
-//                startActivityForResult(i, Constants.SIGN_ACTIVITY_RES_2); // Start token activity
             } catch (U2FException | JSONException e) {
                 e.printStackTrace();
                 JSONObject error = ResponseCodec.encodeError(ErrorCode.OTHER_ERROR, ErrorCode.OTHER_ERROR.toString().concat(" Wrong in Token."));
@@ -192,7 +170,6 @@ public class U2FClientActivity extends AppCompatActivity {
 
         } else if (requestCode == Constants.REG_ACTIVITY_RES_3) { // Reg: sign's check only
             LogUtils.d("sign's check only");
-            CHECK_ONLY_SUCCESS = true;
             if (resultCode == RESULT_OK) {
                 JSONObject registerResponse = ResponseCodec.encodeRegisterResponse(data.getByteArrayExtra("RawMessage"), U2FClient.getClientData());
                 Intent i = ResponseCodec.encodeResponse(U2FResponseType.u2f_register_response.name(), registerResponse);
@@ -200,14 +177,13 @@ public class U2FClientActivity extends AppCompatActivity {
                 finish();
             } else if (resultCode == RESULT_CANCELED) {
                 if (data.getIntExtra("SW", 0) == Constants.SW_TEST_OF_USER_PRESENCE_REQUIRED) { // success, key handle had been registered
-                    Toast.makeText(this, "Token had been registered. ", Toast.LENGTH_LONG).show();
+                    Toast.makeText(this, "show me your card", Toast.LENGTH_LONG).show();
                     JSONObject error = ResponseCodec.encodeError(ErrorCode.DEVICE_INELIGIBLE, ErrorCode.DEVICE_INELIGIBLE.toString());
                     Intent i = ResponseCodec.encodeResponse(U2FResponseType.u2f_register_response.name(), error);
                     setResult(RESULT_CANCELED, i);
                     finish();
                 } else if (data.getIntExtra("SW", 0) == Constants.SW_INVALID_KEY_HANDLE) { // fail, bad key handle
                     Toast.makeText(this, "Bad Key Handle. Do register", Toast.LENGTH_LONG).show();
-                    CHECK_ONLY_SUCCESS = true;
                 } else {
                     throw new RuntimeException("shouldn't happen!!!");
                 }
@@ -278,7 +254,6 @@ public class U2FClientActivity extends AppCompatActivity {
                 i.putExtra(U2FTokenIntentType.U2F_OPERATION_SIGN.name(), data);
                 break;
             case U2F_OPERATION_SIGN_BATCH:
-                data.putByteArray("RawMessage", rawMessage);
                 data.putParcelableArray("signBatch", authenticationRequests);
                 i.putExtra(U2FTokenIntentType.U2F_OPERATION_SIGN_BATCH.name(), data);
                 break;

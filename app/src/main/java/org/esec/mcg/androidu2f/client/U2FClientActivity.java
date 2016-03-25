@@ -168,28 +168,7 @@ public class U2FClientActivity extends AppCompatActivity {
 
             }
 
-        } else if (requestCode == Constants.REG_ACTIVITY_RES_3) { // Reg: sign's check only
-            LogUtils.d("sign's check only");
-            if (resultCode == RESULT_OK) {
-                JSONObject registerResponse = ResponseCodec.encodeRegisterResponse(data.getByteArrayExtra("RawMessage"), U2FClient.getClientData());
-                Intent i = ResponseCodec.encodeResponse(U2FResponseType.u2f_register_response.name(), registerResponse);
-                setResult(RESULT_OK, i);
-                finish();
-            } else if (resultCode == RESULT_CANCELED) {
-                if (data.getIntExtra("SW", 0) == Constants.SW_TEST_OF_USER_PRESENCE_REQUIRED) { // success, key handle had been registered
-                    Toast.makeText(this, "show me your card", Toast.LENGTH_LONG).show();
-                    JSONObject error = ResponseCodec.encodeError(ErrorCode.DEVICE_INELIGIBLE, ErrorCode.DEVICE_INELIGIBLE.toString());
-                    Intent i = ResponseCodec.encodeResponse(U2FResponseType.u2f_register_response.name(), error);
-                    setResult(RESULT_CANCELED, i);
-                    finish();
-                } else if (data.getIntExtra("SW", 0) == Constants.SW_INVALID_KEY_HANDLE) { // fail, bad key handle
-                    Toast.makeText(this, "Bad Key Handle. Do register", Toast.LENGTH_LONG).show();
-                } else {
-                    throw new RuntimeException("shouldn't happen!!!");
-                }
-            }
         }
-
         else if (requestCode == Constants.SIGN_ACTIVITY_RES_2) { // sign
             LogUtils.d("onActivityResult");
             // If previous sign request failed, then do the next one.
@@ -216,21 +195,10 @@ public class U2FClientActivity extends AppCompatActivity {
                 finish();
             }
         } else if (requestCode == OVERLAY_PERMISSION_REQ_CODE) {
-//            if ()
             LogUtils.d("666");
         } else {
-            LogUtils.d("can not happedndd!!");
+            throw new RuntimeException("can not happened!!");
         }
-    }
-
-    public void swipeProceed(View view) {
-        Intent intent = new Intent();
-        setResult(RESULT_OK, intent);
-        finish();
-    }
-
-    private static void startRegWithCheck() {
-
     }
 
     private static Intent genTokenIntent(U2FTokenIntentType intentType,

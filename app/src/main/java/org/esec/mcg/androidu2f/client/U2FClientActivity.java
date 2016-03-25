@@ -6,13 +6,10 @@ import android.net.Uri;
 import android.provider.Settings;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
-import android.view.View;
 import android.widget.Toast;
 
 import org.esec.mcg.androidu2f.Constants;
 import org.esec.mcg.androidu2f.U2FException;
-import org.esec.mcg.androidu2f.client.card.JavaCardTokenActivity;
 import org.esec.mcg.androidu2f.client.model.U2FClient;
 import org.esec.mcg.androidu2f.client.model.U2FClientImpl;
 import org.esec.mcg.androidu2f.client.msg.U2FTokenIntentType;
@@ -24,7 +21,6 @@ import org.esec.mcg.androidu2f.msg.U2FIntentType;
 import org.esec.mcg.androidu2f.msg.U2FRequestType;
 import org.esec.mcg.androidu2f.msg.U2FResponseType;
 import org.esec.mcg.androidu2fsimulator.token.msg.AuthenticationRequest;
-import org.esec.mcg.androidu2fsimulator.token.msg.User;
 import org.esec.mcg.utils.logger.LogUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -170,9 +166,9 @@ public class U2FClientActivity extends AppCompatActivity {
 
         }
         else if (requestCode == Constants.SIGN_ACTIVITY_RES_2) { // sign
-            LogUtils.d("onActivityResult");
             // If previous sign request failed, then do the next one.
             if (resultCode == RESULT_CANCELED) {
+                LogUtils.d("RESULT_CANCELED");
                 if (data.getIntExtra("SW", 0) == Constants.SW_TEST_OF_USER_PRESENCE_REQUIRED) {
                     Toast.makeText(this, "Please show me your token.", Toast.LENGTH_LONG).show();
                     JSONObject error = ResponseCodec.encodeError(ErrorCode.OTHER_ERROR, ErrorCode.OTHER_ERROR.toString().concat(" Wrong in Token."));
@@ -189,10 +185,12 @@ public class U2FClientActivity extends AppCompatActivity {
                     throw new RuntimeException("shouldnt happendddd.");
                 }
             } else if (resultCode == RESULT_OK) {
-                JSONObject signResponse = ResponseCodec.encodeSignResponse(u2fClient.getKeyHandle(), data.getByteArrayExtra("RawMessage"), u2fClient.getClientData());
+                JSONObject signResponse = ResponseCodec.encodeSignResponse(data.getExtras().getString("keyHandle"), data.getExtras().getByteArray("RawMessage"), u2fClient.getClientData());
                 Intent i = ResponseCodec.encodeResponse(U2FResponseType.u2f_sign_response.name(), signResponse);
                 setResult(RESULT_OK, i);
                 finish();
+            } else {
+                throw new RuntimeException("can not happen!");
             }
         } else if (requestCode == OVERLAY_PERMISSION_REQ_CODE) {
             LogUtils.d("666");

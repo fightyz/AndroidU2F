@@ -36,7 +36,8 @@ public class U2FClientImpl extends U2FClient {
     private String appId;
     private String serverChallengeBase64;
     private String facetID;
-//    private String clientData;
+
+    private JSONArray signBatch;
 
     /**
      * Caller of the U2FClientActivity
@@ -142,6 +143,7 @@ public class U2FClientImpl extends U2FClient {
             }
 
             byte[] rawKeyHandle = android.util.Base64.decode(keyHandle, Base64.NO_WRAP | Base64.URL_SAFE);
+            LogUtils.d("client sign key handle: " + ByteUtil.ByteArrayToHexString(rawKeyHandle));
             return new AuthenticationRequest(control, clientDataSha256, appIdSha256, rawKeyHandle);
         } catch (JSONException e) {
             throw new U2FException("Rgister request JSON format is wrong.", e);
@@ -157,6 +159,7 @@ public class U2FClientImpl extends U2FClient {
     @Override
     public AuthenticationRequest[] signBatch(JSONArray signRequestsBatch, boolean sign) throws U2FException {
         try {
+            signBatch = signRequestsBatch;
             AuthenticationRequest[] authenticationRequestsBatch = new AuthenticationRequest[signRequestsBatch.length()];
             for (int i = 0; i < signRequestsBatch.length(); i++) {
                 authenticationRequestsBatch[i] = sign(signRequestsBatch.getJSONObject(i).toString(), sign);
@@ -168,13 +171,22 @@ public class U2FClientImpl extends U2FClient {
 
     }
 
+    @Override
+    public String getKeyHandle(int index) {
+        try {
+            return signBatch.getJSONObject(index).getString("keyHandle");
+        } catch (JSONException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     //TODO Implement this function
     /**
      * @param appId
      * @return
      */
     private boolean verifyAppId(String appId) {
-        LogUtils.d(appId);
+//        LogUtils.d(appId);
         return true;
     }
 
@@ -184,7 +196,7 @@ public class U2FClientImpl extends U2FClient {
         Certificate certificate = CertificateFactory.getInstance("X509").generateCertificate(byteArrayInputStream);
         MessageDigest messageDigest = MessageDigest.getInstance("SHA1");
         String facetID = "android:apk-key-hash:" + Base64.encodeToString(messageDigest.digest(certificate.getEncoded()), Base64.DEFAULT | Base64.NO_WRAP);
-        LogUtils.d("android:apk-key-hash:" + Base64.encodeToString(messageDigest.digest(certificate.getEncoded()), Base64.DEFAULT | Base64.NO_WRAP));
+//        LogUtils.d("android:apk-key-hash:" + Base64.encodeToString(messageDigest.digest(certificate.getEncoded()), Base64.DEFAULT | Base64.NO_WRAP));
         facetID = "https://demo.strongauth.com";
         return facetID;
     }

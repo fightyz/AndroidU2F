@@ -52,6 +52,9 @@ public class SignFragment extends Fragment {
 
     private OnFragmentInteractionListener mListener;
 
+    private static final int MSG_START_ACTIVITY = 0;
+    private static final int MSG_ERROR = 1;
+
     public SignFragment() {
         // Required empty public constructor
     }
@@ -120,17 +123,21 @@ public class SignFragment extends Fragment {
                     Bundle data = new Bundle();
                     data.putString("Request", newRequest.toString());
                     data.putString("U2FIntentType", U2FIntentType.U2F_OPERATION_SIGN.name());
-                    i.putExtras(data);
+//                    i.putExtras(data);
+
+                    Message msg = Message.obtain(null, MSG_START_ACTIVITY);
+                    msg.setData(data);
+                    uiHandler.sendMessage(msg);
                 } catch (U2FException | JSONException e) {
                     e.printStackTrace();
                     Bundle data = new Bundle();
                     data.putString("Error", e.getMessage());
-                    Message msg = new Message();
+                    Message msg = Message.obtain(null, MSG_ERROR);
                     msg.setData(data);
                     uiHandler.sendMessage(msg);
                     return;
                 }
-                getActivity().startActivityForResult(i, SIGN_ACTIVITY_RES_2);
+//                getActivity().startActivityForResult(i, SIGN_ACTIVITY_RES_2);
             }
         }).start();
     }
@@ -198,8 +205,20 @@ public class SignFragment extends Fragment {
         public void handleMessage(Message msg) {
             super.handleMessage(msg);
             Bundle data = msg.getData();
-            statusText.setText(data.getString("Error"));
-            progressBar.setVisibility(View.INVISIBLE);
+            switch (msg.what) {
+                case MSG_ERROR:
+                    statusText.setText(data.getString("Error"));
+                    progressBar.setVisibility(View.INVISIBLE);
+                    break;
+                case MSG_START_ACTIVITY:
+                    Intent i = new Intent("org.fidoalliance.intent.FIDO_OPERATION");
+                    i.addCategory("android.intent.category.DEFAULT");
+                    i.setType("application/fido.u2f_client+json");
+                    i.putExtras(msg.getData());
+
+                    getActivity().startActivityForResult(i, SIGN_ACTIVITY_RES_2);
+            }
+
         }
     }
 }

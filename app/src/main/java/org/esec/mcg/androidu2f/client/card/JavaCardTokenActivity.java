@@ -69,7 +69,7 @@ public class JavaCardTokenActivity extends AppCompatActivity implements ReadCard
             }
         } else if (getIntent().getBundleExtra(U2FTokenIntentType.U2F_OPERATION_REG.name()) != null) {
             u2fTokenIntentType = U2FTokenIntentType.U2F_OPERATION_REG.name();
-            rawMessage = getIntent().getExtras().getByteArray("RawMessage");
+            rawMessage = getIntent().getBundleExtra(U2FTokenIntentType.U2F_OPERATION_REG.name()).getByteArray("RawMessage");
         } else if (getIntent().getBundleExtra(U2FTokenIntentType.U2F_OPERATION_SIGN.name()) != null) {
             u2fTokenIntentType = U2FTokenIntentType.U2F_OPERATION_SIGN.name();
             rawMessage = getIntent().getExtras().getByteArray("RawMessage");
@@ -85,9 +85,9 @@ public class JavaCardTokenActivity extends AppCompatActivity implements ReadCard
             mAdapter.enableForegroundDispatch(this, mPendingintent, mFilters, mTechList);
         }
 
-        Bundle extras = getIntent().getBundleExtra("signBatch");
-        u2fTokenIntentType = extras.getString("U2FTokenIntentType");
-        rawMessage = extras.getByteArray("RawMessage");
+//        Bundle extras = getIntent().getBundleExtra("signBatch");
+//        u2fTokenIntentType = extras.getString("U2FTokenIntentType");
+//        rawMessage = extras.getByteArray("RawMessage");
     }
 
     @Override

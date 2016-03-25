@@ -20,6 +20,7 @@ public abstract class U2FClient {
         return clientData;
     }
     public String getKeyHandle() { return keyHandle; }
+    abstract public String getKeyHandle(int index);
 
     //    void authenticate(String u2fProtoclMessage);
 }

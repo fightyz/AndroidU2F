@@ -10,11 +10,7 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context=".client.card.JavaCardTokenActivity">
 
-    <org.esec.mcg.androidu2f.client.card.VerticalLinearLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:background="#00dd00">
+
 
         <TextView
             android:id="@+id/java_card_message"
@@ -22,15 +18,5 @@
             android:layout_height="wrap_content"
             android:text="show me nfc card"/>
 
-        <org.esec.mcg.androidu2f.client.card.MyTextView
-            android:id="@+id/my_tv"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_below="@+id/java_card_message"
-            android:background="#fff000"
-            mytv:text="this is my text view"
-            mytv:textSize="30sp"/>
-
-    </org.esec.mcg.androidu2f.client.card.VerticalLinearLayout>
 
 </RelativeLayout>

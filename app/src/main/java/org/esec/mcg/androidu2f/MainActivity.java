@@ -142,7 +142,9 @@ public class MainActivity extends AppCompatActivity
                     public void run() {
                         try {
                             JSONObject response = new JSONObject(signResponse).getJSONObject("responseData");
-                            String webResponse = FidoWebService.callFidoWebService(FidoWebService.SKFE_AUTHENTICATE_WEBSERVICE, getResources(), "ly", response);
+                            response.put("sessionId", sessionId);
+                            LogUtils.d("response: " + response.toString());
+                            String webResponse = FidoWebService.callFidoWebService(FidoWebService.SKFE_AUTHENTICATE_WEBSERVICE, getResources(), "iceespresso101", response);
                             LogUtils.d(webResponse);
                             Bundle data = new Bundle();
                             data.putString("WebResponse", webResponse);

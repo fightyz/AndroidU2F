@@ -54,8 +54,8 @@ public class ResponseCodec {
     }
 
     public static JSONObject encodeSignResponse(String keyHandle, byte[] authenticationResponse, String clientData) {
-        String signatureDataBase64 = Base64.encodeToString(authenticationResponse, Base64.NO_WRAP | Base64.URL_SAFE);
-        String clientDataBase64 = Base64.encodeToString(clientData.getBytes(), Base64.NO_WRAP | Base64.URL_SAFE);
+        String signatureDataBase64 = Base64.encodeToString(authenticationResponse, Base64.URL_SAFE);
+        String clientDataBase64 = Base64.encodeToString(clientData.getBytes(), Base64.URL_SAFE);
         JSONObject signResponse = new JSONObject();
         try {
             signResponse.put("keyHandle", keyHandle);

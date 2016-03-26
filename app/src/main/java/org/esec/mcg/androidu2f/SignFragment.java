@@ -120,6 +120,7 @@ public class SignFragment extends Fragment {
                     JSONObject newRequest = new JSONObject();
                     newRequest.put("type", U2FRequestType.u2f_sign_request);
                     newRequest.put("signRequests", request.getJSONArray("SignRequest"));
+                    MainActivity.sessionId = request.getJSONArray("SignRequest").getJSONObject(0).getString("sessionId");
                     Bundle data = new Bundle();
                     data.putString("Request", newRequest.toString());
                     data.putString("U2FIntentType", U2FIntentType.U2F_OPERATION_SIGN.name());

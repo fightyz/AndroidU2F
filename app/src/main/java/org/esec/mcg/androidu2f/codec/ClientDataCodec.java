@@ -2,6 +2,9 @@ package org.esec.mcg.androidu2f.codec;
 
 import com.google.gson.JsonObject;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 /**
  * Created by yz on 2016/1/14.
  */
@@ -25,12 +28,24 @@ public class ClientDataCodec {
      * @return String with the JSON data-structure
      */
     public static String encodeClientData(String requestType, String serverChallengeBase64, String facetID, String cid) {
-        JsonObject clientData = new JsonObject();
-        clientData.addProperty(JSON_PROPERTY_REQUEST_TYPE, requestType);
-        clientData.addProperty(JSON_PROPERTY_SERVER_CHALLENGE_BASE64, serverChallengeBase64);
-        clientData.addProperty(JSON_PROPERTY_SERVER_ORIGIN, facetID);
-        if (cid != null) {
-            clientData.addProperty(JSON_PROPERTY_SERVER_CID, cid);
+//        JsonObject clientData = new JsonObject();
+//        clientData.addProperty(JSON_PROPERTY_REQUEST_TYPE, requestType);
+//        clientData.addProperty(JSON_PROPERTY_SERVER_CHALLENGE_BASE64, serverChallengeBase64);
+//        clientData.addProperty(JSON_PROPERTY_SERVER_ORIGIN, facetID);
+//        if (cid != null) {
+//            clientData.addProperty(JSON_PROPERTY_SERVER_CID, cid);
+//        }
+//        return clientData.toString();
+        JSONObject clientData = new JSONObject();
+        try {
+            clientData.put(JSON_PROPERTY_REQUEST_TYPE, requestType);
+            clientData.put(JSON_PROPERTY_SERVER_CHALLENGE_BASE64, serverChallengeBase64);
+            clientData.put(JSON_PROPERTY_SERVER_ORIGIN, facetID);
+             if (cid != null) {
+                 clientData.put(JSON_PROPERTY_SERVER_CID, cid);
+             }
+        } catch (JSONException e) {
+            e.printStackTrace();
         }
         return clientData.toString();
     }

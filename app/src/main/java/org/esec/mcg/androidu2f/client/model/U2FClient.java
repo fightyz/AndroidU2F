@@ -16,10 +16,8 @@ public abstract class U2FClient {
     abstract public AuthenticationRequest sign(String u2fProtocolMessage, boolean isSign) throws U2FException;
     abstract public AuthenticationRequest[] signBatch(JSONArray signRequestsBatch, boolean sign) throws U2FException;
 
-    public static String getClientData() {
-        return clientData;
-    }
-    public String getKeyHandle() { return keyHandle; }
+    public static String getClientData() { return clientData; }
+    abstract public String getClientDataForIndex(int index);
     abstract public String getKeyHandle(int index);
 
     //    void authenticate(String u2fProtoclMessage);

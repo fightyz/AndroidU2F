@@ -143,7 +143,6 @@ public class U2FClientImpl extends U2FClient {
             }
 
             byte[] rawKeyHandle = android.util.Base64.decode(keyHandle, Base64.NO_WRAP | Base64.URL_SAFE);
-            LogUtils.d("client sign key handle: " + ByteUtil.ByteArrayToHexString(rawKeyHandle));
             return new AuthenticationRequest(control, clientDataSha256, appIdSha256, rawKeyHandle);
         } catch (JSONException e) {
             throw new U2FException("Rgister request JSON format is wrong.", e);
@@ -163,6 +162,7 @@ public class U2FClientImpl extends U2FClient {
             AuthenticationRequest[] authenticationRequestsBatch = new AuthenticationRequest[signRequestsBatch.length()];
             for (int i = 0; i < signRequestsBatch.length(); i++) {
                 authenticationRequestsBatch[i] = sign(signRequestsBatch.getJSONObject(i).toString(), sign);
+                LogUtils.d("authenticationRequestsBatch: " + authenticationRequestsBatch[i]);
             }
             return authenticationRequestsBatch;
         } catch (JSONException e) {

@@ -3,6 +3,8 @@ package org.esec.mcg.androidu2fsimulator.token.msg;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import org.esec.mcg.utils.ByteUtil;
+
 import java.util.Arrays;
 import java.util.Objects;
 
@@ -24,6 +26,16 @@ public class AuthenticationRequest implements Parcelable {
         this.challengeSha256 = challengeSha256;
         this.applicationSha256 = applicationSha256;
         this.keyHandle = keyHandle;
+    }
+
+    @Override
+    public String toString() {
+        return "AuthenticationRequest{" +
+                ", control=" + control +
+                "applicationSha256=" + ByteUtil.ByteArrayToHexString(applicationSha256) +
+                ", challengeSha256=" + ByteUtil.ByteArrayToHexString(challengeSha256) +
+                ", keyHandle=" + ByteUtil.ByteArrayToHexString(keyHandle) +
+                '}';
     }
 
     private AuthenticationRequest(Parcel source) {

@@ -6,6 +6,7 @@ import org.esec.mcg.androidu2f.client.card.APDU.APDUError;
 import org.esec.mcg.androidu2f.client.card.APDU.RegisterBuilder;
 import org.esec.mcg.androidu2f.client.card.APDU.SelectBuilder;
 import org.esec.mcg.androidu2f.client.card.APDU.SignBuilder;
+import org.esec.mcg.androidu2fsimulator.token.msg.AuthenticationRequest;
 import org.esec.mcg.utils.ByteUtil;
 import org.esec.mcg.utils.logger.LogUtils;
 
@@ -16,19 +17,22 @@ public class ReadCardTask {
     private JavaCardTokenReader mReader;
     private OnCardReadFinishListener mListener;
     private Enum operation;
-    private byte control;
+    private AuthenticationRequest[] mAuthenticationRequests;
 
     private static final byte[] AID = {(byte)0xa0, 0x00, 0x00, 0x06, 0x47, 0x2f, 0x00, 0x01};
     private static final byte[] U2F_V2 = {'U', '2', 'F', '_', 'V', '2'};
 
     private byte[] mRawMessage;
 
-    public ReadCardTask(JavaCardTokenReader reader, OnCardReadFinishListener listener, byte control, byte[] rawMessage, Enum op) {
+    public ReadCardTask(JavaCardTokenReader reader,
+                        OnCardReadFinishListener listener,
+                        byte[] rawMessage, AuthenticationRequest[] authenticationRequests,
+                        Enum op) {
         mReader = reader;
         mListener = listener;
         mRawMessage = rawMessage;
+        mAuthenticationRequests = authenticationRequests;
         operation = op;
-        this.control = control;
     }
 
     public void startExecute() {
@@ -88,7 +92,6 @@ public class ReadCardTask {
 
         private byte[] doSign() throws APDUError {
             SignBuilder sb = new SignBuilder().setRawMessage(mRawMessage);
-            sb.setControl(control);
             mSigncmd = sb.build();
             LogUtils.d(ByteUtil.ByteArrayToHexString(mSigncmd));
             byte[] response = mReader.transceive(mSigncmd);

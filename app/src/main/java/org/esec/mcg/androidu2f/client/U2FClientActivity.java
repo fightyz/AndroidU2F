@@ -12,17 +12,15 @@ import org.esec.mcg.androidu2f.Constants;
 import org.esec.mcg.androidu2f.U2FException;
 import org.esec.mcg.androidu2f.client.model.U2FClient;
 import org.esec.mcg.androidu2f.client.model.U2FClientImpl;
+import org.esec.mcg.androidu2fsimulator.token.msg.AuthenticationRequest;
+import org.esec.mcg.androidu2fsimulator.token.msg.RegistrationRequest;
 import org.esec.mcg.androidu2f.client.msg.U2FTokenIntentType;
-import org.esec.mcg.androidu2f.codec.RawMessageCodec;
 import org.esec.mcg.androidu2f.codec.ResponseCodec;
 import org.esec.mcg.androidu2f.msg.ErrorCode;
-import org.esec.mcg.androidu2f.client.msg.RegistrationRequest;
 import org.esec.mcg.androidu2f.msg.U2FIntentType;
 import org.esec.mcg.androidu2f.msg.U2FRequestType;
 import org.esec.mcg.androidu2f.msg.U2FResponseType;
-import org.esec.mcg.androidu2fsimulator.token.msg.AuthenticationRequest;
 import org.esec.mcg.utils.logger.LogUtils;
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -33,7 +31,6 @@ public class U2FClientActivity extends AppCompatActivity {
     private String request;
     private String requestType;
     private String U2FOperationType;
-    private JSONArray signRequests;
 
     private U2FClient u2fClient;
 
@@ -83,27 +80,11 @@ public class U2FClientActivity extends AppCompatActivity {
         if (requestType.equals(U2FRequestType.u2f_register_request.name())) {
             try {
                 JSONObject requestJson = new JSONObject(request);
-                if (requestJson.has("signRequests")) {
-                    signRequests = requestJson.getJSONArray("signRequests");
-                    if (signRequests.length() != 0) {
-                        AuthenticationRequest[] authenticationRequestsBatch = u2fClient.signBatch(signRequests, false);
-                        RegistrationRequest registrationRequest = u2fClient.register(request);
-                        Intent i = genTokenIntent(U2FTokenIntentType.U2F_OPERATION_REG,
-                                RawMessageCodec.encodeRegistrationRequest(registrationRequest), authenticationRequestsBatch);
-                        startActivityForResult(i, Constants.REG_ACTIVITY_RES_1);
-                    } else {
-                        RegistrationRequest registrationRequest = u2fClient.register(request);
-                        Intent i = genTokenIntent(U2FTokenIntentType.U2F_OPERATION_REG,
-                                RawMessageCodec.encodeRegistrationRequest(registrationRequest), null);
-                        startActivityForResult(i, Constants.REG_ACTIVITY_RES_1);
-                    }
-                } else {
-                    RegistrationRequest registrationRequest = u2fClient.register(request);
-                    Intent i = genTokenIntent(U2FTokenIntentType.U2F_OPERATION_REG,
-                            RawMessageCodec.encodeRegistrationRequest(registrationRequest), null);
-                    startActivityForResult(i, Constants.REG_ACTIVITY_RES_1);
-                }
-
+                AuthenticationRequest[] authenticationRequestsBatch = u2fClient.signBatch(requestJson, false);
+                RegistrationRequest registrationRequest = u2fClient.register(request);
+                Intent i = genTokenIntent(U2FTokenIntentType.U2F_OPERATION_REG,
+                        registrationRequest, authenticationRequestsBatch);
+                startActivityForResult(i, Constants.REG_ACTIVITY_RES_1);
             } catch (U2FException | JSONException e) {
                 LogUtils.d("------------------");
                 JSONObject error = ResponseCodec.encodeError(ErrorCode.BAD_REQUEST, e.getMessage());
@@ -115,13 +96,10 @@ public class U2FClientActivity extends AppCompatActivity {
         } else if (requestType.equals(U2FRequestType.u2f_sign_request.name())) { // Sign, type = u2f_sign_request
             try {
                 JSONObject requestJson = new JSONObject(request);
-                if (requestJson.has("signRequests")) {
-                    signRequests = requestJson.getJSONArray("signRequests");
-                    AuthenticationRequest[] authenticationRequestsBatch = u2fClient.signBatch(signRequests, true);
-                    Intent i = genTokenIntent(U2FTokenIntentType.U2F_OPERATION_SIGN_BATCH,
-                            null, authenticationRequestsBatch);
-                    startActivityForResult(i, Constants.SIGN_ACTIVITY_RES_2);
-                }
+                AuthenticationRequest[] authenticationRequestsBatch = u2fClient.signBatch(requestJson, true);
+                Intent i = genTokenIntent(U2FTokenIntentType.U2F_OPERATION_SIGN_BATCH,
+                        null, authenticationRequestsBatch);
+                startActivityForResult(i, Constants.SIGN_ACTIVITY_RES_2);
             } catch (U2FException | JSONException e) {
                 e.printStackTrace();
                 JSONObject error = ResponseCodec.encodeError(ErrorCode.OTHER_ERROR, ErrorCode.OTHER_ERROR.toString().concat(" Wrong in Token."));
@@ -201,7 +179,7 @@ public class U2FClientActivity extends AppCompatActivity {
     }
 
     private static Intent genTokenIntent(U2FTokenIntentType intentType,
-                                         byte[] rawMessage,
+                                         RegistrationRequest registrationRequest,
                                          AuthenticationRequest[] authenticationRequests) {
         Intent i = new Intent();
         i.setAction("org.fidoalliance.intent.FIDO_OPERATION");
@@ -212,12 +190,13 @@ public class U2FClientActivity extends AppCompatActivity {
 
         switch (intentType) {
             case U2F_OPERATION_REG:
-                data.putByteArray("RawMessage", rawMessage);
+                data.putParcelable("registerRequest", registrationRequest);
                 data.putParcelableArray("signBatch", authenticationRequests);
                 i.putExtra(U2FTokenIntentType.U2F_OPERATION_REG.name(), data);
                 break;
+            // TODO: 2016/3/28
             case U2F_OPERATION_SIGN:
-                data.putByteArray("RawMessage", rawMessage);
+//                data.putByteArray("RawMessage", rawMessage);
                 i.putExtra(U2FTokenIntentType.U2F_OPERATION_SIGN.name(), data);
                 break;
             case U2F_OPERATION_SIGN_BATCH:

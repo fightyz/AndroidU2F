@@ -12,7 +12,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.widget.TextView;
 
-import org.esec.mcg.androidu2f.Constants;
 import org.esec.mcg.androidu2f.R;
 import org.esec.mcg.androidu2f.client.card.APDU.APDUError;
 import org.esec.mcg.androidu2fsimulator.token.msg.AuthenticationRequest;
@@ -28,7 +27,7 @@ public class JavaCardTokenActivity extends AppCompatActivity implements ReadCard
 
     private JavaCardTokenReader mReader;
 
-    private String u2fTokenIntentType;
+    private U2FTokenIntentType u2fTokenIntentType;
     private byte[] rawMessage;
     private AuthenticationRequest[] signBatch;
     private int signBatchIndex;
@@ -55,25 +54,35 @@ public class JavaCardTokenActivity extends AppCompatActivity implements ReadCard
                                      new String[] {NfcA.class.getName()}};
         LogUtils.d("JavaCardTokenActivity");
 
-        if (getIntent().getBundleExtra("signBatch") != null) {
-            Bundle extras = getIntent().getBundleExtra("signBatch");
-            Parcelable[] allParcelables = extras.getParcelableArray(U2FTokenIntentType.U2F_OPERATION_SIGN_BATCH.name());
+        Intent intent = getIntent();
+        Bundle data;
+
+        if (intent.getBundleExtra(U2FTokenIntentType.U2F_OPERATION_SIGN_BATCH.name()) != null) {
+            u2fTokenIntentType = U2FTokenIntentType.U2F_OPERATION_SIGN_BATCH;
+            Bundle extras = getIntent().getBundleExtra(U2FTokenIntentType.U2F_OPERATION_SIGN_BATCH.name());
+            Parcelable[] allParcelables = extras.getParcelableArray("signBatch");
             if (allParcelables != null) {
-                LogUtils.d(allParcelables.length);
-                LogUtils.d("===================");
+                signBatch = new AuthenticationRequest[allParcelables.length];
+                for (int i = 0; i < allParcelables.length; i++) {
+                    signBatch[i] = (AuthenticationRequest)allParcelables[i];
+                    LogUtils.d("signBatch: " + signBatch[i]);
+                }
+            }
+        }
+        else if ((data = intent.getBundleExtra(U2FTokenIntentType.U2F_OPERATION_REG.name())) != null) {
+            LogUtils.d("this is reg");
+            u2fTokenIntentType = U2FTokenIntentType.U2F_OPERATION_REG;
+            rawMessage = data.getByteArray("RawMessage");
+            Parcelable[] allParcelables = data.getParcelableArray("signBatch");
+            if (allParcelables != null) {
                 signBatch = new AuthenticationRequest[allParcelables.length];
                 for (int i = 0; i < allParcelables.length; i++) {
                     signBatch[i] = (AuthenticationRequest)allParcelables[i];
                 }
-                LogUtils.d(signBatch[0].getApplicationSha256());
             }
-        } else if (getIntent().getBundleExtra(U2FTokenIntentType.U2F_OPERATION_REG.name()) != null) {
-            u2fTokenIntentType = U2FTokenIntentType.U2F_OPERATION_REG.name();
-            rawMessage = getIntent().getBundleExtra(U2FTokenIntentType.U2F_OPERATION_REG.name()).getByteArray("RawMessage");
-        } else if (getIntent().getBundleExtra(U2FTokenIntentType.U2F_OPERATION_SIGN.name()) != null) {
-            u2fTokenIntentType = U2FTokenIntentType.U2F_OPERATION_SIGN.name();
-            rawMessage = getIntent().getExtras().getByteArray("RawMessage");
-        } else {
+        }
+        else {
+            // TODO: 2016/3/28 erroe message layout
             throw new RuntimeException("Illegal intent");
         }
     }
@@ -84,10 +93,6 @@ public class JavaCardTokenActivity extends AppCompatActivity implements ReadCard
         if (mAdapter != null) {
             mAdapter.enableForegroundDispatch(this, mPendingintent, mFilters, mTechList);
         }
-
-//        Bundle extras = getIntent().getBundleExtra("signBatch");
-//        u2fTokenIntentType = extras.getString("U2FTokenIntentType");
-//        rawMessage = extras.getByteArray("RawMessage");
     }
 
     @Override
@@ -114,10 +119,9 @@ public class JavaCardTokenActivity extends AppCompatActivity implements ReadCard
         } else if (u2fTokenIntentType.equals(U2FTokenIntentType.U2F_OPERATION_SIGN.name())) {
             operation = U2FTokenIntentType.U2F_OPERATION_SIGN;
             // because rawMessage's first byte is control byte
-            control = rawMessage[0];
-            System.arraycopy(rawMessage, 1, rawMessage, 0, rawMessage.length - 1);
         }
-        ReadCardTask task = new ReadCardTask(mReader, this, control, rawMessage, operation);
+
+        ReadCardTask task = new ReadCardTask(mReader, this, rawMessage, signBatch, u2fTokenIntentType);
         task.startExecute();
     }
 

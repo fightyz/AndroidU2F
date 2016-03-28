@@ -4,9 +4,9 @@ import android.content.pm.PackageInfo;
 import android.util.Base64;
 
 import org.esec.mcg.androidu2f.U2FException;
-import org.esec.mcg.androidu2f.client.msg.RegistrationRequest;
-import org.esec.mcg.androidu2f.codec.ClientDataCodec;
 import org.esec.mcg.androidu2fsimulator.token.msg.AuthenticationRequest;
+import org.esec.mcg.androidu2fsimulator.token.msg.RegistrationRequest;
+import org.esec.mcg.androidu2f.codec.ClientDataCodec;
 import org.esec.mcg.utils.ByteUtil;
 import org.esec.mcg.utils.logger.LogUtils;
 import org.json.JSONArray;
@@ -65,13 +65,6 @@ public class U2FClientImpl extends U2FClient {
     public RegistrationRequest register(String u2fProtocolMessage) throws U2FException {
         try {
             JSONObject reg = new JSONObject(u2fProtocolMessage);
-//            JSONArray signReqs;
-//            if ((signReqs = reg.getJSONArray("signRequests")) != null) {
-//                for (int i = 0; i < signReqs.length(); i++) {
-//                    JSONObject signReq = signReqs.getJSONObject(i);
-//                    sign(signReq.toString(), false);
-//                }
-//            }
 
             version = ((JSONObject)reg.getJSONArray("registerRequests").get(0)).getString("version");
             appId = ((JSONObject)reg.getJSONArray("registerRequests").get(0)).getString("appId");
@@ -110,13 +103,12 @@ public class U2FClientImpl extends U2FClient {
 
     /**
      * Decode U2F request message and generate raw message.
-     * @param u2fProtocolMessage
+     * @param signRequest
      * @return
      * @throws U2FException
      */
-    public AuthenticationRequest sign(String u2fProtocolMessage, boolean isSign) throws U2FException {
+    public AuthenticationRequest sign(JSONObject signRequest, boolean isSign) throws U2FException {
         try {
-            JSONObject signRequest = new JSONObject(u2fProtocolMessage);
             version = signRequest.getString("version");
             appId = signRequest.getString("appId");
             serverChallengeBase64 = signRequest.getString("challenge");
@@ -156,12 +148,17 @@ public class U2FClientImpl extends U2FClient {
     }
 
     @Override
-    public AuthenticationRequest[] signBatch(JSONArray signRequestsBatch, boolean sign) throws U2FException {
+    public AuthenticationRequest[] signBatch(JSONObject signRequests, boolean sign) throws U2FException {
         try {
-            signBatch = signRequestsBatch;
-            AuthenticationRequest[] authenticationRequestsBatch = new AuthenticationRequest[signRequestsBatch.length()];
-            for (int i = 0; i < signRequestsBatch.length(); i++) {
-                authenticationRequestsBatch[i] = sign(signRequestsBatch.getJSONObject(i).toString(), sign);
+            if (signRequests.has("signRequests")) {
+                signBatch = signRequests.getJSONArray("signRequests");
+            }
+            if (signBatch.length() == 0) {
+                return null;
+            }
+            AuthenticationRequest[] authenticationRequestsBatch = new AuthenticationRequest[signBatch.length()];
+            for (int i = 0; i < signBatch.length(); i++) {
+                authenticationRequestsBatch[i] = sign(signBatch.getJSONObject(i), sign);
                 LogUtils.d("authenticationRequestsBatch: " + authenticationRequestsBatch[i]);
             }
             return authenticationRequestsBatch;

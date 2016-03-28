@@ -185,7 +185,8 @@ public class U2FClientActivity extends AppCompatActivity {
                     throw new RuntimeException("shouldnt happendddd.");
                 }
             } else if (resultCode == RESULT_OK) {
-                JSONObject signResponse = ResponseCodec.encodeSignResponse(u2fClient.getKeyHandle(0), data.getExtras().getByteArray("RawMessage"), u2fClient.getClientDataForIndex(0));
+                int keyHandleIndex = data.getExtras().getInt("keyHandleIndex");
+                JSONObject signResponse = ResponseCodec.encodeSignResponse(u2fClient.getKeyHandle(keyHandleIndex), data.getExtras().getByteArray("RawMessage"), u2fClient.getClientDataForIndex(keyHandleIndex));
                 Intent i = ResponseCodec.encodeResponse(U2FResponseType.u2f_sign_response.name(), signResponse);
                 setResult(RESULT_OK, i);
                 finish();

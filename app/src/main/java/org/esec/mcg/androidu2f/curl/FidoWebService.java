@@ -174,8 +174,8 @@ public class FidoWebService {
         URL url = new URL(urlparam);
         HttpsURLConnection conn = (HttpsURLConnection) url.openConnection();
         conn.setSSLSocketFactory(context.getSocketFactory());
-        conn.setReadTimeout(100000 /* milliseconds */);
-        conn.setConnectTimeout(150000 /* milliseconds */);
+        conn.setReadTimeout(10000 /* milliseconds */);
+        conn.setConnectTimeout(15000 /* milliseconds */);
         conn.setRequestMethod("POST");
         conn.setDoInput(true);
         conn.setDoOutput(true);

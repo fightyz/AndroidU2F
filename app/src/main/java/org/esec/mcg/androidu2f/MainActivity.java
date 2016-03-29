@@ -17,16 +17,12 @@ import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import org.esec.mcg.androidu2f.client.curl.Curl;
 import org.esec.mcg.androidu2f.curl.FidoWebService;
-import org.esec.mcg.utils.HTTP;
 import org.esec.mcg.utils.logger.LogUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.net.URL;
 import java.util.LinkedHashMap;
 import java.util.Map;
 

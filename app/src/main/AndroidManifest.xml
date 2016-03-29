@@ -54,23 +54,6 @@
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
-
-        <activity android:name=".client.card.JavaCardTokenActivity">
-            <intent-filter>
-                <action android:name="org.fidoalliance.intent.FIDO_OPERATION" />
-
-                <data android:mimeType="application/fido.u2f_token+json" />
-
-                <category android:name="android.intent.category.DEFAULT" />
-            </intent-filter>
-            <intent-filter>
-                <action android:name="android.nfc.action.TECH_DISCOVERED" />
-                <action android:name="android.nfc.action.TAG_DISCOVERED" />
-            </intent-filter>
-            <meta-data
-                android:name="android.nfc.action.TECH_DISCOVERED"
-                android:resource="@xml/nfc_tech_filter" />
-        </activity>
     </application>
 
 </manifest>

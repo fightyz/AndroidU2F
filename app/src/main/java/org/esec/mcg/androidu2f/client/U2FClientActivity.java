@@ -131,12 +131,13 @@ public class U2FClientActivity extends AppCompatActivity {
 
             } else if (resultCode == RESULT_CANCELED) { // fail
                 if (data.getIntExtra("SW", 0) == Constants.SW_TEST_OF_USER_PRESENCE_REQUIRED) {
+                    LogUtils.d("Please show me your token.");
                     Toast.makeText(this, "Please show me your token.", Toast.LENGTH_LONG).show();
                     JSONObject error = ResponseCodec.encodeError(ErrorCode.OTHER_ERROR, ErrorCode.OTHER_ERROR.toString().concat("Please show me your token."));
                     Intent i = ResponseCodec.encodeResponse(U2FResponseType.u2f_register_response.name(), error);
                     setResult(RESULT_CANCELED, i);
                     finish();
-                } else {
+                } else if (data.getIntExtra("SW", 0) == Constants.SW_TEST_OF_USER_PRESENCE_REQUIRED) {
                     throw new RuntimeException("should not happend!!!");
                 }
 

@@ -40,15 +40,9 @@ public class AuthenticationRequest implements Parcelable {
 
     private AuthenticationRequest(Parcel source) {
         control = source.readByte();
-
-        challengeSha256 = new byte[source.readInt()];
-        source.readByteArray(challengeSha256);
-
-        applicationSha256 = new byte[source.readInt()];
-        source.readByteArray(applicationSha256);
-//
-        keyHandle = new byte[source.readInt()];
-        source.readByteArray(keyHandle);
+        challengeSha256 = source.createByteArray();
+        applicationSha256 = source.createByteArray();
+        keyHandle = source.createByteArray();
     }
 
     /** The FIDO Client will set the control byte to one of the following values:
@@ -114,14 +108,8 @@ public class AuthenticationRequest implements Parcelable {
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeByte(control);
-
-        dest.writeInt(challengeSha256.length);
         dest.writeByteArray(challengeSha256);
-
-        dest.writeInt(applicationSha256.length);
         dest.writeByteArray(applicationSha256);
-//
-        dest.writeInt(keyHandle.length);
         dest.writeByteArray(keyHandle);
     }
 

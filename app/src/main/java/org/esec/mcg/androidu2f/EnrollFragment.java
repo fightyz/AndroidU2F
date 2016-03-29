@@ -7,6 +7,7 @@ import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.app.Fragment;
 import android.os.Handler;
@@ -68,6 +69,8 @@ public class EnrollFragment extends Fragment {
 
     private OnFragmentInteractionListener mListener;
 
+    private Thread thread;
+
     /**
      * Use this factory method to create a new instance of
      * this fragment using the provided parameters.
@@ -104,7 +107,7 @@ public class EnrollFragment extends Fragment {
 
         uiHandler = new UIHandler();
 
-        new Thread(new Runnable() {
+        thread = new Thread(new Runnable() {
             @Override
             public void run() {
 //                try {
@@ -119,7 +122,12 @@ public class EnrollFragment extends Fragment {
 //
 //                }
                 // Test for network
-                ConnectivityManager connectivityManager = (ConnectivityManager) getActivity().getSystemService(Context.CONNECTIVITY_SERVICE);
+                ConnectivityManager connectivityManager;
+                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+                    connectivityManager = (ConnectivityManager) getActivity().getSystemService(Context.CONNECTIVITY_SERVICE);
+                } else {
+                    connectivityManager = (ConnectivityManager) getContext().getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
+                }
                 NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
                 if (networkInfo == null && !networkInfo.isConnected()) {
                     return;
@@ -164,7 +172,9 @@ public class EnrollFragment extends Fragment {
                 // call u2f client activity
                 getActivity().startActivityForResult(i, Constants.REG_ACTIVITY_RES_1);
             }
-        }).start();
+        });
+
+        thread.start();
     }
 
     @Override
@@ -206,6 +216,7 @@ public class EnrollFragment extends Fragment {
     @Override
     public void onDetach() {
         super.onDetach();
+        thread.interrupt();
         mListener = null;
     }
 

@@ -11,4 +11,7 @@ public class Constants {
 
     public static final int SW_INVALID_KEY_HANDLE = 0x6a80;
     public static final int SW_TEST_OF_USER_PRESENCE_REQUIRED = 0x6985;
+
+    public static final int MSG_ERROR = 1;
+    public static final int MSG_START_ACTIVITY = 2;
 }

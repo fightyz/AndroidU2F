@@ -17,6 +17,14 @@ import android.view.ViewGroup;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import com.android.volley.DefaultRetryPolicy;
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
+
 import org.esec.mcg.androidu2f.curl.FidoWebService;
 import org.esec.mcg.androidu2f.msg.U2FIntentType;
 import org.esec.mcg.androidu2f.msg.U2FRequestType;
@@ -91,56 +99,98 @@ public class SignFragment extends Fragment {
 
         uiHandler = new UIHandler();
 
-        new Thread(new Runnable() {
+        RequestQueue queue = Volley.newRequestQueue(getActivity());
+        String url = "http://192.168.1.22:8000/sign";
+        StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
+                new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+                        statusText.setText("Response is: " + response);
+                        try {
+                            JSONObject formalResponse = new JSONObject(response);
+                            JSONObject request = formalResponse.getJSONObject("Challenge");
+                            JSONObject newRequest = new JSONObject();
+                            newRequest.put("type", U2FRequestType.u2f_sign_request);
+//                            newRequest.put("signRequests", request.getJSONArray("SignRequest"));
+                            newRequest.put("signRequests", request.getJSONArray("signRequests"));
+//                            MainActivity.sessionId = request.getJSONArray("SignRequest").getJSONObject(0).getString("sessionId");
+                            MainActivity.sessionId = request.getJSONArray("signRequests").getJSONObject(0).getString("sessionId");
+                            Bundle data = new Bundle();
+                            data.putString("Request", newRequest.toString());
+                            data.putString("U2FIntentType", U2FIntentType.U2F_OPERATION_SIGN.name());
+
+                            Intent i = new Intent("org.fidoalliance.intent.FIDO_OPERATION");
+                            i.addCategory("android.intent.category.DEFAULT");
+                            i.setType("application/fido.u2f_client+json");
+                            i.putExtras(data);
+                            getActivity().startActivityForResult(i, SIGN_ACTIVITY_RES_2);
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+
+                    }
+                }, new Response.ErrorListener() {
             @Override
-            public void run() {
-                // Test for network
-                ConnectivityManager connectivityManager = (ConnectivityManager) getActivity().getSystemService(Context.CONNECTIVITY_SERVICE);
-                NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
-                if (networkInfo == null && !networkInfo.isConnected()) {
-                    return;
-                }
-
-                Intent i = new Intent("org.fidoalliance.intent.FIDO_OPERATION");
-                i.addCategory("android.intent.category.DEFAULT");
-                i.setType("application/fido.u2f_client+json");
-
-                // Get the U2F Server's enroll url
-                SharedPreferences pf = PreferenceManager.getDefaultSharedPreferences(getActivity());
-                String endPoint = pf.getString("server_endpoint", "http://192.168.1.101:8000");
-                String signPoint = pf.getString("sign", "/sign");
-
-                final String response;
-                try {
-                    response = FidoWebService.callFidoWebService(FidoWebService.SKFE_PREAUTHENTICATE_WEBSERVICE, getActivity().getResources(), username, null);
-//                    response = "{\"Challenge\":{\"SignRequest\":[{\"keyHandle\":\"2sH1ypMiPfGkYJDcvguRl-RuA1mzJTDRyLZBpFlhkxGdaiZq2AC1EJ_MBnopebE3yTkhhFYSGZWMHBkWm4mGja5BUwNwUNaGWL1dQUEXq7duWOgY1pJSqAZDClGVWJ4d2TYqS-tnQVubVzrkscsB12MoXubmi2OXjSkfxaPDYEKBG7aPfbRWDGBQdVL5m4AfozRuxhjS_URMQCiXEou2KapmB_tSYXOfCXOWLcD9YF0\",\"sessionId\":\"wc1jMSmzVkj8t89+xrJRiEUS4SvEdN0BSTq2CRq1vOI=\",\"challenge\":\"4a-o7-88Ehc_FJJ_97eafh31QixzA6jdOaemq9a0jHnzKscK2uvwV5R4bVxKFB6m2O-peR73O41UXNJVH-5vF5bOkp5Srm9IMwUCrnjgGg9iyUM6D78QDJ9ENUos8x8PZrj_XyGSC98D9s2q8GdFDmhupZYR_TwdPiwVGo2rChI\",\"version\":\"U2F_V2\",\"appId\":\"https://demo.strongauth.com:8181/app.json\"},{\"keyHandle\":\"G4Asdesb3I1qYjTzoaq8Cpoj3MZenqJAbTG2epM-8mYRnLDeX12xwE8ZeKo4_As04v32RwMLzPknkMxBZaeOOQ\",\"sessionId\":\"lj/j8AQEQbJ1cYlBEVnOFo+b84sWAQiobjK9gr/Y5FM=\",\"challenge\":\"h3zIjYVdtLH71a8Y_bAQDWJpnTMpQyLLxFjkB1S8qOssTBcydJLG9XYo8yMAE_-zzVxMZh9NiLt7_hr6Z4RW4cbRhxlZA2vovKcTiIopaHyNcupRjSFwWI0XbmQ26GzDPfbHwGlm8qzRh08ioh2fS48Ut8tU0TqhA5kXUkAcZIs\",\"version\":\"U2F_V2\",\"appId\":\"https://demo.strongauth.com:8181/app.json\"},{\"keyHandle\":\"gR9TtDoS_uSI7mNZK_lbW-6T2Vl3e1y7IkDO2mYMXJWGmfWNXUJr89zrVLu6a7A1gz_u6zhd0bdt-giIeK60HfogqT0of7RuTZ27N6d-zJ-3NqbXv8irhHXaE1Y9WgzsrwtazW8AJfq1XIR9h0qYNi0gQSVupVrX8R_S3R7SC15xnVOPZ9sJAiI8YU0uwd2HTnzRGQyp1Xdu9Yx3EJYKjfc2XSp5ciUgABpCeI7REXM\",\"sessionId\":\"yj7qvjI4FzAqAxXn6T32IcYToDLy0ymfunt4wmErwSY=\",\"challenge\":\"ODz6salYBN7_R7fARNZCgsfE32ng24rxGViVy5VvFcY0EnhRKz5HTUMezmSuXairFXDhICb_3Q0_PYDsE2S54hxbvJp6cCcqhKGhzw0O53YyPJhBoohUa4kAjqDqfEB80NX_8HtiVZVjqquVb1OVpAireWmgPGSJasFIkp06QRU\",\"version\":\"U2F_V2\",\"appId\":\"https://demo.strongauth.com:8181/app.json\"},{\"keyHandle\":\"IMzdqT8oamzXyj8PQkLX_3g9irzE-0U3X7k1_iUmERQixs9C0zvrGuDyoVkGUx_iddWb4WOuxQuJQh1bUSE7bYZ-Z8Fd4U76pSOm88VkqcVplFr3hehQWMjXlif9QiQLWMTL1DMFra6ch1h7FYIp1CpjLpLQZspXU3Ij64ERqJc6ITsGBG117zWIRUYensHV9_BYW3TMHffsO7Ae0N9FjDhyMkD5BHVCmfA08t5XVFg\",\"sessionId\":\"Xg6Q7dUtFfhfbEkSvPmp8vMLkqsh1UZKlIlcqaZfSiI=\",\"challenge\":\"axYn7f1__l4okRyJ-EV95QugXEAUUYz2HWevwYVO_CaBtKf4TZN_uIU2OTtMvjlkvEoaNrDton_cwngwLPYaD6rI4TyM3Qw4WSu1k919VU8ScZvqHUEJfRd_WmKVcA-6DrerNcakNhShU9yOCHSt5HNrnBqIt1FScl-qfo0x_dM\",\"version\":\"U2F_V2\",\"appId\":\"https://demo.strongauth.com:8181/app.json\"},{\"keyHandle\":\"kTkCQGYbOIIqvTd_tvLmqJEFS-0Raz4nQli_0VPegHx-1XgRmL7nz6d4bX3eeI4HKztzRVtVUbWPkxWFE9zI4Bwv_H6YSeij2QBeKKCJ3fmV-QEW78Y-LR5qhsWyttjY1uFl4y145fk7YN6gLG5qEthMF0-n2YHV2e_MrQUc7f-dzpdQJbvmPnAaayZgUwo3t6jHwN0iHhGOMV2oAn3MCajr6EfhD8qUYEickz0M2SM\",\"sessionId\":\"0EN+6faGUGr5nFYeHAZS4IwhOOFiOuG7JvoImKCe69g=\",\"challenge\":\"fOLyq1bkuJ2I6Y70ZGGthB1fsRISL6_DPlv8kybjHNQzt8Pt1xPCmSYX_yogrjhnwdHHODk358Hm4JPyPBeIK_Gw_1585s5CFzhoG2Pf3BkLNxvOnV2-VTmLv3IySsyf4nGDO7W8N2BI_XI4GxWAaALw7xsHAIjyzlK0Ok12swA\",\"version\":\"U2F_V2\",\"appId\":\"https://demo.strongauth.com:8181/app.json\"},{\"keyHandle\":\"NOqhEF7u2uy7LecEl4rhU-rg9o4T3UeCpYmhZzL_LTFv9nTa-S5iG05dp3IxLwkM-I8luSfpb-4pcz-IogXHZuMXwcM7f27C4peqbys3OOwjbCBPPAlh0jcAlZ6xImTG9bY79boNEIJhEHpKn6k7ncV6Uly1tS8DxJJz1xZbpyps77rv2JLdWUaAQw3YYOZt1AdnIpeIIYeMojYtvu9U2gPA-adSbMh-ybssOJpc1Dc\",\"sessionId\":\"zktla3cbxrQVO+wMbTOk4pgxcpehqd6EtiHPAeZNapo=\",\"challenge\":\"VyQm1O1qCudBbT11Yulj33o1jKggHueZhWTRcA_Iwe3E6YiJ50tmD0Pj3mc-oNw5VVFAWA4Es1WOhJCZ9pskj0LnAApYb_BwRS9xCGwmc6lIEbFu-eBQ3SsZNPDHUdsOE4ZFHCaG0nCk-6_LtaL2_4eQR8MPdhimfmSLhJvuLM8\",\"version\":\"U2F_V2\",\"appId\":\"https://demo.strongauth.com:8181/app.json\"}]},\"Message\":\"\",\"Error\":\"\"}";
-                    LogUtils.d(response);
-                    JSONObject formalResponse = new JSONObject(response);
-                    JSONObject request = formalResponse.getJSONObject("Challenge");
-                    JSONObject newRequest = new JSONObject();
-                    newRequest.put("type", U2FRequestType.u2f_sign_request);
-                    newRequest.put("signRequests", request.getJSONArray("SignRequest"));
-                    MainActivity.sessionId = request.getJSONArray("SignRequest").getJSONObject(0).getString("sessionId");
-                    Bundle data = new Bundle();
-                    data.putString("Request", newRequest.toString());
-                    data.putString("U2FIntentType", U2FIntentType.U2F_OPERATION_SIGN.name());
-//                    i.putExtras(data);
-
-                    Message msg = Message.obtain(null, MSG_START_ACTIVITY);
-                    msg.setData(data);
-                    uiHandler.sendMessage(msg);
-                } catch (U2FException | JSONException e) {
-                    e.printStackTrace();
-                    Bundle data = new Bundle();
-                    data.putString("Error", e.getMessage());
-                    Message msg = Message.obtain(null, MSG_ERROR);
-                    msg.setData(data);
-                    uiHandler.sendMessage(msg);
-                    return;
-                }
-//                getActivity().startActivityForResult(i, SIGN_ACTIVITY_RES_2);
+            public void onErrorResponse(VolleyError error) {
+                statusText.setText("That didn't work! " + error.getMessage());
             }
-        }).start();
+        });
+
+        stringRequest.setRetryPolicy(new DefaultRetryPolicy(20 * 1000, 5, 1.0f));
+
+        queue.add(stringRequest);
+
+//        new Thread(new Runnable() {
+//            @Override
+//            public void run() {
+//                // Test for network
+//                ConnectivityManager connectivityManager = (ConnectivityManager) getActivity().getSystemService(Context.CONNECTIVITY_SERVICE);
+//                NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
+//                if (networkInfo == null && !networkInfo.isConnected()) {
+//                    return;
+//                }
+//
+//                Intent i = new Intent("org.fidoalliance.intent.FIDO_OPERATION");
+//                i.addCategory("android.intent.category.DEFAULT");
+//                i.setType("application/fido.u2f_client+json");
+//
+//                // Get the U2F Server's enroll url
+//                SharedPreferences pf = PreferenceManager.getDefaultSharedPreferences(getActivity());
+//                String endPoint = pf.getString("server_endpoint", "http://192.168.1.101:8000");
+//                String signPoint = pf.getString("sign", "/sign");
+//
+//                final String response;
+//                try {
+////                    response = FidoWebService.callFidoWebService(FidoWebService.SKFE_PREAUTHENTICATE_WEBSERVICE, getActivity().getResources(), username, null);
+////                    response = "{\"Challenge\":{\"SignRequest\":[{\"keyHandle\":\"2sH1ypMiPfGkYJDcvguRl-RuA1mzJTDRyLZBpFlhkxGdaiZq2AC1EJ_MBnopebE3yTkhhFYSGZWMHBkWm4mGja5BUwNwUNaGWL1dQUEXq7duWOgY1pJSqAZDClGVWJ4d2TYqS-tnQVubVzrkscsB12MoXubmi2OXjSkfxaPDYEKBG7aPfbRWDGBQdVL5m4AfozRuxhjS_URMQCiXEou2KapmB_tSYXOfCXOWLcD9YF0\",\"sessionId\":\"wc1jMSmzVkj8t89+xrJRiEUS4SvEdN0BSTq2CRq1vOI=\",\"challenge\":\"4a-o7-88Ehc_FJJ_97eafh31QixzA6jdOaemq9a0jHnzKscK2uvwV5R4bVxKFB6m2O-peR73O41UXNJVH-5vF5bOkp5Srm9IMwUCrnjgGg9iyUM6D78QDJ9ENUos8x8PZrj_XyGSC98D9s2q8GdFDmhupZYR_TwdPiwVGo2rChI\",\"version\":\"U2F_V2\",\"appId\":\"https://demo.strongauth.com:8181/app.json\"},{\"keyHandle\":\"G4Asdesb3I1qYjTzoaq8Cpoj3MZenqJAbTG2epM-8mYRnLDeX12xwE8ZeKo4_As04v32RwMLzPknkMxBZaeOOQ\",\"sessionId\":\"lj/j8AQEQbJ1cYlBEVnOFo+b84sWAQiobjK9gr/Y5FM=\",\"challenge\":\"h3zIjYVdtLH71a8Y_bAQDWJpnTMpQyLLxFjkB1S8qOssTBcydJLG9XYo8yMAE_-zzVxMZh9NiLt7_hr6Z4RW4cbRhxlZA2vovKcTiIopaHyNcupRjSFwWI0XbmQ26GzDPfbHwGlm8qzRh08ioh2fS48Ut8tU0TqhA5kXUkAcZIs\",\"version\":\"U2F_V2\",\"appId\":\"https://demo.strongauth.com:8181/app.json\"},{\"keyHandle\":\"gR9TtDoS_uSI7mNZK_lbW-6T2Vl3e1y7IkDO2mYMXJWGmfWNXUJr89zrVLu6a7A1gz_u6zhd0bdt-giIeK60HfogqT0of7RuTZ27N6d-zJ-3NqbXv8irhHXaE1Y9WgzsrwtazW8AJfq1XIR9h0qYNi0gQSVupVrX8R_S3R7SC15xnVOPZ9sJAiI8YU0uwd2HTnzRGQyp1Xdu9Yx3EJYKjfc2XSp5ciUgABpCeI7REXM\",\"sessionId\":\"yj7qvjI4FzAqAxXn6T32IcYToDLy0ymfunt4wmErwSY=\",\"challenge\":\"ODz6salYBN7_R7fARNZCgsfE32ng24rxGViVy5VvFcY0EnhRKz5HTUMezmSuXairFXDhICb_3Q0_PYDsE2S54hxbvJp6cCcqhKGhzw0O53YyPJhBoohUa4kAjqDqfEB80NX_8HtiVZVjqquVb1OVpAireWmgPGSJasFIkp06QRU\",\"version\":\"U2F_V2\",\"appId\":\"https://demo.strongauth.com:8181/app.json\"},{\"keyHandle\":\"IMzdqT8oamzXyj8PQkLX_3g9irzE-0U3X7k1_iUmERQixs9C0zvrGuDyoVkGUx_iddWb4WOuxQuJQh1bUSE7bYZ-Z8Fd4U76pSOm88VkqcVplFr3hehQWMjXlif9QiQLWMTL1DMFra6ch1h7FYIp1CpjLpLQZspXU3Ij64ERqJc6ITsGBG117zWIRUYensHV9_BYW3TMHffsO7Ae0N9FjDhyMkD5BHVCmfA08t5XVFg\",\"sessionId\":\"Xg6Q7dUtFfhfbEkSvPmp8vMLkqsh1UZKlIlcqaZfSiI=\",\"challenge\":\"axYn7f1__l4okRyJ-EV95QugXEAUUYz2HWevwYVO_CaBtKf4TZN_uIU2OTtMvjlkvEoaNrDton_cwngwLPYaD6rI4TyM3Qw4WSu1k919VU8ScZvqHUEJfRd_WmKVcA-6DrerNcakNhShU9yOCHSt5HNrnBqIt1FScl-qfo0x_dM\",\"version\":\"U2F_V2\",\"appId\":\"https://demo.strongauth.com:8181/app.json\"},{\"keyHandle\":\"kTkCQGYbOIIqvTd_tvLmqJEFS-0Raz4nQli_0VPegHx-1XgRmL7nz6d4bX3eeI4HKztzRVtVUbWPkxWFE9zI4Bwv_H6YSeij2QBeKKCJ3fmV-QEW78Y-LR5qhsWyttjY1uFl4y145fk7YN6gLG5qEthMF0-n2YHV2e_MrQUc7f-dzpdQJbvmPnAaayZgUwo3t6jHwN0iHhGOMV2oAn3MCajr6EfhD8qUYEickz0M2SM\",\"sessionId\":\"0EN+6faGUGr5nFYeHAZS4IwhOOFiOuG7JvoImKCe69g=\",\"challenge\":\"fOLyq1bkuJ2I6Y70ZGGthB1fsRISL6_DPlv8kybjHNQzt8Pt1xPCmSYX_yogrjhnwdHHODk358Hm4JPyPBeIK_Gw_1585s5CFzhoG2Pf3BkLNxvOnV2-VTmLv3IySsyf4nGDO7W8N2BI_XI4GxWAaALw7xsHAIjyzlK0Ok12swA\",\"version\":\"U2F_V2\",\"appId\":\"https://demo.strongauth.com:8181/app.json\"},{\"keyHandle\":\"NOqhEF7u2uy7LecEl4rhU-rg9o4T3UeCpYmhZzL_LTFv9nTa-S5iG05dp3IxLwkM-I8luSfpb-4pcz-IogXHZuMXwcM7f27C4peqbys3OOwjbCBPPAlh0jcAlZ6xImTG9bY79boNEIJhEHpKn6k7ncV6Uly1tS8DxJJz1xZbpyps77rv2JLdWUaAQw3YYOZt1AdnIpeIIYeMojYtvu9U2gPA-adSbMh-ybssOJpc1Dc\",\"sessionId\":\"zktla3cbxrQVO+wMbTOk4pgxcpehqd6EtiHPAeZNapo=\",\"challenge\":\"VyQm1O1qCudBbT11Yulj33o1jKggHueZhWTRcA_Iwe3E6YiJ50tmD0Pj3mc-oNw5VVFAWA4Es1WOhJCZ9pskj0LnAApYb_BwRS9xCGwmc6lIEbFu-eBQ3SsZNPDHUdsOE4ZFHCaG0nCk-6_LtaL2_4eQR8MPdhimfmSLhJvuLM8\",\"version\":\"U2F_V2\",\"appId\":\"https://demo.strongauth.com:8181/app.json\"}]},\"Message\":\"\",\"Error\":\"\"}";
+////                    LogUtils.d(response);
+//                    response = "{\"Challenge\": {\"SignRequest\": [{\"sessionId\": \"123456\", \"challenge\": \"SP1FwSgZPJG6j91c0fv83k5UJHcttbYFisqPEiQeAgA=\", \"version\": \"U2F_V2\", \"keyHandle\": \"saTokChu9tfJEyn22wfYZmfCv_n8uCATahfeYaA98SSwAdABtPUX5z_g-Gx11CS9qXcyxdTCYOaz1Yw9RI9B9LwBSgv5X75APRsRG-uZCIeFtdD16H0K1pVJ4mPv3I8HPHwbpicGTqOF2xAfED9Fijr3H0_D6I7UOeommntHjditS36E58y0m4kO4SsUYjQN7un-8Hr9YJwhZc86IcdccvxvrYuzVbBeVaNs4krv5EE=\", \"appId\": \"http://localhost:8000\"}]}, \"Message\": \"\", \"Error\": \"\"}";
+//                    JSONObject formalResponse = new JSONObject(response);
+//                    JSONObject request = formalResponse.getJSONObject("Challenge");
+//                    JSONObject newRequest = new JSONObject();
+//                    newRequest.put("type", U2FRequestType.u2f_sign_request);
+//                    newRequest.put("signRequests", request.getJSONArray("SignRequest"));
+//                    MainActivity.sessionId = request.getJSONArray("SignRequest").getJSONObject(0).getString("sessionId");
+//                    Bundle data = new Bundle();
+//                    data.putString("Request", newRequest.toString());
+//                    data.putString("U2FIntentType", U2FIntentType.U2F_OPERATION_SIGN.name());
+////                    i.putExtras(data);
+//
+//                    Message msg = Message.obtain(null, MSG_START_ACTIVITY);
+//                    msg.setData(data);
+//                    uiHandler.sendMessage(msg);
+//                } catch (JSONException e) {
+//                    e.printStackTrace();
+//                    Bundle data = new Bundle();
+//                    data.putString("Error", e.getMessage());
+//                    Message msg = Message.obtain(null, MSG_ERROR);
+//                    msg.setData(data);
+//                    uiHandler.sendMessage(msg);
+//                    return;
+//                }
+////                getActivity().startActivityForResult(i, SIGN_ACTIVITY_RES_2);
+//            }
+//        }).start();
     }
 
     @Override

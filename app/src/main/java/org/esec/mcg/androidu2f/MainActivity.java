@@ -11,16 +11,28 @@ import android.app.Fragment;
 import android.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.TextView;
+
+import com.android.volley.AuthFailureError;
+import com.android.volley.DefaultRetryPolicy;
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
 
 import org.esec.mcg.androidu2f.curl.FidoWebService;
 import org.esec.mcg.utils.logger.LogUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -92,37 +104,52 @@ public class MainActivity extends AppCompatActivity
             LogUtils.d(registerResponse);
             //TODO send register response to StrongAuth U2F Server
             try {
-                final JSONObject response = new JSONObject(registerResponse).getJSONObject("responseData").put("sessionId", sessionId);
-                new Thread(new Runnable() {
+                final JSONObject response = new JSONObject(registerResponse).getJSONObject("responseData");
+
+                RequestQueue queue = Volley.newRequestQueue(this);
+                String url = "http://192.168.1.22:8000/com_register";
+                JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(url, response, new Response.Listener<JSONObject>() {
                     @Override
-                    public void run() {
-                        String webResponse = null;
+                    public void onResponse(JSONObject response) {
+                        LogUtils.d("response: " + response.toString());
+                        int result = 0;
                         try {
-                            webResponse = FidoWebService.callFidoWebService(FidoWebService.SKFE_REGISTER_WEBSERVICE, getResources(), "yz", response);
-                            LogUtils.d(webResponse);
-                            Bundle data = new Bundle();
-                            data.putString("WebResponse", webResponse);
-                            Message msg = Message.obtain();
-                            msg.what = RESPONSE;
-                            msg.setData(data);
-                            uiHandler.sendMessage(msg);
-                        } catch (U2FException e) {
+                            result = response.getInt("result");
+                            if (result == 1) {
+                                Fragment currentFragment = getFragmentManager().findFragmentById(R.id.fragment_container);
+                                ((TextView)currentFragment.getView().findViewById(R.id.enroll_status_text)).setText("register successful");
+                                FragmentTransaction fragmentTransaction = getFragmentManager().beginTransaction();
+                                fragmentTransaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
+                                Fragment fragment = (Fragment)LoginFragment.newInstance(null, null);
+                                fragmentTransaction.replace(R.id.fragment_container, fragment, "currentFragment");
+                                fragmentTransaction.addToBackStack(null);
+                                fragmentTransaction.commit();
+                            } else {
+                                Fragment currentFragment = getFragmentManager().findFragmentById(R.id.fragment_container);
+                                ((TextView)currentFragment.getView().findViewById(R.id.enroll_status_text)).setText("register failed!");
+                            }
+                        } catch (JSONException e) {
                             e.printStackTrace();
-                            Bundle data = new Bundle();
-                            data.putString("Error", e.getMessage());
-                            Message msg = Message.obtain();
-                            msg.what = ERROR;
-                            msg.setData(data);
-                            uiHandler.sendMessage(msg);
-                            return;
                         }
+
+
                     }
-                }).start();
+                }, new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        LogUtils.d("response error: " + error);
+                    }
+                });
+                jsonObjectRequest.setRetryPolicy(new DefaultRetryPolicy(20 * 1000, 5, 1.0f));
+
+                queue.add(jsonObjectRequest);
+
 
             } catch (JSONException e) {
                 e.printStackTrace();
             }
         } else if (Constants.SIGN_ACTIVITY_RES_2 == requestCode) {
+            LogUtils.d("==================");
             if (resultCode == RESULT_CANCELED) {
                 Fragment currentFragment = getFragmentManager().findFragmentById(R.id.fragment_container);
                 ((TextView)currentFragment.getView().findViewById(R.id.sign_status_text)).setText(data.getStringExtra("Response"));
@@ -131,33 +158,70 @@ public class MainActivity extends AppCompatActivity
                 final String signResponse = data.getStringExtra("Response");
 
                 LogUtils.d(signResponse);
-                new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            JSONObject response = new JSONObject(signResponse).getJSONObject("responseData");
-                            response.put("sessionId", sessionId);
+
+                RequestQueue queue = Volley.newRequestQueue(this);
+                String url = "http://192.168.1.22:8000/com_auth";
+                final JSONObject response;
+                try {
+                    response = new JSONObject(signResponse).getJSONObject("responseData");
+                    JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(url, response, new Response.Listener<JSONObject>() {
+                        @Override
+                        public void onResponse(JSONObject response) {
                             LogUtils.d("response: " + response.toString());
-                            String webResponse = FidoWebService.callFidoWebService(FidoWebService.SKFE_AUTHENTICATE_WEBSERVICE, getResources(), "iceespresso101", response);
-                            LogUtils.d(webResponse);
-                            Bundle data = new Bundle();
-                            data.putString("WebResponse", webResponse);
-                            Message msg = Message.obtain();
-                            msg.what = RESPONSE;
-                            msg.setData(data);
-                            uiHandler.sendMessage(msg);
-                        } catch (JSONException | U2FException e) {
-                            e.printStackTrace();
-                            Bundle data = new Bundle();
-                            data.putString("Error", e.getMessage());
-                            Message msg = Message.obtain();
-                            msg.what = ERROR;
-                            msg.setData(data);
-                            uiHandler.sendMessage(msg);
-                            return;
+                            int result = 0;
+                            try {
+                                result = response.getInt("result");
+                                if (result == 1) {
+                                    Fragment currentFragment = getFragmentManager().findFragmentById(R.id.fragment_container);
+                                    ((TextView)currentFragment.getView().findViewById(R.id.sign_status_text)).setText("sign successful");
+                                } else {
+                                    Fragment currentFragment = getFragmentManager().findFragmentById(R.id.fragment_container);
+                                    ((TextView)currentFragment.getView().findViewById(R.id.sign_status_text)).setText("sign failed!");
+                                }
+                            } catch (JSONException e) {
+                                e.printStackTrace();
+                            }
                         }
-                    }
-                }).start();
+                    }, new Response.ErrorListener() {
+                        @Override
+                        public void onErrorResponse(VolleyError error) {
+                            LogUtils.d("response error: " + error);
+                        }
+                    });
+                    jsonObjectRequest.setRetryPolicy(new DefaultRetryPolicy(20 * 1000, 5, 1.0f));
+                    queue.add(jsonObjectRequest);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+
+
+//                new Thread(new Runnable() {
+//                    @Override
+//                    public void run() {
+//                        try {
+//                            JSONObject response = new JSONObject(signResponse).getJSONObject("responseData");
+//                            response.put("sessionId", sessionId);
+//                            LogUtils.d("response: " + response.toString());
+//                            String webResponse = FidoWebService.callFidoWebService(FidoWebService.SKFE_AUTHENTICATE_WEBSERVICE, getResources(), "iceespresso101", response);
+//                            LogUtils.d(webResponse);
+//                            Bundle data = new Bundle();
+//                            data.putString("WebResponse", webResponse);
+//                            Message msg = Message.obtain();
+//                            msg.what = RESPONSE;
+//                            msg.setData(data);
+//                            uiHandler.sendMessage(msg);
+//                        } catch (JSONException | U2FException e) {
+//                            e.printStackTrace();
+//                            Bundle data = new Bundle();
+//                            data.putString("Error", e.getMessage());
+//                            Message msg = Message.obtain();
+//                            msg.what = ERROR;
+//                            msg.setData(data);
+//                            uiHandler.sendMessage(msg);
+//                            return;
+//                        }
+//                    }
+//                }).start();
             }
         }
     }

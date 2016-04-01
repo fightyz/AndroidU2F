@@ -30,6 +30,7 @@ dependencies {
     compile 'com.android.support:support-v4:23.0.1'
     debugCompile 'com.squareup.leakcanary:leakcanary-android:1.4-beta2' // or 1.4-beta2
     releaseCompile 'com.squareup.leakcanary:leakcanary-android-no-op:1.4-beta2' // or 1.4-beta2
+    compile 'com.mcxiaoke.volley:library:1.0.+@aar'
 //    compile 'commons-codec:commons-codec:1.10'
     compile files('libs/sc-light-jdk15on-1.47.0.2.jar')
     compile files('libs/scpkix-jdk15on-1.47.0.2.jar')

@@ -113,6 +113,15 @@ public class U2FClientActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+        if (data == null) {
+            LogUtils.d("Please show me your token.");
+            Toast.makeText(this, "Please show me your token.", Toast.LENGTH_LONG).show();
+            JSONObject error = ResponseCodec.encodeError(ErrorCode.OTHER_ERROR, ErrorCode.OTHER_ERROR.toString().concat("Please show me your token."));
+            Intent i = ResponseCodec.encodeResponse(U2FResponseType.u2f_register_response.name(), error);
+            setResult(RESULT_CANCELED, i);
+            finish();
+            return;
+        }
         if (requestCode == Constants.REG_ACTIVITY_RES_1) { // register
             LogUtils.d("REG_ACTIVITY_RES_1");
             if (resultCode == RESULT_OK) { // success

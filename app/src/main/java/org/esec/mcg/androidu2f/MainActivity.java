@@ -82,7 +82,7 @@ public class MainActivity extends AppCompatActivity
 
                         Fragment currentFragment = getFragmentManager().findFragmentByTag("currentFragment");
                         TextView tx;
-
+                        LogUtils.d("op: " + HttpServiceClient.op.name());
                         switch (HttpServiceClient.op) {
                             case u2f_register_request:
 
@@ -238,15 +238,6 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
-    public void onFragmentInteraction(Uri uri) {
-
-    }
-
-    public HttpServiceClient getHttpServiceClient() {
-        return httpServiceClient;
-    }
-
-    @Override
     protected void onDestroy() {
         super.onDestroy();
         LogUtils.d("Number of handles found: %d", httpServiceClient.getRequestHandles().size());
@@ -259,6 +250,26 @@ public class MainActivity extends AppCompatActivity
                 LogUtils.d("Handle %d already non-cancellable", counter);
             }
             counter++;
+        }
+    }
+
+    @Override
+    public void preregister(String username) {
+        try {
+            httpServiceClient.callFidoWebService(HttpServiceClient.SKFE_PREREGISTER_WEBSERVICE,
+                    getResources(), username, null);
+        } catch (U2FException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void presign(String username) {
+        try {
+            httpServiceClient.callFidoWebService(HttpServiceClient.SKFE_PREAUTHENTICATE_WEBSERVICE,
+                    getResources(), username, null);
+        } catch (U2FException e) {
+            e.printStackTrace();
         }
     }
 }

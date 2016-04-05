@@ -97,13 +97,7 @@ public class EnrollFragment extends Fragment {
         parameters.put("username", username);
         parameters.put("password", password);
         parameters.put("version", "U2F_V2");
-
-        try {
-            ((MainActivity)getActivity()).getHttpServiceClient().callFidoWebService(HttpServiceClient.SKFE_PREREGISTER_WEBSERVICE,
-                            getResources(), username, null);
-        } catch (U2FException e) {
-            e.printStackTrace();
-        }
+        mListener.preregister(username);
     }
 
     @Override
@@ -124,20 +118,13 @@ public class EnrollFragment extends Fragment {
         return "{\"type\": \"u2f_register_request\", \"signRequest\": [], \"registerRequests\": [{\"challenge\": \"mLkHCmQZGbZEXefhWByeKo5zTFldYLIZFRGeHdvTFBc=\", \"version\": \"U2F_V2\", \"appId\": \"http://localhost:8000\"}]}";
     }
 
-    // TODO: Rename method, update argument and hook method into UI event
-    public void onButtonPressed(Uri uri) {
-        if (mListener != null) {
-            mListener.onFragmentInteraction(uri);
-        }
-    }
-
     @Override
-    public void onAttach(Activity activity) {
-        super.onAttach(activity);
-        try {
-            mListener = (OnFragmentInteractionListener) activity;
-        } catch (ClassCastException e) {
-            throw new ClassCastException(activity.toString()
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        if (context instanceof OnFragmentInteractionListener) {
+            mListener = (OnFragmentInteractionListener) context;
+        } else {
+            throw new RuntimeException(context.toString()
                     + " must implement OnFragmentInteractionListener");
         }
     }
@@ -160,6 +147,6 @@ public class EnrollFragment extends Fragment {
      */
     public interface OnFragmentInteractionListener {
         // TODO: Update argument type and name
-        public void onFragmentInteraction(Uri uri);
+        public void preregister(String username);
     }
 }

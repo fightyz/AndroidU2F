@@ -44,7 +44,7 @@ public class MainActivity extends AppCompatActivity
     public static String sessionId;
     private UIHandler uiHandler;
 
-    private HttpServiceClient httpServiceClient = new HttpServiceClient();
+    private HttpServiceClient httpServiceClient = new HttpServiceClient(this);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -77,19 +77,55 @@ public class MainActivity extends AppCompatActivity
                         Intent i = new Intent("org.fidoalliance.intent.FIDO_OPERATION");
                         i.addCategory("android.intent.category.DEFAULT");
                         i.setType("application/fido.u2f_client+json");
-                        JSONObject formalResponse = new JSONObject(rawJsonResponse);
-                        JSONObject request = formalResponse.getJSONObject("Challenge");
-                        JSONObject formalRequest = new JSONObject();
-                        formalRequest.put("type", U2FRequestType.u2f_register_request);
-                        formalRequest.put("registerRequests", request.getJSONArray("RegisterRequest"));
-                        formalRequest.put("signRequests", request.getJSONArray("SignRequest"));
-                        MainActivity.sessionId = request.getString("sessionId");
-
                         Bundle data = new Bundle();
-                        data.putString("Request", formalRequest.toString());
-                        data.putString("U2FIntentType", U2FIntentType.U2F_OPERATION_REG.name());
-                        i.putExtras(data);
-                        startActivityForResult(i, Constants.REG_ACTIVITY_RES_1);
+                        JSONObject formalResponse;
+                        JSONObject request;
+                        JSONObject formalRequest;
+
+                        Fragment currentFragment = getFragmentManager().findFragmentByTag("currentFragment");
+                        TextView tx;
+
+                        switch (HttpServiceClient.op) {
+                            case u2f_register_request:
+
+                                formalResponse = new JSONObject(rawJsonResponse);
+                                request = formalResponse.getJSONObject("Challenge");
+                                formalRequest = new JSONObject();
+
+                                formalRequest.put("type", U2FRequestType.u2f_register_request);
+                                formalRequest.put("registerRequests", request.getJSONArray("RegisterRequest"));
+                                formalRequest.put("signRequests", request.getJSONArray("SignRequest"));
+                                MainActivity.sessionId = request.getString("sessionId");
+
+                                data.putString("Request", formalRequest.toString());
+                                data.putString("U2FIntentType", U2FIntentType.U2F_OPERATION_REG.name());
+                                i.putExtras(data);
+                                startActivityForResult(i, Constants.REG_ACTIVITY_RES_1);
+                                break;
+                            case u2f_sign_request:
+                                formalResponse = new JSONObject(rawJsonResponse);
+                                request = formalResponse.getJSONObject("Challenge");
+                                formalRequest = new JSONObject();
+                                formalRequest.put("type", U2FRequestType.u2f_sign_request);
+                                formalRequest.put("signRequests", request.getJSONArray("SignRequest"));
+                                MainActivity.sessionId = request.getJSONArray("SignRequest").getJSONObject(0).getString("sessionId");
+                                data.putString("Request", formalRequest.toString());
+                                data.putString("U2FIntentType", U2FIntentType.U2F_OPERATION_SIGN.name());
+                                i.putExtras(data);
+                                startActivityForResult(i, Constants.SIGN_ACTIVITY_RES_2);
+                                break;
+                            case u2f_register_response:
+                                tx = (TextView)currentFragment.getView().findViewById(R.id.enroll_status_text);
+                                tx.setText(rawJsonResponse);
+                                currentFragment.getView().findViewById(R.id.enroll_progressBar).setVisibility(View.INVISIBLE);
+                                break;
+                            case u2f_sign_response:
+                                tx = (TextView)currentFragment.getView().findViewById(R.id.sign_status_text);
+                                tx.setText(rawJsonResponse);
+                                currentFragment.getView().findViewById(R.id.sign_progressBar).setVisibility(View.INVISIBLE);
+                                break;
+                        }
+
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
@@ -101,9 +137,19 @@ public class MainActivity extends AppCompatActivity
             public void onFailure(int statusCode, Header[] headers, Throwable throwable, String rawJsonData, SampleJSON errorResponse) {
                 LogUtils.d(HttpServiceClient.debugHeaders(headers));
                 LogUtils.d(HttpServiceClient.dubugStatusCode(statusCode));
-                if (errorResponse != null) {
-                    LogUtils.d(rawJsonData);
-
+                if (statusCode == 0) {
+                    rawJsonData = "Connection Timeout!";
+                }
+                LogUtils.d(rawJsonData);
+                Fragment currentFragment = getFragmentManager().findFragmentByTag("currentFragment");
+                if (currentFragment instanceof EnrollFragment) {
+                    TextView tx = (TextView)currentFragment.getView().findViewById(R.id.enroll_status_text);
+                    tx.setText(rawJsonData);
+                    currentFragment.getView().findViewById(R.id.enroll_progressBar).setVisibility(View.INVISIBLE);
+                } else if (currentFragment instanceof SignFragment) {
+                    TextView tx = (TextView)currentFragment.getView().findViewById(R.id.sign_status_text);
+                    currentFragment.getView().findViewById(R.id.sign_progressBar).setVisibility(View.INVISIBLE);
+                    tx.setText(rawJsonData);
                 }
             }
 
@@ -151,33 +197,9 @@ public class MainActivity extends AppCompatActivity
             //TODO send register response to StrongAuth U2F Server
             try {
                 final JSONObject response = new JSONObject(registerResponse).getJSONObject("responseData").put("sessionId", sessionId);
-                new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        String webResponse = null;
-                        try {
-                            webResponse = FidoWebService.callFidoWebService(FidoWebService.SKFE_REGISTER_WEBSERVICE, getResources(), "yz", response);
-                            LogUtils.d(webResponse);
-                            Bundle data = new Bundle();
-                            data.putString("WebResponse", webResponse);
-                            Message msg = Message.obtain();
-                            msg.what = RESPONSE;
-                            msg.setData(data);
-                            uiHandler.sendMessage(msg);
-                        } catch (U2FException e) {
-                            e.printStackTrace();
-                            Bundle data = new Bundle();
-                            data.putString("Error", e.getMessage());
-                            Message msg = Message.obtain();
-                            msg.what = ERROR;
-                            msg.setData(data);
-                            uiHandler.sendMessage(msg);
-                            return;
-                        }
-                    }
-                }).start();
+                httpServiceClient.callFidoWebService(HttpServiceClient.SKFE_REGISTER_WEBSERVICE, getResources(), null, response);
 
-            } catch (JSONException e) {
+            } catch (JSONException | U2FException e) {
                 e.printStackTrace();
             }
         } else if (Constants.SIGN_ACTIVITY_RES_2 == requestCode) {
@@ -187,35 +209,41 @@ public class MainActivity extends AppCompatActivity
                 return;
             } else if (resultCode == RESULT_OK) {
                 final String signResponse = data.getStringExtra("Response");
-
                 LogUtils.d(signResponse);
-                new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            JSONObject response = new JSONObject(signResponse).getJSONObject("responseData");
-                            response.put("sessionId", sessionId);
-                            LogUtils.d("response: " + response.toString());
-                            String webResponse = FidoWebService.callFidoWebService(FidoWebService.SKFE_AUTHENTICATE_WEBSERVICE, getResources(), "iceespresso101", response);
-                            LogUtils.d(webResponse);
-                            Bundle data = new Bundle();
-                            data.putString("WebResponse", webResponse);
-                            Message msg = Message.obtain();
-                            msg.what = RESPONSE;
-                            msg.setData(data);
-                            uiHandler.sendMessage(msg);
-                        } catch (JSONException | U2FException e) {
-                            e.printStackTrace();
-                            Bundle data = new Bundle();
-                            data.putString("Error", e.getMessage());
-                            Message msg = Message.obtain();
-                            msg.what = ERROR;
-                            msg.setData(data);
-                            uiHandler.sendMessage(msg);
-                            return;
-                        }
-                    }
-                }).start();
+                try {
+                    final JSONObject response = new JSONObject(signResponse).getJSONObject("responseData").put("sessionId", sessionId);
+                    httpServiceClient.callFidoWebService(HttpServiceClient.SKFE_AUTHENTICATE_WEBSERVICE, getResources(), null, response);
+                } catch (U2FException | JSONException e) {
+                    e.printStackTrace();
+                }
+
+//                new Thread(new Runnable() {
+//                    @Override
+//                    public void run() {
+//                        try {
+//                            JSONObject response = new JSONObject(signResponse).getJSONObject("responseData");
+//                            response.put("sessionId", sessionId);
+//                            LogUtils.d("response: " + response.toString());
+//                            String webResponse = FidoWebService.callFidoWebService(FidoWebService.SKFE_AUTHENTICATE_WEBSERVICE, getResources(), "iceespresso101", response);
+//                            LogUtils.d(webResponse);
+//                            Bundle data = new Bundle();
+//                            data.putString("WebResponse", webResponse);
+//                            Message msg = Message.obtain();
+//                            msg.what = RESPONSE;
+//                            msg.setData(data);
+//                            uiHandler.sendMessage(msg);
+//                        } catch (JSONException | U2FException e) {
+//                            e.printStackTrace();
+//                            Bundle data = new Bundle();
+//                            data.putString("Error", e.getMessage());
+//                            Message msg = Message.obtain();
+//                            msg.what = ERROR;
+//                            msg.setData(data);
+//                            uiHandler.sendMessage(msg);
+//                            return;
+//                        }
+//                    }
+//                }).start();
             }
         }
     }

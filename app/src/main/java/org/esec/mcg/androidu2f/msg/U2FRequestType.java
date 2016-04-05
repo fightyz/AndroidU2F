@@ -5,5 +5,7 @@ package org.esec.mcg.androidu2f.msg;
  */
 public enum U2FRequestType {
     u2f_register_request,
-    u2f_sign_request
+    u2f_sign_request,
+    u2f_register_response,
+    u2f_sign_response
 }

@@ -10,6 +10,7 @@ import com.loopj.android.http.ResponseHandlerInterface;
 
 import org.esec.mcg.androidu2f.R;
 import org.esec.mcg.androidu2f.U2FException;
+import org.esec.mcg.androidu2f.msg.U2FRequestType;
 import org.esec.mcg.utils.logger.LogUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -66,6 +67,8 @@ public class HttpServiceClient {
     public static final String ATTESTATION_KEYSTORE_PRIVATEKEY_ALIAS = "mykey";
     public static final String ATTESTATION_KEYSTORE_TYPE = "BKS";
 
+    public static U2FRequestType op;
+
     private Context mContext;
     private String URL;
     private Header[] headers;
@@ -79,6 +82,10 @@ public class HttpServiceClient {
     private AsyncHttpClient asyncHttpClient = new AsyncHttpClient();
 
     private final List<RequestHandle> requestHandles = new LinkedList<RequestHandle>();
+
+    public HttpServiceClient(Context context) {
+        this.mContext = context;
+    }
 
     public void callFidoWebService(int webServiceType, Resources res, String username, JSONObject response)
             throws U2FException {
@@ -110,18 +117,22 @@ public class HttpServiceClient {
                 case SKFE_PREREGISTER_WEBSERVICE:
                     fidoserviceurl = "https://demo.strongauth.com".concat("/skfe/rest/preregister");
                     payload = new JSONObject().put(JSON_KEY_USERNAME_LABEL, username).toString();
+                    op = U2FRequestType.u2f_register_request;
                     break;
                 case SKFE_REGISTER_WEBSERVICE:
                     fidoserviceurl = "https://demo.strongauth.com".concat("/skfe/rest/register");
                     payload = new JSONObject().put("response", response).put("metadata", createMetadata).toString();
+                    op = U2FRequestType.u2f_register_response;
                     break;
                 case SKFE_PREAUTHENTICATE_WEBSERVICE:
                     fidoserviceurl = "https://demo.strongauth.com".concat("/skfe/rest/preauthenticate");
                     payload = new JSONObject().put(JSON_KEY_USERNAME_LABEL, username).toString();
+                    op = U2FRequestType.u2f_sign_request;
                     break;
                 case SKFE_AUTHENTICATE_WEBSERVICE:
                     fidoserviceurl = "https://demo.strongauth.com".concat("/skfe/rest/authenticate");
                     payload = new JSONObject().put("response", response).put("metadata", lastUsedMetadata).toString();
+                    op = U2FRequestType.u2f_sign_response;
                     break;
                 default:
                     throw new U2FException("Invalid webservice called..".concat(": ") + webServiceType);

@@ -182,6 +182,10 @@ public class HttpServiceClient {
         }
     }
 
+    public List<RequestHandle> getRequestHandles() {
+        return requestHandles;
+    }
+
     public void setResponseHandler(ResponseHandlerInterface responseHandlerInterface) {
         this.responseHandler = responseHandlerInterface;
     }

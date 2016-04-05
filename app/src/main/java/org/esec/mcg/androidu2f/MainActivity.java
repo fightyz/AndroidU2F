@@ -11,6 +11,7 @@ import android.app.Fragment;
 import android.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -19,6 +20,7 @@ import android.widget.TextView;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.loopj.android.http.BaseJsonHttpResponseHandler;
+import com.loopj.android.http.RequestHandle;
 
 import org.esec.mcg.androidu2f.curl.FidoWebService;
 import org.esec.mcg.androidu2f.curl.HttpServiceClient;
@@ -38,11 +40,8 @@ public class MainActivity extends AppCompatActivity
         implements LoginFragment.OnFragmentInteractionListener, EnrollFragment.OnFragmentInteractionListener,
                     SignFragment.OnFragmentInteractionListener {
 
-    public static final int RESPONSE = 1;
-    public static final int ERROR = 2;
     private final Map<String,String> details = new LinkedHashMap<String, String>();
     public static String sessionId;
-    private UIHandler uiHandler;
 
     private HttpServiceClient httpServiceClient = new HttpServiceClient(this);
 
@@ -65,7 +64,6 @@ public class MainActivity extends AppCompatActivity
         LoginFragment fragment = new LoginFragment();
         getFragmentManager().beginTransaction().replace(R.id.fragment_container, fragment).commit();
 
-        uiHandler = new UIHandler();
         httpServiceClient.setResponseHandler(new BaseJsonHttpResponseHandler<SampleJSON>() {
             @Override
             public void onSuccess(int statusCode, Header[] headers, String rawJsonResponse, SampleJSON response) {
@@ -216,34 +214,6 @@ public class MainActivity extends AppCompatActivity
                 } catch (U2FException | JSONException e) {
                     e.printStackTrace();
                 }
-
-//                new Thread(new Runnable() {
-//                    @Override
-//                    public void run() {
-//                        try {
-//                            JSONObject response = new JSONObject(signResponse).getJSONObject("responseData");
-//                            response.put("sessionId", sessionId);
-//                            LogUtils.d("response: " + response.toString());
-//                            String webResponse = FidoWebService.callFidoWebService(FidoWebService.SKFE_AUTHENTICATE_WEBSERVICE, getResources(), "iceespresso101", response);
-//                            LogUtils.d(webResponse);
-//                            Bundle data = new Bundle();
-//                            data.putString("WebResponse", webResponse);
-//                            Message msg = Message.obtain();
-//                            msg.what = RESPONSE;
-//                            msg.setData(data);
-//                            uiHandler.sendMessage(msg);
-//                        } catch (JSONException | U2FException e) {
-//                            e.printStackTrace();
-//                            Bundle data = new Bundle();
-//                            data.putString("Error", e.getMessage());
-//                            Message msg = Message.obtain();
-//                            msg.what = ERROR;
-//                            msg.setData(data);
-//                            uiHandler.sendMessage(msg);
-//                            return;
-//                        }
-//                    }
-//                }).start();
             }
         }
     }
@@ -272,38 +242,23 @@ public class MainActivity extends AppCompatActivity
 
     }
 
-    private class UIHandler extends Handler {
-        @Override
-        public void handleMessage(Message msg) {
-            super.handleMessage(msg);
-            Bundle data = msg.getData();
-            Fragment currentFragment = getFragmentManager().findFragmentByTag("currentFragment");
-            String message;
-            switch (msg.what) {
-                case RESPONSE:
-                    message = data.getString("WebResponse");
-                    break;
-                case ERROR:
-                    message = data.getString("Error");
-                    break;
-                default:
-                    message = "Ah o!";
-            }
-            if (currentFragment instanceof EnrollFragment) {
-                TextView tx = (TextView)currentFragment.getView().findViewById(R.id.enroll_status_text);
-
-                tx.setText(message);
-                currentFragment.getView().findViewById(R.id.enroll_progressBar).setVisibility(View.INVISIBLE);
-            } else if (currentFragment instanceof SignFragment) {
-
-                TextView tx = (TextView)currentFragment.getView().findViewById(R.id.sign_status_text);
-                currentFragment.getView().findViewById(R.id.sign_progressBar).setVisibility(View.INVISIBLE);
-                tx.setText(message);
-            }
-        }
-    }
-
     public HttpServiceClient getHttpServiceClient() {
         return httpServiceClient;
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        LogUtils.d("Number of handles found: %d", httpServiceClient.getRequestHandles().size());
+        int counter = 0;
+        for(RequestHandle handle : httpServiceClient.getRequestHandles()) {
+            if (!handle.isCancelled() && !handle.isFinished()) {
+                LogUtils.d("Cancelling handle %d", counter);
+                LogUtils.d(String.format("Handle %d cancel", counter) + (handle.cancel(true) ? " succeeded" : " failed"));
+            } else {
+                LogUtils.d("Handle %d already non-cancellable", counter);
+            }
+            counter++;
+        }
     }
 }

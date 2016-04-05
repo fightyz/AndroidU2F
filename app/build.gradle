@@ -18,6 +18,12 @@ android {
         }
     }
 
+    packagingOptions {
+        exclude 'META-INF/DEPENDENCIES'
+        exclude 'META-INF/LICENSE'
+        exclude 'META-INF/NOTICE'
+    }
+
     useLibrary 'org.apache.http.legacy'
 }
 
@@ -31,6 +37,7 @@ dependencies {
     debugCompile 'com.squareup.leakcanary:leakcanary-android:1.4-beta2' // or 1.4-beta2
     releaseCompile 'com.squareup.leakcanary:leakcanary-android-no-op:1.4-beta2' // or 1.4-beta2
     compile 'com.loopj.android:android-async-http:1.4.9'
+    compile 'com.fasterxml.jackson.core:jackson-databind:2.5.3'
 //    compile 'commons-codec:commons-codec:1.10'
     compile files('libs/sc-light-jdk15on-1.47.0.2.jar')
     compile files('libs/scpkix-jdk15on-1.47.0.2.jar')

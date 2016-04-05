@@ -16,13 +16,23 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.TextView;
 
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.loopj.android.http.BaseJsonHttpResponseHandler;
+
 import org.esec.mcg.androidu2f.curl.FidoWebService;
+import org.esec.mcg.androidu2f.curl.HttpServiceClient;
+import org.esec.mcg.androidu2f.curl.SampleJSON;
+import org.esec.mcg.androidu2f.msg.U2FIntentType;
+import org.esec.mcg.androidu2f.msg.U2FRequestType;
 import org.esec.mcg.utils.logger.LogUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+
+import cz.msebera.android.httpclient.Header;
 
 public class MainActivity extends AppCompatActivity
         implements LoginFragment.OnFragmentInteractionListener, EnrollFragment.OnFragmentInteractionListener,
@@ -33,6 +43,8 @@ public class MainActivity extends AppCompatActivity
     private final Map<String,String> details = new LinkedHashMap<String, String>();
     public static String sessionId;
     private UIHandler uiHandler;
+
+    private HttpServiceClient httpServiceClient = new HttpServiceClient();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,6 +66,52 @@ public class MainActivity extends AppCompatActivity
         getFragmentManager().beginTransaction().replace(R.id.fragment_container, fragment).commit();
 
         uiHandler = new UIHandler();
+        httpServiceClient.setResponseHandler(new BaseJsonHttpResponseHandler<SampleJSON>() {
+            @Override
+            public void onSuccess(int statusCode, Header[] headers, String rawJsonResponse, SampleJSON response) {
+                LogUtils.d(HttpServiceClient.debugHeaders(headers));
+                LogUtils.d(HttpServiceClient.dubugStatusCode(statusCode));
+                if (response != null) {
+                    LogUtils.d(rawJsonResponse);
+                    try {
+                        Intent i = new Intent("org.fidoalliance.intent.FIDO_OPERATION");
+                        i.addCategory("android.intent.category.DEFAULT");
+                        i.setType("application/fido.u2f_client+json");
+                        JSONObject formalResponse = new JSONObject(rawJsonResponse);
+                        JSONObject request = formalResponse.getJSONObject("Challenge");
+                        JSONObject formalRequest = new JSONObject();
+                        formalRequest.put("type", U2FRequestType.u2f_register_request);
+                        formalRequest.put("registerRequests", request.getJSONArray("RegisterRequest"));
+                        formalRequest.put("signRequests", request.getJSONArray("SignRequest"));
+                        MainActivity.sessionId = request.getString("sessionId");
+
+                        Bundle data = new Bundle();
+                        data.putString("Request", formalRequest.toString());
+                        data.putString("U2FIntentType", U2FIntentType.U2F_OPERATION_REG.name());
+                        i.putExtras(data);
+                        startActivityForResult(i, Constants.REG_ACTIVITY_RES_1);
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+
+                }
+            }
+
+            @Override
+            public void onFailure(int statusCode, Header[] headers, Throwable throwable, String rawJsonData, SampleJSON errorResponse) {
+                LogUtils.d(HttpServiceClient.debugHeaders(headers));
+                LogUtils.d(HttpServiceClient.dubugStatusCode(statusCode));
+                if (errorResponse != null) {
+                    LogUtils.d(rawJsonData);
+
+                }
+            }
+
+            @Override
+            protected SampleJSON parseResponse(String rawJsonData, boolean isFailure) throws Throwable {
+                return new ObjectMapper().readValues(new JsonFactory().createParser(rawJsonData), SampleJSON.class).next();
+            }
+        });
     }
 
     @Override
@@ -215,5 +273,9 @@ public class MainActivity extends AppCompatActivity
                 tx.setText(message);
             }
         }
+    }
+
+    public HttpServiceClient getHttpServiceClient() {
+        return httpServiceClient;
     }
 }

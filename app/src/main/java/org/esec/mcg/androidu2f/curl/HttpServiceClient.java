@@ -24,10 +24,12 @@ import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 
 import cz.msebera.android.httpclient.Header;
 import cz.msebera.android.httpclient.HttpEntity;
 import cz.msebera.android.httpclient.client.methods.HttpUriRequest;
+import cz.msebera.android.httpclient.entity.StringEntity;
 import cz.msebera.android.httpclient.impl.client.DefaultHttpClient;
 import cz.msebera.android.httpclient.protocol.HttpContext;
 
@@ -68,6 +70,7 @@ public class HttpServiceClient {
     private String URL;
     private Header[] headers;
     private HttpEntity entity;
+    private String contentType;
     private ResponseHandlerInterface responseHandler;
 
     // Miscellaneous constants
@@ -136,8 +139,13 @@ public class HttpServiceClient {
             is = res.openRawResource(R.raw.cacerts);
             store.load(is, null);
             asyncHttpClient.setSSLSocketFactory(new SecureSocketFactory(store));
+            URL = fidoserviceurl;
+            headers = null;
+            entity = new StringEntity(formParams);
+            contentType = "application/x-www-form-urlencoded";
 
-            addRequestHandle(executeAction(mContext, fidoserviceurl, null, ));
+
+            addRequestHandle(asyncHttpClient.post(mContext, URL, headers, entity, contentType, responseHandler));
         } catch (JSONException e) {
             throw new U2FException("Net work error.", e);
         } catch (KeyStoreException e) {
@@ -162,4 +170,27 @@ public class HttpServiceClient {
             requestHandles.add(handle);
         }
     }
+
+    public void setResponseHandler(ResponseHandlerInterface responseHandlerInterface) {
+        this.responseHandler = responseHandlerInterface;
+    }
+
+    public static final String debugHeaders(Header[] headers) {
+        if (headers != null) {
+            StringBuilder builder = new StringBuilder();
+            for (Header h : headers) {
+                String _h = String.format(Locale.US, "%s : %s", h.getName(), h.getValue());
+                builder.append(_h);
+                builder.append("\n");
+            }
+            return builder.toString();
+        }
+        return null;
+    }
+
+    public static final String dubugStatusCode(int statusCode) {
+        return String.format(Locale.US, "Return Status Code: %d", statusCode);
+    }
+
+
 }

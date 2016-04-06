@@ -1,43 +1,39 @@
 package org.esec.mcg.androidu2f;
 
+import android.app.Fragment;
+import android.app.FragmentTransaction;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
-import android.app.Fragment;
-import android.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
-import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.TextView;
 
-import com.android.volley.AuthFailureError;
 import com.android.volley.DefaultRetryPolicy;
-import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
-import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 
-import org.esec.mcg.androidu2f.curl.FidoWebService;
 import org.esec.mcg.utils.logger.LogUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class MainActivity extends AppCompatActivity
-        implements LoginFragment.OnFragmentInteractionListener, EnrollFragment.OnFragmentInteractionListener,
+        implements BackHandledInterface,
+                    RegisterFragment.OnFragmentInteractionListener,
+                    LoginFragment.OnFragmentInteractionListener,
+                    EnrollFragment.OnFragmentInteractionListener,
                     SignFragment.OnFragmentInteractionListener {
 
     public static final int RESPONSE = 1;
@@ -46,6 +42,8 @@ public class MainActivity extends AppCompatActivity
     public static String sessionId;
     private UIHandler uiHandler;
 
+    private BackHandledFragment mBackHandledFragment;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -53,16 +51,12 @@ public class MainActivity extends AppCompatActivity
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-            }
-        });
 
-        LoginFragment fragment = new LoginFragment();
+
+//        RegisterFragment fragment = new RegisterFragment();
+//        getFragmentManager().beginTransaction().replace(R.id.fragment_container, fragment).commit();
+
+        InfoFragment fragment = new InfoFragment();
         getFragmentManager().beginTransaction().replace(R.id.fragment_container, fragment).commit();
 
         uiHandler = new UIHandler();
@@ -91,6 +85,38 @@ public class MainActivity extends AppCompatActivity
         return super.onOptionsItemSelected(item);
     }
 
+    public void onClick(View view) {
+        int id = view.getId();
+
+        if(id == R.id.register_button) {
+            RegisterFragment fragment = new RegisterFragment();
+            getFragmentManager().beginTransaction().replace(R.id.fragment_container, fragment)
+                    .addToBackStack("registerFragment").commit();
+
+        } else if(id == R.id.open_door_button) {
+            LoginFragment fragment = new LoginFragment();
+            getFragmentManager().beginTransaction().replace(R.id.fragment_container, fragment)
+                    .addToBackStack("loginFragment").commit();
+        }
+    }
+
+    @Override
+    public void setSelectedFragment(BackHandledFragment selectedFragment) {
+        this.mBackHandledFragment = selectedFragment;
+    }
+
+    @Override
+    public void onBackPressed() {
+        Log.e("mainActivity", "onBackPressed");
+        if(mBackHandledFragment == null || !mBackHandledFragment.onBackPressed()){
+            if(getFragmentManager().getBackStackEntryCount() == 0){
+                super.onBackPressed();
+            }else{
+                getFragmentManager().popBackStack();
+            }
+        }
+    }
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -111,21 +137,21 @@ public class MainActivity extends AppCompatActivity
                 JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(url, response, new Response.Listener<JSONObject>() {
                     @Override
                     public void onResponse(JSONObject response) {
+                        Fragment currentFragment = getFragmentManager().findFragmentById(R.id.fragment_container);
+                        currentFragment.getView().findViewById(R.id.enroll_progressBar).setVisibility(View.GONE);
                         LogUtils.d("response: " + response.toString());
                         int result = 0;
                         try {
                             result = response.getInt("result");
                             if (result == 1) {
-                                Fragment currentFragment = getFragmentManager().findFragmentById(R.id.fragment_container);
                                 ((TextView)currentFragment.getView().findViewById(R.id.enroll_status_text)).setText("register successful");
                                 FragmentTransaction fragmentTransaction = getFragmentManager().beginTransaction();
                                 fragmentTransaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
-                                Fragment fragment = (Fragment)LoginFragment.newInstance(null, null);
+                                Fragment fragment = (Fragment) org.esec.mcg.androidu2f.RegisterFragment.newInstance(null, null);
                                 fragmentTransaction.replace(R.id.fragment_container, fragment, "currentFragment");
                                 fragmentTransaction.addToBackStack(null);
                                 fragmentTransaction.commit();
                             } else {
-                                Fragment currentFragment = getFragmentManager().findFragmentById(R.id.fragment_container);
                                 ((TextView)currentFragment.getView().findViewById(R.id.enroll_status_text)).setText("register failed!");
                             }
                         } catch (JSONException e) {
@@ -137,6 +163,9 @@ public class MainActivity extends AppCompatActivity
                 }, new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
+                        Fragment currentFragment = getFragmentManager().findFragmentById(R.id.fragment_container);
+                        currentFragment.getView().findViewById(R.id.enroll_progressBar).setVisibility(View.GONE);
+                        ((TextView)currentFragment.getView().findViewById(R.id.enroll_status_text)).setText("response error: " + error.getMessage());
                         LogUtils.d("response error: " + error);
                     }
                 });
@@ -167,15 +196,15 @@ public class MainActivity extends AppCompatActivity
                     JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(url, response, new Response.Listener<JSONObject>() {
                         @Override
                         public void onResponse(JSONObject response) {
+                            Fragment currentFragment = getFragmentManager().findFragmentById(R.id.fragment_container);
+                            currentFragment.getView().findViewById(R.id.sign_progressBar).setVisibility(View.GONE);
                             LogUtils.d("response: " + response.toString());
                             int result = 0;
                             try {
                                 result = response.getInt("result");
                                 if (result == 1) {
-                                    Fragment currentFragment = getFragmentManager().findFragmentById(R.id.fragment_container);
                                     ((TextView)currentFragment.getView().findViewById(R.id.sign_status_text)).setText("sign successful");
                                 } else {
-                                    Fragment currentFragment = getFragmentManager().findFragmentById(R.id.fragment_container);
                                     ((TextView)currentFragment.getView().findViewById(R.id.sign_status_text)).setText("sign failed!");
                                 }
                             } catch (JSONException e) {
@@ -185,6 +214,9 @@ public class MainActivity extends AppCompatActivity
                     }, new Response.ErrorListener() {
                         @Override
                         public void onErrorResponse(VolleyError error) {
+                            Fragment currentFragment = getFragmentManager().findFragmentById(R.id.fragment_container);
+                            currentFragment.getView().findViewById(R.id.sign_progressBar).setVisibility(View.GONE);
+                            ((TextView)currentFragment.getView().findViewById(R.id.sign_status_text)).setText("response error: " + error.getMessage());
                             LogUtils.d("response error: " + error);
                         }
                     });
@@ -193,41 +225,12 @@ public class MainActivity extends AppCompatActivity
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
-
-
-//                new Thread(new Runnable() {
-//                    @Override
-//                    public void run() {
-//                        try {
-//                            JSONObject response = new JSONObject(signResponse).getJSONObject("responseData");
-//                            response.put("sessionId", sessionId);
-//                            LogUtils.d("response: " + response.toString());
-//                            String webResponse = FidoWebService.callFidoWebService(FidoWebService.SKFE_AUTHENTICATE_WEBSERVICE, getResources(), "iceespresso101", response);
-//                            LogUtils.d(webResponse);
-//                            Bundle data = new Bundle();
-//                            data.putString("WebResponse", webResponse);
-//                            Message msg = Message.obtain();
-//                            msg.what = RESPONSE;
-//                            msg.setData(data);
-//                            uiHandler.sendMessage(msg);
-//                        } catch (JSONException | U2FException e) {
-//                            e.printStackTrace();
-//                            Bundle data = new Bundle();
-//                            data.putString("Error", e.getMessage());
-//                            Message msg = Message.obtain();
-//                            msg.what = ERROR;
-//                            msg.setData(data);
-//                            uiHandler.sendMessage(msg);
-//                            return;
-//                        }
-//                    }
-//                }).start();
             }
         }
     }
 
     /**
-     * Callback of the LoginFragment.
+     * Callback of the RegisterFragment.
      * After user inputs username and password, do register or authenticate the android token
      * @param username
      * @param password
@@ -238,7 +241,7 @@ public class MainActivity extends AppCompatActivity
         FragmentTransaction fragmentTransaction = getFragmentManager().beginTransaction();
 
         details.clear();
-        Fragment fragment = sign ? (Fragment)SignFragment.newInstance(username, password) : (Fragment)EnrollFragment.newInstance(username, password);
+        Fragment fragment = sign ? (Fragment) SignFragment.newInstance(username, password) : (Fragment) EnrollFragment.newInstance(username, password);
         fragmentTransaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
         fragmentTransaction.replace(R.id.fragment_container, fragment, "currentFragment");
         fragmentTransaction.addToBackStack(null);

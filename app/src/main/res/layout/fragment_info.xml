@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:gravity="center_horizontal">
+
+    <TextView
+        android:textColor="#005685"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:text="Car Sharing Demo"
+        android:textSize="55sp"
+        android:shadowColor="#fbeee4"
+        android:shadowDx="3"
+        android:shadowDy="3"
+        android:shadowRadius="1.5"
+        android:id="@+id/intro_title" />
+
+    <ScrollView
+        android:id="@+id/intro_form"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <LinearLayout
+            android:id="@+id/intro_form_layout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_gravity="center" >
+
+            <Button android:id="@+id/register_button"
+                android:background="@drawable/standard_button"
+                style="@style/ButtonFont"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp" android:text="REGISTER"
+                android:focusable="true"
+                android:onClick="onClick"/>
+
+            <Button android:id="@+id/open_door_button"
+                android:background="@drawable/standard_button"
+                style="@style/ButtonFont"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp" android:text="OPEN DOOR"
+                android:focusable="true"
+                android:onClick="onClick"/>
+
+        </LinearLayout>
+    </ScrollView>
+</LinearLayout>

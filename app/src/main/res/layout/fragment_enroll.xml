@@ -7,19 +7,22 @@
         android:layout_height="match_parent"
         android:orientation="vertical"
         android:layout_gravity="center"
-        android:gravity="center_vertical"
-        android:padding="16dp">
+        android:gravity="center_vertical" >
 
         <ProgressBar
+            android:id="@+id/enroll_progressBar"
+            style="?android:attr/progressBarStyleLarge"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:id="@+id/enroll_progressBar"
-            android:layout_gravity="center" />
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="20dp"
+            android:layout_marginBottom="8dp"/>
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Registering, please wait..."
+            android:textSize="20sp"
             android:id="@+id/enroll_status_text"
             android:layout_gravity="center" />
 

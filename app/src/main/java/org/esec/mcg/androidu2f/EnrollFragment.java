@@ -1,18 +1,12 @@
 package org.esec.mcg.androidu2f;
 
 import android.app.Activity;
-import android.content.Context;
-import android.content.Intent;
-import android.content.SharedPreferences;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
-import android.net.Uri;
-import android.os.Build;
-import android.os.Bundle;
 import android.app.Fragment;
+import android.content.Intent;
+import android.net.Uri;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.preference.PreferenceManager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -28,7 +22,6 @@ import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 
 import org.esec.mcg.androidu2f.client.op.U2FServerRequest;
-import org.esec.mcg.androidu2f.curl.FidoWebService;
 import org.esec.mcg.androidu2f.msg.U2FIntentType;
 import org.esec.mcg.androidu2f.msg.U2FRequestType;
 import org.esec.mcg.utils.logger.LogUtils;
@@ -49,7 +42,7 @@ import java.util.Map;
  * Use the {@link EnrollFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class EnrollFragment extends Fragment {
+public class EnrollFragment extends BackHandledFragment {
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String USERNAME = "username";
     private static final String PASSWORD = "password";
@@ -91,6 +84,16 @@ public class EnrollFragment extends Fragment {
 
     public EnrollFragment() {
         // Required empty public constructor
+    }
+
+    /**
+     * 所有继承BackHandledFragment的子类都将在这个方法中实现物理Back键按下后的逻辑
+     * FragmentActivity捕捉到物理返回键点击事件后会首先询问Fragment是否消费该事件
+     * 如果没有Fragment消息时FragmentActivity自己才会消费该事件
+     */
+    @Override
+    protected boolean onBackPressed() {
+        return false;
     }
 
     @Override

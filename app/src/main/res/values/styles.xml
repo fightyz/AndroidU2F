@@ -14,4 +14,11 @@
     <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
     <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
 
+
+    <style name="ButtonFont" parent="@android:style/TextAppearance.Medium">
+        <item name="android:layout_height">fill_parent</item>
+        <item name="android:typeface">normal</item>
+        <item name="android:textColor">@drawable/text_color</item>
+    </style>
+
 </resources>

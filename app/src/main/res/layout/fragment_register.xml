@@ -18,7 +18,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:text="Open Door"
+            android:text="Registration"
             android:textSize="50sp"
             android:shadowColor="#fbeee4"
             android:shadowDx="3"
@@ -27,12 +27,12 @@
             android:id="@+id/textView" />
 
         <ScrollView
-            android:id="@+id/login_form"
+            android:id="@+id/register_form"
             android:layout_width="match_parent"
             android:layout_height="match_parent" >
 
             <LinearLayout
-                android:id="@+id/login_form_layout"
+                android:id="@+id/register_form_layout"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:orientation="vertical"
@@ -42,7 +42,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content">
                     <EditText
-                        android:id="@+id/login_username"
+                        android:id="@+id/register_username"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:hint="Username"
@@ -57,7 +57,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content">
                     <EditText
-                        android:id="@+id/login_password"
+                        android:id="@+id/register_password"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:hint="Password"
@@ -69,13 +69,13 @@
                 </android.support.design.widget.TextInputLayout>
 
                 <Button
-                    android:id="@+id/login_fido_button"
+                    android:id="@+id/register_fido_button"
                     android:background="@drawable/standard_button"
                     style="@style/ButtonFont"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
-                    android:text="OPEN DOOR"
+                    android:text="REGISTER"
                     android:focusable="true" />
 
             </LinearLayout>

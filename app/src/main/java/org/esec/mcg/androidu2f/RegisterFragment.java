@@ -10,11 +10,11 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.Toast;
 
-/**
- * Created by Administrator on 2016/4/6.
- */
-public class LoginFragment extends BackHandledFragment {
 
+/**
+ * The fragment which wraps token registration and authentication features.
+ */
+public class RegisterFragment extends BackHandledFragment {
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String ARG_PARAM1 = "param1";
@@ -44,7 +44,7 @@ public class LoginFragment extends BackHandledFragment {
         return fragment;
     }
 
-    public LoginFragment() {
+    public RegisterFragment() {
         // Required empty public constructor
     }
 
@@ -61,21 +61,21 @@ public class LoginFragment extends BackHandledFragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        View view = inflater.inflate(R.layout.fragment_login, container, false);
-//        view.findViewById(R.id.register_fido_button).setOnClickListener(new View.OnClickListener() {
-//
-//            @Override
-//            public void onClick(View v) {
-//                submit(false);
-//            }
-//        });
-        view.findViewById(R.id.login_fido_button).setOnClickListener(new View.OnClickListener() {
+        View view = inflater.inflate(R.layout.fragment_register, container, false);
+        view.findViewById(R.id.register_fido_button).setOnClickListener(new View.OnClickListener() {
 
             @Override
             public void onClick(View v) {
-                submit(true);
+                submit(false);
             }
         });
+//        view.findViewById(R.id.sign_button).setOnClickListener(new View.OnClickListener() {
+//
+//            @Override
+//            public void onClick(View v) {
+//                submit(true);
+//            }
+//        });
         return view;
     }
 
@@ -94,8 +94,8 @@ public class LoginFragment extends BackHandledFragment {
 //            @Override
 //            public boolean onKey(View v, int keyCode, KeyEvent event) {
 //                if (event.getAction() == KeyEvent.ACTION_UP && keyCode == KeyEvent.KEYCODE_BACK) {
-//                    Log.e("loginFragment", "fragment back key is clicked");
-//                    getActivity().getFragmentManager().popBackStack("loginFragment", FragmentManager.POP_BACK_STACK_INCLUSIVE);
+//                    Log.e("registerFragment", "fragment back key is clicked");
+//                    getActivity().getFragmentManager().popBackStack("registerFragment", FragmentManager.POP_BACK_STACK_INCLUSIVE);
 //                    return true;
 //                }
 //                return false;
@@ -104,9 +104,9 @@ public class LoginFragment extends BackHandledFragment {
 //    }
 
     private void submit(boolean sign) {
-        EditText userText = (EditText) getActivity().findViewById(R.id.login_username);
+        EditText userText = (EditText) getActivity().findViewById(R.id.register_username);
         String username = userText.getText().toString().trim();
-        EditText passText = (EditText) getActivity().findViewById(R.id.login_password);
+        EditText passText = (EditText) getActivity().findViewById(R.id.register_password);
         String password = passText.getText().toString().trim();
 
         InputMethodManager inputMethodManager = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
@@ -156,4 +156,5 @@ public class LoginFragment extends BackHandledFragment {
         // TODO: Update argument type and name
         public void onLoginEntered(String username, String password, boolean sign);
     }
+
 }

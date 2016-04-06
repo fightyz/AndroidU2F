@@ -1,16 +1,12 @@
 package org.esec.mcg.androidu2f;
 
+import android.app.Fragment;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Bundle;
-import android.app.Fragment;
 import android.os.Handler;
 import android.os.Message;
-import android.preference.PreferenceManager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -25,14 +21,11 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 
-import org.esec.mcg.androidu2f.curl.FidoWebService;
 import org.esec.mcg.androidu2f.msg.U2FIntentType;
 import org.esec.mcg.androidu2f.msg.U2FRequestType;
-import org.esec.mcg.utils.logger.LogUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
@@ -46,7 +39,7 @@ import java.util.Map;
  * Use the {@link SignFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class SignFragment extends Fragment {
+public class SignFragment extends BackHandledFragment {
     private TextView statusText;
     private ProgressBar progressBar;
     private UIHandler uiHandler;
@@ -82,6 +75,16 @@ public class SignFragment extends Fragment {
         args.putString(PASSWORD, password);
         fragment.setArguments(args);
         return fragment;
+    }
+
+    /**
+     * 所有继承BackHandledFragment的子类都将在这个方法中实现物理Back键按下后的逻辑
+     * FragmentActivity捕捉到物理返回键点击事件后会首先询问Fragment是否消费该事件
+     * 如果没有Fragment消息时FragmentActivity自己才会消费该事件
+     */
+    @Override
+    protected boolean onBackPressed() {
+        return false;
     }
 
     @Override

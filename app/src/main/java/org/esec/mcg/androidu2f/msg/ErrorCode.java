@@ -1,9 +1,11 @@
 package org.esec.mcg.androidu2f.msg;
 
+import org.esec.mcg.androidu2f.client.msg.ResponseData;
+
 /**
  * Created by yz on 2016/3/10.
  */
-public enum ErrorCode {
+public enum ErrorCode implements ResponseData {
     OK("OK"),
     OTHER_ERROR("Other Error"),
     BAD_REQUEST("Bad Request"),

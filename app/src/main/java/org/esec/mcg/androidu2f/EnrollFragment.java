@@ -1,34 +1,14 @@
 package org.esec.mcg.androidu2f;
 
-import android.app.Activity;
 import android.content.Context;
-import android.content.Intent;
-import android.content.SharedPreferences;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
-import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.app.Fragment;
-import android.os.Handler;
-import android.os.Message;
-import android.preference.PreferenceManager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
-import org.esec.mcg.androidu2f.client.op.U2FServerRequest;
-import org.esec.mcg.androidu2f.curl.FidoWebService;
-import org.esec.mcg.androidu2f.curl.HttpServiceClient;
-import org.esec.mcg.androidu2f.msg.U2FIntentType;
-import org.esec.mcg.androidu2f.msg.U2FRequestType;
-import org.esec.mcg.utils.logger.LogUtils;
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.lang.ref.WeakReference;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
@@ -53,10 +33,6 @@ public class EnrollFragment extends Fragment {
     private TextView statusText;
     private ProgressBar progressBar;
 
-    /**
-     * Client's clientRegister operation.
-     */
-    private U2FServerRequest serverRequestMessage = new U2FServerRequest();
 
     private OnFragmentInteractionListener mListener;
 

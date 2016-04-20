@@ -10,8 +10,10 @@ import android.widget.Toast;
 
 import org.esec.mcg.androidu2f.Constants;
 import org.esec.mcg.androidu2f.U2FException;
+import org.esec.mcg.androidu2f.client.codec.RequestCodec;
 import org.esec.mcg.androidu2f.client.model.U2FClient;
 import org.esec.mcg.androidu2f.client.model.U2FClientImpl;
+import org.esec.mcg.androidu2f.client.msg.Request;
 import org.esec.mcg.androidu2fsimulator.token.msg.AuthenticationRequest;
 import org.esec.mcg.androidu2fsimulator.token.msg.RegistrationRequest;
 import org.esec.mcg.androidu2f.client.msg.U2FTokenIntentType;
@@ -44,6 +46,14 @@ public class U2FClientActivity extends AppCompatActivity {
         } else {
             LogUtils.d("555");
         }
+
+        Intent intent = getIntent();
+        String requestStr;
+        String U2FOperationType;
+        if ((requestStr = intent.getExtras().getString("Request")) != null
+                && (U2FOperationType = intent.getExtras().getString("U2FIntentType")) != null) {
+            Request request = RequestCodec.encodeRequest(requestStr);
+        }
     }
 
     @Override
@@ -53,6 +63,7 @@ public class U2FClientActivity extends AppCompatActivity {
         Bundle extras = getIntent().getExtras();
         request = extras.getString("Request");
         U2FOperationType = extras.getString("U2FIntentType");
+        LogUtils.d(request);
 
         try {
             requestType = (new JSONObject(request)).getString("type");

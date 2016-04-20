@@ -1,4 +1,4 @@
-package org.esec.mcg.androidu2f.msg;
+package org.esec.mcg.androidu2f.client.msg;
 
 import org.esec.mcg.androidu2f.client.msg.ResponseData;
 

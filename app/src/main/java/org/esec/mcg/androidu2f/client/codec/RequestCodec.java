@@ -2,6 +2,8 @@ package org.esec.mcg.androidu2f.client.codec;
 
 import android.support.annotation.Nullable;
 
+import org.esec.mcg.androidu2f.U2FException;
+import org.esec.mcg.androidu2f.client.msg.ErrorCode;
 import org.esec.mcg.androidu2f.client.msg.RegisterRequest;
 import org.esec.mcg.androidu2f.client.msg.Request;
 import org.esec.mcg.androidu2f.client.msg.SignRequest;
@@ -14,11 +16,17 @@ import org.json.JSONObject;
  * Created by yz on 2016/4/15.
  */
 public class RequestCodec {
-    public static Request encodeRequest(String requestStr) {
+    public static Request encodeRequest(String requestStr) throws U2FException {
         try {
             LogUtils.d(requestStr);
             JSONObject requestJson = new JSONObject(requestStr);
 
+            String type;
+            if (!requestJson.has("type")) {
+                throw new U2FException(ErrorCode.BAD_REQUEST);
+            } else {
+                type = requestJson.getString("type");
+            }
             RegisterRequest[] registerRequests = null;
             SignRequest[] signRequests = null;
             if (requestJson.has("registerRequests")) {
@@ -39,18 +47,18 @@ public class RequestCodec {
                 requestId = Integer.valueOf(requestJson.getString("requestId"));
             }
 
-            return new Request(requestJson.getString("type"),
+            return new Request(type,
                     signRequests,
                     registerRequests,
                     timeoutSeconds,
                     requestId);
         } catch (JSONException e) {
-            throw new RuntimeException("Bad request", e);
+            throw new U2FException(ErrorCode.BAD_REQUEST);
         }
     }
 
     @Nullable
-    public static RegisterRequest[] encodeRegisterRequest(JSONArray registerRequstsJson) {
+    public static RegisterRequest[] encodeRegisterRequest(JSONArray registerRequstsJson) throws U2FException {
         try {
             if (registerRequstsJson == null || registerRequstsJson.length() == 0) {
                 return null;
@@ -66,11 +74,11 @@ public class RequestCodec {
                 return registerRequests;
             }
         } catch (JSONException e) {
-            throw new RuntimeException("Bad request", e);
+            throw new U2FException(ErrorCode.BAD_REQUEST);
         }
     }
 
-    public static SignRequest[] encodeSignRequest(JSONArray signRequestsJson) {
+    public static SignRequest[] encodeSignRequest(JSONArray signRequestsJson) throws U2FException {
         try {
             if (signRequestsJson == null || signRequestsJson.length() == 0) {
                 return null;
@@ -87,7 +95,7 @@ public class RequestCodec {
                 return signRequests;
             }
         } catch (JSONException e) {
-            throw new RuntimeException("Bad request", e);
+            throw new U2FException(ErrorCode.BAD_REQUEST);
         }
 
     }

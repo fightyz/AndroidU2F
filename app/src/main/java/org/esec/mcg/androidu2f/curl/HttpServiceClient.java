@@ -135,7 +135,7 @@ public class HttpServiceClient {
                     op = U2FRequestType.u2f_sign_response;
                     break;
                 default:
-                    throw new U2FException("Invalid webservice called..".concat(": ") + webServiceType);
+                    throw new RuntimeException("No this webservice call");
             }
             LogUtils.d(PARAMETER_PAYLOAD_LABEL.concat(payload));
 
@@ -158,19 +158,19 @@ public class HttpServiceClient {
 
             addRequestHandle(asyncHttpClient.post(mContext, URL, headers, entity, contentType, responseHandler));
         } catch (JSONException e) {
-            throw new U2FException("Net work error.", e);
+            throw new RuntimeException(e);
         } catch (KeyStoreException e) {
-            throw new U2FException("Key store exception.", e);
+            throw new RuntimeException(e);
         } catch (CertificateException e) {
-            throw new U2FException("Key store exception.", e);
+            throw new RuntimeException(e);
         } catch (NoSuchAlgorithmException e) {
-            throw new U2FException("Key store exception.", e);
+            throw new RuntimeException(e);
         } catch (IOException e) {
-            throw new U2FException("Key store exception.", e);
+            throw new RuntimeException(e);
         } catch (UnrecoverableKeyException e) {
-            throw new U2FException("Key store exception.", e);
+            throw new RuntimeException(e);
         } catch (KeyManagementException e) {
-            throw new U2FException("Key store exception.", e);
+            throw new RuntimeException(e);
         } finally {
             AsyncHttpClient.silentCloseInputStream(is);
         }

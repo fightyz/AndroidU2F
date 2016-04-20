@@ -1,31 +1,14 @@
 package org.esec.mcg.androidu2f;
 
 import android.content.Context;
-import android.content.Intent;
-import android.content.SharedPreferences;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
-import android.net.Uri;
 import android.os.Bundle;
 import android.app.Fragment;
-import android.os.Handler;
-import android.os.Message;
-import android.preference.PreferenceManager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
-import org.esec.mcg.androidu2f.curl.FidoWebService;
-import org.esec.mcg.androidu2f.curl.HttpServiceClient;
-import org.esec.mcg.androidu2f.msg.U2FIntentType;
-import org.esec.mcg.androidu2f.msg.U2FRequestType;
-import org.esec.mcg.utils.logger.LogUtils;
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;

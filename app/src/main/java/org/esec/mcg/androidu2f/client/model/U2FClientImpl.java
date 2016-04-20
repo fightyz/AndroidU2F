@@ -4,6 +4,9 @@ import android.content.pm.PackageInfo;
 import android.util.Base64;
 
 import org.esec.mcg.androidu2f.U2FException;
+import org.esec.mcg.androidu2f.client.msg.RegisterRequest;
+import org.esec.mcg.androidu2f.client.msg.Request;
+import org.esec.mcg.androidu2f.client.msg.SignRequest;
 import org.esec.mcg.androidu2fsimulator.token.msg.AuthenticationRequest;
 import org.esec.mcg.androidu2fsimulator.token.msg.RegistrationRequest;
 import org.esec.mcg.androidu2f.codec.ClientDataCodec;
@@ -37,42 +40,41 @@ public class U2FClientImpl extends U2FClient {
     private String serverChallengeBase64;
     private String facetID;
 
-    private JSONArray signBatch;
-
     /**
      * Caller of the U2FClientActivity
      */
     private PackageInfo packageInfo;
     private Crypto crypto;
 
+    private final Request request;
+
     /**
      * Implementaion of U2FClient.
      * @param packageInfo Caller's packageInfo.
      */
-    public U2FClientImpl(PackageInfo packageInfo) {
+    public U2FClientImpl(PackageInfo packageInfo, Request request) {
 //        this.u2fToken = u2fToken;
         this.packageInfo = packageInfo;
         crypto = new CryptoImpl();
+        this.request = request;
     }
 
     /**
      * Decode U2F request message and generate raw message.
-     * @param u2fProtocolMessage
      * @return
      * @throws U2FException
      */
     @Override
-    public RegistrationRequest register(String u2fProtocolMessage) throws U2FException {
+    public RegistrationRequest register(RegisterRequest[] registerRequests) {
         try {
-            JSONObject reg = new JSONObject(u2fProtocolMessage);
 
-            version = ((JSONObject)reg.getJSONArray("registerRequests").get(0)).getString("version");
-            appId = ((JSONObject)reg.getJSONArray("registerRequests").get(0)).getString("appId");
-            serverChallengeBase64 = ((JSONObject)reg.getJSONArray("registerRequests").get(0)).getString("challenge");
+            version = registerRequests[0].getVersion();
+            appId = registerRequests[0].getAppId();
+            serverChallengeBase64 = registerRequests[0].getChallenge();
 
             // Check the u2f version
             if (!version.equals(U2F_V2)) {
-                throw new U2FException(String.format("Unsupported protocol version: %s", version));
+//                throw new U2FException(String.format("Unsupported protocol version: %s", version));
             }
 
             // TODO: 2016/3/21 The facetID should be the orign, and it should be in appid's json.
@@ -91,13 +93,10 @@ public class U2FClientImpl extends U2FClient {
             LogUtils.d(ByteUtil.ByteArrayToHexString(clientDataSha256));
 
             return new RegistrationRequest(appIdSha256, clientDataSha256);
-        } catch (JSONException e) {
-            e.printStackTrace();
-            throw new U2FException("Register request JSON format is wrong.", e);
         } catch (CertificateException e) {
-            throw new U2FException("Can not get the caller's apk signature(facet ID).", e);
+            throw new RuntimeException(e);
         } catch (NoSuchAlgorithmException e) {
-            throw new U2FException("Can not get the caller's apk signature(facet ID).", e);
+            throw new RuntimeException(e);
         }
     }
 
@@ -107,16 +106,16 @@ public class U2FClientImpl extends U2FClient {
      * @return
      * @throws U2FException
      */
-    public AuthenticationRequest sign(JSONObject signRequest, boolean isSign) throws U2FException {
+    public AuthenticationRequest sign(SignRequest signRequest, boolean isSign) {
         try {
-            version = signRequest.getString("version");
-            appId = signRequest.getString("appId");
-            serverChallengeBase64 = signRequest.getString("challenge");
-            keyHandle = signRequest.getString("keyHandle");
+            version = signRequest.getVersion();
+            appId = signRequest.getAppId();
+            serverChallengeBase64 = signRequest.getChallenge();
+            keyHandle = signRequest.getKeyHandle();
 
             // Check the u2f version
             if (!version.equals(U2F_V2)) {
-                throw new U2FException(String.format("Unsupported protocol version: %s", version));
+//                throw new U2FException(String.format("Unsupported protocol version: %s", version));
             }
 
             facetID = getFacetID(packageInfo);
@@ -136,56 +135,39 @@ public class U2FClientImpl extends U2FClient {
 
             byte[] rawKeyHandle = android.util.Base64.decode(keyHandle, Base64.URL_SAFE);
             return new AuthenticationRequest(control, clientDataSha256, appIdSha256, rawKeyHandle);
-        } catch (JSONException e) {
-            throw new U2FException("Rgister request JSON format is wrong.", e);
         } catch (CertificateException e) {
-            throw new U2FException("Can not get the caller's apk signature(facet ID).", e);
+            throw new RuntimeException(e);
         } catch (NoSuchAlgorithmException e) {
-            throw new U2FException("Can not get the caller's apk signature(facet ID).", e);
+            throw new RuntimeException(e);
         } catch (IllegalArgumentException e) {
-            throw new U2FException("Bad Base64 encoding of key Handle.", e);
+            throw new RuntimeException(e);
         }
     }
 
     @Override
-    public AuthenticationRequest[] signBatch(JSONObject signRequests, boolean sign) throws U2FException {
-        try {
-            if (signRequests.has("signRequests")) {
-                signBatch = signRequests.getJSONArray("signRequests");
-            }
-            if (signBatch.length() == 0) {
-                return null;
-            }
-            AuthenticationRequest[] authenticationRequestsBatch = new AuthenticationRequest[signBatch.length()];
-            for (int i = 0; i < signBatch.length(); i++) {
-                authenticationRequestsBatch[i] = sign(signBatch.getJSONObject(i), sign);
-                LogUtils.d("authenticationRequestsBatch: " + authenticationRequestsBatch[i]);
-            }
-            return authenticationRequestsBatch;
-        } catch (JSONException e) {
-            throw new U2FException("Rgister request JSON format is wrong.", e);
+    public AuthenticationRequest[] signBatch(SignRequest[] signRequests, boolean sign) {
+        if (signRequests == null || signRequests.length == 0) {
+            return null;
         }
-
+        AuthenticationRequest[] authenticationRequestsBatch = new AuthenticationRequest[signRequests.length];
+        for (int i = 0; i < signRequests.length; i++) {
+            authenticationRequestsBatch[i] = sign(signRequests[i], sign);
+            LogUtils.d("authenticationRequestsBatch: " + authenticationRequestsBatch[i]);
+        }
+        return authenticationRequestsBatch;
     }
 
     @Override
     public String getClientDataForIndex(int index) {
-        try {
-            return ClientDataCodec.encodeClientData(ClientDataCodec.REQUEST_TYPE_AUTHENTICATE,
-                    signBatch.getJSONObject(index).getString("challenge"), facetID, null);
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-        return null;
+        SignRequest[] signRequests = request.getSignRequests();
+        return ClientDataCodec.encodeClientData(ClientDataCodec.REQUEST_TYPE_AUTHENTICATE,
+                signRequests[index].getChallenge(), facetID, null);
     }
 
     @Override
     public String getKeyHandle(int index) {
-        try {
-            return signBatch.getJSONObject(index).getString("keyHandle");
-        } catch (JSONException e) {
-            throw new RuntimeException(e);
-        }
+        SignRequest[] signRequests = request.getSignRequests();
+        return signRequests[index].getKeyHandle();
     }
 
     //TODO Implement this function

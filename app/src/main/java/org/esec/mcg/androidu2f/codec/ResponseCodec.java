@@ -4,10 +4,9 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.util.Base64;
 
-import org.esec.mcg.androidu2f.msg.ErrorCode;
+import org.esec.mcg.androidu2f.client.msg.ErrorCode;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.spongycastle.jcajce.provider.symmetric.ARC4;
 
 /**
  * Created by yz on 2016/3/10.

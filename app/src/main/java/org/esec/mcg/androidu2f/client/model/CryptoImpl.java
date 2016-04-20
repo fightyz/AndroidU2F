@@ -11,13 +11,13 @@ import java.security.NoSuchAlgorithmException;
  */
 public class CryptoImpl implements Crypto {
     @Override
-    public byte[] computeSha256(String message) throws U2FException {
+    public byte[] computeSha256(String message) {
         try {
             return MessageDigest.getInstance("SHA-256").digest(message.getBytes("UTF-8"));
         } catch (NoSuchAlgorithmException e) {
-            throw new U2FException("Cannot compute SHA-256", e);
+            throw new RuntimeException(e);
         } catch (UnsupportedEncodingException e) {
-            throw new U2FException("Message is not UTF-8 encoded.", e);
+            throw new RuntimeException(e);
         }
     }
 }

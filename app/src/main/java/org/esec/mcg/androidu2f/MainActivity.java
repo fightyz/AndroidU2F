@@ -1,17 +1,13 @@
 package org.esec.mcg.androidu2f;
 
 import android.content.Intent;
-import android.net.Uri;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Message;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.app.Fragment;
 import android.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -19,11 +15,9 @@ import android.widget.TextView;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.deser.Deserializers;
 import com.loopj.android.http.BaseJsonHttpResponseHandler;
 import com.loopj.android.http.RequestHandle;
 
-import org.esec.mcg.androidu2f.curl.FidoWebService;
 import org.esec.mcg.androidu2f.curl.HttpServiceClient;
 import org.esec.mcg.androidu2f.curl.SampleJSON;
 import org.esec.mcg.androidu2f.msg.U2FIntentType;

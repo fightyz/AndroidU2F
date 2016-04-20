@@ -15,4 +15,20 @@ public class SignRequest {
         this.keyHandle = keyHandle;
         this.appId = appId;
     }
+
+    public String getAppId() {
+        return appId;
+    }
+
+    public String getChallenge() {
+        return challenge;
+    }
+
+    public String getKeyHandle() {
+        return keyHandle;
+    }
+
+    public String getVersion() {
+        return version;
+    }
 }

@@ -29,10 +29,6 @@ public class U2FClientActivity extends AppCompatActivity {
 
     public static int OVERLAY_PERMISSION_REQ_CODE = 1234;
 
-    private String request;
-    private String requestType;
-    private String U2FOperationType;
-
     private U2FClient u2fClient;
 
     @Override
@@ -92,79 +88,11 @@ public class U2FClientActivity extends AppCompatActivity {
     protected void onResume() {
         LogUtils.d("onResume");
         super.onResume();
-//        Bundle extras = getIntent().getExtras();
-//        request = extras.getString("Request");
-//        U2FOperationType = extras.getString("U2FIntentType");
-//        LogUtils.d(request);
-//
-//        try {
-//            requestType = (new JSONObject(request)).getString("type");
-//            u2fClient = new U2FClientImpl(this.getPackageManager().getPackageInfo(this.getPackageName(), this.getPackageManager().GET_SIGNATURES));
-//        } catch (JSONException e) {
-//            // "type" field is wrong, can't be resolved.
-//            JSONObject error = ResponseCodec.encodeError(ErrorCode.BAD_REQUEST, ErrorCode.BAD_REQUEST.toString());
-//            String u2fResponseType;
-//            if (U2FOperationType.equals(U2FIntentType.U2F_OPERATION_REG)) {
-//                u2fResponseType = U2FResponseType.u2f_register_response.name();
-//            } else {
-//                u2fResponseType = U2FResponseType.u2f_sign_response.name();
-//            }
-//            Intent i = ResponseCodec.encodeResponse(u2fResponseType, error);
-//
-//            setResult(RESULT_CANCELED, i);
-//            finish();
-//            return;
-//        } catch (PackageManager.NameNotFoundException e) {
-//            // TODO: 2016/3/10 Handle exception
-//            throw new RuntimeException(e);
-//        }
-//
-//        // Register, type = u2f_register_request
-//        if (requestType.equals(U2FRequestType.u2f_register_request.name())) {
-//            try {
-//                JSONObject requestJson = new JSONObject(request);
-//                AuthenticationRequest[] authenticationRequestsBatch = u2fClient.signBatch(requestJson, false);
-//                RegistrationRequest registrationRequest = u2fClient.register(request);
-//                Intent i = genTokenIntent(U2FTokenIntentType.U2F_OPERATION_REG,
-//                        registrationRequest, authenticationRequestsBatch);
-//                startActivityForResult(i, Constants.REG_ACTIVITY_RES_1);
-//            } catch (U2FException | JSONException e) {
-//                LogUtils.d("------------------");
-//                JSONObject error = ResponseCodec.encodeError(ErrorCode.BAD_REQUEST, e.getMessage());
-//                Intent i = ResponseCodec.encodeResponse(U2FResponseType.u2f_register_response.name(), error);
-//                setResult(RESULT_CANCELED, i);
-//                finish();
-//                return;
-//            }
-//        } else if (requestType.equals(U2FRequestType.u2f_sign_request.name())) { // Sign, type = u2f_sign_request
-//            try {
-//                JSONObject requestJson = new JSONObject(request);
-//                AuthenticationRequest[] authenticationRequestsBatch = u2fClient.signBatch(requestJson, true);
-//                Intent i = genTokenIntent(U2FTokenIntentType.U2F_OPERATION_SIGN_BATCH,
-//                        null, authenticationRequestsBatch);
-//                startActivityForResult(i, Constants.SIGN_ACTIVITY_RES_2);
-//            } catch (U2FException | JSONException e) {
-//                e.printStackTrace();
-//                JSONObject error = ResponseCodec.encodeError(ErrorCode.OTHER_ERROR, ErrorCode.OTHER_ERROR.toString().concat(" Wrong in Token."));
-//                Intent i = ResponseCodec.encodeResponse(U2FResponseType.u2f_sign_response.name(), error);
-//                setResult(RESULT_CANCELED, i);
-//                finish();
-//            }
-//        }
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (data == null) {
-            LogUtils.d("Please show me your token.");
-            Toast.makeText(this, "Please show me your token.", Toast.LENGTH_LONG).show();
-            JSONObject error = ResponseCodec.encodeError(ErrorCode.OTHER_ERROR, ErrorCode.OTHER_ERROR.toString().concat("Please show me your token."));
-            Intent i = ResponseCodec.encodeResponse(U2FResponseType.u2f_register_response.name(), error);
-            setResult(RESULT_CANCELED, i);
-            finish();
-            return;
-        }
         if (requestCode == Constants.REG_ACTIVITY_RES_1) { // register
             LogUtils.d("REG_ACTIVITY_RES_1");
             if (resultCode == RESULT_OK) { // success

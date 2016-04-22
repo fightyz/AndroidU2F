@@ -22,20 +22,20 @@ public class RequestCodec {
             JSONObject requestJson = new JSONObject(requestStr);
 
             String type;
-            if (!requestJson.has("type")) {
+            RegisterRequest[] registerRequests = null;
+            SignRequest[] signRequests;
+
+            if (!requestJson.has("type") || !requestJson.has("signRequests")) {
                 throw new U2FException(ErrorCode.BAD_REQUEST);
             } else {
                 type = requestJson.getString("type");
+                JSONArray signRequestsJson = requestJson.getJSONArray("signRequests");
+                signRequests = encodeSignRequest(signRequestsJson);
             }
-            RegisterRequest[] registerRequests = null;
-            SignRequest[] signRequests = null;
+
             if (requestJson.has("registerRequests")) {
                 JSONArray registerRequestsJson = requestJson.getJSONArray("registerRequests");
                 registerRequests = encodeRegisterRequest(registerRequestsJson);
-            }
-            if (requestJson.has("signRequests")) {
-                JSONArray signRequestsJson = requestJson.getJSONArray("signRequests");
-                signRequests = encodeSignRequest(signRequestsJson);
             }
 
             int timeoutSeconds = -1;
